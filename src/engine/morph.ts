@@ -1,3 +1,7 @@
+/**
+ * Radial-profile morphing inspired by jeremy-prt/bloub (MIT).
+ * Every silhouette is r(θ) sampled at the same angles, so a morph is a lerp of radii.
+ */
 import { TAU, lerp, r2 } from './math'
 
 export const PROFILE_SAMPLES = 64

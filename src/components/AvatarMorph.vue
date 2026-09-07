@@ -12,8 +12,9 @@ import {
 const props = withDefaults(
   defineProps<{
     durationMs?: number
+    label?: string
   }>(),
-  { durationMs: DEFAULT_MORPH_MS },
+  { durationMs: DEFAULT_MORPH_MS, label: 'Grok_bot' },
 )
 
 const from = ref<AnimationState>('Idle')
@@ -62,7 +63,7 @@ onUnmounted(() => {
       class="avatar"
       :viewBox="viewBoxAttr()"
       role="img"
-      :aria-label="`Grok_bot ${frame.to}`"
+      :aria-label="label"
       :data-state="frame.progress >= 1 ? frame.to : frame.from"
       :data-target="frame.to"
     >
@@ -77,7 +78,12 @@ onUnmounted(() => {
         :opacity="dot.opacity"
       />
     </svg>
-    <button type="button" :aria-pressed="frame.to === 'Thinking'" @click="toggleIdleThinking">
+    <button
+      type="button"
+      data-morph-toggle
+      :aria-pressed="frame.to === 'Thinking'"
+      @click="toggleIdleThinking"
+    >
       {{ frame.to === 'Thinking' ? 'Show idle' : 'Show thinking' }}
     </button>
   </div>
