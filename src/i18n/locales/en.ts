@@ -34,6 +34,43 @@ const en: typeof fr = {
     Comet: 'Comet',
   },
 
+  timeline: {
+    play: 'Start playback',
+    pause: 'Stop playback',
+    addAnimation: 'Add an animation',
+    cycles: 'Cycles',
+    blockAria: '{state}, {duration}',
+    blockDurationAria: 'Duration of {state}, {duration}',
+    blockRemoveAria: 'Remove {state}',
+    moveLeft: 'Move {state} left',
+    moveRight: 'Move {state} right',
+  },
+
+  dialog: {
+    cancel: 'Cancel',
+    nameCreateTitle: 'New cycle',
+    nameRenameTitle: 'Rename cycle',
+    nameField: 'Cycle name',
+    nameCreate: 'Create',
+    nameRename: 'Rename',
+    removeTitle: 'Delete "{name}"?',
+    removeDetail: 'This sequence will be lost, along with its {n} animations.',
+    removeConfirm: 'Delete',
+  },
+
+  cycles: {
+    defaultName: 'Default cycle',
+    newName: 'My cycle',
+    menuNew: 'New cycle',
+    menuRenameAria: 'Rename {name}',
+    menuRemoveAria: 'Delete {name}',
+  },
+
+  units: {
+    seconds: '{n} s',
+    secondsShort: '{n}s',
+  },
+
   settings: {
     title: 'Settings',
     language: 'Language',

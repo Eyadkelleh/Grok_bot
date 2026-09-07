@@ -98,6 +98,25 @@ describe('App', () => {
     expect(document.documentElement.lang).toBe('fr')
   })
 
+  it('plays a timeline block onto the avatar and still lets the palette preview', async () => {
+    const wrapper = mount(App)
+    expect(wrapper.find('[data-timeline]').exists()).toBe(true)
+    expect(wrapper.get('[data-timeline] [data-block="0"]').attributes('data-state')).toBe('Idle')
+
+    await wrapper.get('[data-timeline] [data-block="1"] [data-carte]').trigger('click')
+    expect(wrapper.get('svg[role="img"]').attributes('data-target')).toBe('Thinking')
+
+    await wrapper.get('[data-play]').trigger('click')
+    expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('true')
+
+    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
+    expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('false')
+    expect(wrapper.get('svg[role="img"]').attributes('data-target')).toBe('Comet')
+    expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
+      'true',
+    )
+  })
+
   it('shows about/credits for Grok_bot, bloub MIT, and no xAI affiliation', () => {
     const wrapper = mount(App)
     expect(wrapper.text()).toContain('Grok_bot')
