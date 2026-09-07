@@ -1,5 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../App.vue'
 import { brand } from '../brand'
 import { rechargerApparence } from '../customise'
@@ -29,12 +29,17 @@ vi.mock('../ui/capture', async (importOriginal) => {
 
 describe('App', () => {
   beforeEach(() => {
+    history.replaceState(null, '', '/')
     window.localStorage.clear()
     rechargerLangue()
     rechargerApparence()
     langue.value = 'en'
     exporte.mockClear()
     exporteMontage.mockClear()
+  })
+
+  afterEach(() => {
+    history.replaceState(null, '', '/')
   })
 
   it('renders the Grok_bot avatar with default props', () => {
@@ -98,6 +103,7 @@ describe('App', () => {
     expect(wrapper.get('[data-animations-palette] [data-state="Thinking"]').attributes('aria-checked')).toBe(
       'true',
     )
+    expect(location.hash).toBe('#etat=thinking&stop')
   })
 
   it('drives the avatar morph to Comet from the palette', async () => {
@@ -170,6 +176,7 @@ describe('App', () => {
 
     await wrapper.get('[data-play]').trigger('click')
     expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('true')
+    expect(location.hash).toBe('#etat=thinking')
 
     await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
     expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('false')
@@ -177,6 +184,7 @@ describe('App', () => {
     expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
       'true',
     )
+    expect(location.hash).toBe('#etat=comet&stop')
   })
 
   it('shows about/credits for Grok_bot, bloub MIT, and no xAI affiliation', () => {
@@ -242,6 +250,38 @@ describe('App', () => {
     expect(exporte).not.toHaveBeenCalled()
     expect(exporteMontage.mock.calls[0]?.[0]).toBe('mp4')
     expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
+    wrapper.unmount()
+  })
+
+  it('writes #etat=idle&stop on load so the pose is shareable', () => {
+    const wrapper = mount(App)
+    expect(location.hash).toBe('#etat=idle&stop')
+    wrapper.unmount()
+  })
+
+  it('opens a named pose from the hash on load', () => {
+    history.replaceState(null, '', '#etat=thinking&stop')
+    const wrapper = mount(App)
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Thinking')
+    expect(wrapper.get('[data-animations-palette] [data-state="Thinking"]').attributes('aria-checked')).toBe(
+      'true',
+    )
+    expect(location.hash).toBe('#etat=thinking&stop')
+    wrapper.unmount()
+  })
+
+  it('applies a later #etat= change without clobbering it from the nav', async () => {
+    const wrapper = mount(App)
+
+    history.replaceState(null, '', '#etat=orbit&stop')
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+    await flushPromises()
+
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Orbit')
+    expect(location.hash).toBe('#etat=orbit&stop')
+
+    await wrapper.get('[data-nav="customise"]').trigger('click')
+    expect(location.hash).toBe('#etat=orbit&stop')
     wrapper.unmount()
   })
 })

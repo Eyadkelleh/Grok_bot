@@ -58,7 +58,7 @@ const idsCouleurs = COLORS.map((c) => c.id)
 </script>
 
 <template>
-  <aside class="rail" data-customise-panel aria-labelledby="customise-title">
+  <aside class="rail surface" data-customise-panel aria-labelledby="customise-title">
     <h2 id="customise-title">{{ t('panel.title') }}</h2>
 
     <h3 id="customise-shape">{{ t('panel.shape') }}</h3>
@@ -148,8 +148,7 @@ const idsCouleurs = COLORS.map((c) => c.id)
 
 <style scoped>
 .rail {
-  width: 100%;
-  max-width: 16rem;
+  max-width: var(--rail);
   text-align: left;
 }
 

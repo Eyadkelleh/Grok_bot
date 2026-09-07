@@ -16,7 +16,7 @@ const statut = computed(() => {
 </script>
 
 <template>
-  <section class="export" data-export-bar aria-labelledby="export-title">
+  <section class="export surface" data-export-bar aria-labelledby="export-title">
     <h2 id="export-title">{{ t('export.title') }}</h2>
     <div class="actions">
       <button
@@ -36,8 +36,7 @@ const statut = computed(() => {
 
 <style scoped>
 .export {
-  width: 100%;
-  max-width: 16rem;
+  max-width: var(--rail);
   text-align: left;
 }
 

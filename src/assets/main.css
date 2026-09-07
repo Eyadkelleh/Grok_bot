@@ -7,6 +7,7 @@
   --muted: #57534e;
   --line: #d6d3d1;
   --paper: #ffffff;
+  --rail: 16rem;
 }
 
 * {
@@ -25,4 +26,19 @@ body {
 
 #app {
   min-height: 100vh;
+}
+
+#customise,
+#studio,
+#settings,
+#about {
+  scroll-margin-top: 4.5rem;
+}
+
+.surface {
+  width: 100%;
+  padding: 1rem 1.1rem 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--paper);
 }
