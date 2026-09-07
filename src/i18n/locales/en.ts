@@ -11,8 +11,61 @@ const en: typeof fr = {
   nav: {
     label: 'Navigation',
     studio: 'Studio',
+    customise: 'Customise',
     settings: 'Settings',
     about: 'About',
+  },
+
+  panel: {
+    title: 'Customise',
+    shape: 'Shape',
+    expression: 'Expression',
+    colour: 'Colour',
+  },
+
+  shapes: {
+    circle: 'Circle',
+    pebble: 'Pebble',
+    squircle: 'Squircle',
+    capsule: 'Capsule',
+    triangle: 'Triangle',
+    hexagon: 'Hexagon',
+    cloud: 'Cloud',
+    droplet: 'Droplet',
+  },
+
+  colors: {
+    ink: 'Ink',
+    cream: 'Cream',
+    brown: 'Brown',
+    red: 'Red',
+    orange: 'Orange',
+    amber: 'Amber',
+    green: 'Green',
+    turquoise: 'Turquoise',
+    blue: 'Blue',
+    violet: 'Purple',
+    pink: 'Pink',
+    grey: 'Grey',
+  },
+
+  expressions: {
+    neutral: 'Neutral',
+    attentive: 'Attentive',
+    surprised: 'Surprised',
+    excited: 'Excited',
+    happy: 'Happy',
+    laughing: 'Laughing',
+    angry: 'Angry',
+    sad: 'Sad',
+    scared: 'Scared',
+    wary: 'Wary',
+    confused: 'Confused',
+    curious: 'Curious',
+    proud: 'Proud',
+    shy: 'Shy',
+    bored: 'Bored',
+    sleepy: 'Sleepy',
   },
 
   animations: {

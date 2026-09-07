@@ -9,8 +9,61 @@ export default {
   nav: {
     label: 'Navigation',
     studio: 'Studio',
+    customise: 'Personnaliser',
     settings: 'Réglages',
     about: 'À propos',
+  },
+
+  panel: {
+    title: 'Personnaliser',
+    shape: 'Forme',
+    expression: 'Expression',
+    colour: 'Couleur',
+  },
+
+  shapes: {
+    circle: 'Cercle',
+    pebble: 'Galet',
+    squircle: 'Squircle',
+    capsule: 'Capsule',
+    triangle: 'Triangle',
+    hexagon: 'Hexagone',
+    cloud: 'Nuage',
+    droplet: 'Goutte',
+  },
+
+  colors: {
+    ink: 'Encre',
+    cream: 'Crème',
+    brown: 'Brun',
+    red: 'Rouge',
+    orange: 'Orange',
+    amber: 'Ambre',
+    green: 'Vert',
+    turquoise: 'Turquoise',
+    blue: 'Bleu',
+    violet: 'Violet',
+    pink: 'Rose',
+    grey: 'Gris',
+  },
+
+  expressions: {
+    neutral: 'Neutre',
+    attentive: 'Attentif',
+    surprised: 'Surpris',
+    excited: 'Excité',
+    happy: 'Heureux',
+    laughing: 'Hilare',
+    angry: 'En colère',
+    sad: 'Triste',
+    scared: 'Effrayé',
+    wary: 'Méfiant',
+    confused: 'Confus',
+    curious: 'Curieux',
+    proud: 'Fier',
+    shy: 'Timide',
+    bored: 'Blasé',
+    sleepy: 'Somnolent',
   },
 
   animations: {

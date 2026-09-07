@@ -11,8 +11,61 @@ const zh: typeof fr = {
   nav: {
     label: '导航',
     studio: '工作室',
+    customise: '个性化',
     settings: '设置',
     about: '关于',
+  },
+
+  panel: {
+    title: '个性化',
+    shape: '形状',
+    expression: '表情',
+    colour: '颜色',
+  },
+
+  shapes: {
+    circle: '圆形',
+    pebble: '卵石',
+    squircle: '圆角方形',
+    capsule: '胶囊',
+    triangle: '三角形',
+    hexagon: '六边形',
+    cloud: '云朵',
+    droplet: '水滴',
+  },
+
+  colors: {
+    ink: '墨黑',
+    cream: '奶油白',
+    brown: '棕色',
+    red: '红色',
+    orange: '橙色',
+    amber: '琥珀色',
+    green: '绿色',
+    turquoise: '青绿色',
+    blue: '蓝色',
+    violet: '紫色',
+    pink: '粉色',
+    grey: '灰色',
+  },
+
+  expressions: {
+    neutral: '平静',
+    attentive: '专注',
+    surprised: '惊讶',
+    excited: '兴奋',
+    happy: '开心',
+    laughing: '大笑',
+    angry: '生气',
+    sad: '难过',
+    scared: '害怕',
+    wary: '怀疑',
+    confused: '困惑',
+    curious: '好奇',
+    proud: '得意',
+    shy: '羞怯',
+    bored: '无趣',
+    sleepy: '困倦',
   },
 
   animations: {

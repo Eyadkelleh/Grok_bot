@@ -1,6 +1,6 @@
 const PREFIXE = 'grok_bot:'
 
-const NOMS = ['langue', 'cycles'] as const
+const NOMS = ['langue', 'forme', 'couleur', 'expression', 'cycles'] as const
 
 export type NomStocke = (typeof NOMS)[number]
 
