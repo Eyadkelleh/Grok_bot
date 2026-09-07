@@ -24,4 +24,13 @@ describe('AnimationsPalette', () => {
     const wrapper = mount(AnimationsPalette, { props: { modelValue: 'Idle', colour: 'blue' } })
     expect(wrapper.get('[data-state="Idle"] svg path').attributes('fill')).toBe('#3b93f0')
   })
+
+  it('defaults to a grid and can lay out as a strip', () => {
+    const grid = mount(AnimationsPalette, { props: { modelValue: 'Idle' } })
+    expect(grid.get('[data-animations-palette]').attributes('data-layout')).toBe('grid')
+    expect(grid.get('[data-animations-palette]').classes()).not.toContain('strip')
+    const strip = mount(AnimationsPalette, { props: { modelValue: 'Idle', layout: 'strip' } })
+    expect(strip.get('[data-animations-palette]').attributes('data-layout')).toBe('strip')
+    expect(strip.get('[data-animations-palette]').classes()).toContain('strip')
+  })
 })

@@ -12,6 +12,11 @@ import {
 } from '../engine'
 import { t, type Cle } from '../i18n'
 
+const props = withDefaults(
+  defineProps<{ layout?: 'grid' | 'compact' }>(),
+  { layout: 'grid' },
+)
+
 const shape = defineModel<ShapeId>('shape', { required: true })
 const expression = defineModel<ExpressionId>('expression', { required: true })
 const colour = defineModel<ColorId>('colour', { required: true })
@@ -58,7 +63,12 @@ const idsCouleurs = COLORS.map((c) => c.id)
 </script>
 
 <template>
-  <aside class="rail surface" data-customise-panel aria-labelledby="customise-title">
+  <aside
+    class="rail surface"
+    :class="{ compact: props.layout === 'compact' }"
+    data-customise-panel
+    aria-labelledby="customise-title"
+  >
     <h2 id="customise-title">{{ t('panel.title') }}</h2>
 
     <h3 id="customise-shape">{{ t('panel.shape') }}</h3>
@@ -152,6 +162,10 @@ const idsCouleurs = COLORS.map((c) => c.id)
   text-align: left;
 }
 
+.rail.compact {
+  max-width: none;
+}
+
 h2,
 h3 {
   margin: 0;
@@ -161,6 +175,10 @@ h3 {
 
 h3 {
   margin-top: 1.1rem;
+}
+
+.compact h3 {
+  margin-top: 0.85rem;
 }
 
 .tiles,
@@ -176,6 +194,25 @@ h3 {
 
 .swatches {
   grid-template-columns: repeat(6, 1fr);
+}
+
+.compact .tiles {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scroll-snap-type: x proximity;
+}
+
+.compact .tiles button {
+  flex: 0 0 auto;
+  width: 3.35rem;
+  scroll-snap-align: start;
+}
+
+.compact .swatches {
+  grid-template-columns: repeat(auto-fill, minmax(1.85rem, 1fr));
 }
 
 button {

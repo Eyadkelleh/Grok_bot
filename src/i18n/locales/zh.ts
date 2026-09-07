@@ -4,7 +4,7 @@ const zh: typeof fr = {
   app: {
     name: 'Grok_bot',
     title: 'Grok_bot — SVG 头像工作室',
-    tagline: '自定义、制作动画，并导出静态图或视频。',
+    tagline: '三步完成：选外观、选动作、下载视频。',
     botAria: 'Grok_bot 头像',
   },
 
@@ -16,12 +16,24 @@ const zh: typeof fr = {
     about: '关于',
   },
 
+  flow: {
+    stepsLabel: '创建视频的步骤',
+    look: '外观',
+    motion: '动作',
+    video: '视频',
+    lookTitle: '1. 选择外观',
+    motionTitle: '2. 选择动作',
+    videoTitle: '3. 下载视频',
+    summary: '就绪：{pose}',
+    advancedTimeline: '高级：编辑序列',
+  },
+
   panel: {
     title: '个性化',
-    shape: '形状',
+    shape: '外形',
     expression: '表情',
     colour: '颜色',
-    skinLimited: '形状和表情可能不适用于此状态。',
+    skinLimited: '外形和表情可能不适用于此状态。',
   },
 
   shapes: {
@@ -83,7 +95,7 @@ const zh: typeof fr = {
     Egg: '蛋形',
     Hexagon: '六边形',
     Play: '播放',
-    Orbit: '轨道',
+    Orbit: '环绕',
     Burst: '爆发',
     Comet: '彗星',
   },
@@ -130,6 +142,8 @@ const zh: typeof fr = {
     title: '导出',
     stills: '静态图',
     video: '视频',
+    primaryVideo: '下载 {format} · {name}',
+    moreOptions: '高级：导出时间轴循环',
     png: '下载 PNG',
     svg: '下载 SVG',
     gif: '下载 GIF',
@@ -141,7 +155,7 @@ const zh: typeof fr = {
     sourceLabel: '视频来源',
     sourcePose: '当前动作 · {name}',
     sourceCycle: '循环 · {name}',
-    metaPose: '{name} · {duration} · 该动作的短片',
+    metaPose: '{name} · {duration} · 当前动作短片',
     metaCycle: '{name} · {duration} · {count} 个动画',
     busy: '正在导出…',
     progress: '正在导出… {percent}%',

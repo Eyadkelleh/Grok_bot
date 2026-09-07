@@ -30,19 +30,11 @@ const progressPercent = computed(() =>
 )
 
 const poseLabel = computed(() => t(`animations.${props.pose}` as Cle))
+const poseDuration = computed(() =>
+  durationForSource({ kind: 'pose', state: props.pose }),
+)
 
-const videoMeta = computed(() => {
-  if (videoSource.value === 'pose') {
-    return {
-      name: poseLabel.value,
-      duration: durationForSource({
-        kind: 'pose',
-        state: props.pose,
-      }),
-    }
-  }
-  return { name: props.cycleName, duration: props.cycleDuration }
-})
+const primaryAction = computed<ActionId>(() => (mp4Ok.value ? 'mp4' : 'gif'))
 
 const statut = computed(() => {
   if (props.etat === 'occupe') return t('export.progress', { percent: progressPercent.value })
@@ -51,49 +43,88 @@ const statut = computed(() => {
   return ''
 })
 
-function labelVideo(format: 'gif' | 'mp4') {
-  const cle = videoSource.value === 'pose' ? `export.${format}Pose` : `export.${format}Cycle`
-  return t(cle as Cle, { name: videoMeta.value.name })
+function exporterPose(action: ActionId) {
+  emit('exporter', { action, videoSource: 'pose' })
 }
 
-function exporter(action: ActionId) {
-  emit('exporter', { action, videoSource: videoSource.value })
+function exporterCycle(action: ActionId) {
+  emit('exporter', { action, videoSource: 'cycle' })
+}
+
+function exporterPrimary() {
+  exporterPose(primaryAction.value)
 }
 </script>
 
 <template>
   <section class="export surface" data-export-bar aria-labelledby="export-title">
-    <h2 id="export-title">{{ t('export.title') }}</h2>
+    <h2 id="export-title" class="sr-only">{{ t('export.title') }}</h2>
 
-    <div class="group" data-export-group="still">
-      <h3>{{ t('export.stills') }}</h3>
-      <div class="actions">
+    <div class="group primary-group" data-export-group="montage">
+      <p
+        class="meta"
+        data-export-meta
+        data-export-duration
+        :data-export-duration-secs="poseDuration"
+      >
+        {{
+          t('export.metaPose', {
+            name: poseLabel,
+            duration: secondes(poseDuration),
+          })
+        }}
+      </p>
+
+      <button
+        type="button"
+        class="primary"
+        data-export-primary
+        :data-export="primaryAction"
+        :disabled="occupe || (primaryAction === 'mp4' && !mp4Ok)"
+        :title="primaryAction === 'mp4' && !mp4Ok ? t('export.mp4Unavailable') : undefined"
+        @click="exporterPrimary"
+      >
+        {{ t('export.primaryVideo', { name: poseLabel, format: primaryAction.toUpperCase() }) }}
+      </button>
+
+      <div class="secondary-actions">
         <button
+          v-if="primaryAction === 'mp4'"
           type="button"
-          data-export="png"
+          data-export="gif"
           :disabled="occupe"
-          @click="exporter('png')"
+          @click="exporterPose('gif')"
         >
-          {{ t('export.png') }}
+          {{ t('export.gif') }}
         </button>
         <button
+          v-else
           type="button"
-          data-export="svg"
-          :disabled="occupe"
-          @click="exporter('svg')"
+          data-export="mp4"
+          :disabled="occupe || !mp4Ok"
+          :title="mp4Ok ? undefined : t('export.mp4Unavailable')"
+          @click="exporterPose('mp4')"
         >
+          {{ t('export.mp4') }}
+        </button>
+      </div>
+    </div>
+
+    <div class="group quiet" data-export-group="still">
+      <h3>{{ t('export.stills') }}</h3>
+      <div class="actions">
+        <button type="button" data-export="png" :disabled="occupe" @click="exporterPose('png')">
+          {{ t('export.png') }}
+        </button>
+        <button type="button" data-export="svg" :disabled="occupe" @click="exporterPose('svg')">
           {{ t('export.svg') }}
         </button>
       </div>
     </div>
 
-    <div class="group" data-export-group="montage">
-      <h3>{{ t('export.video') }}</h3>
-      <div
-        class="sources"
-        role="radiogroup"
-        :aria-label="t('export.sourceLabel')"
-      >
+    <details class="more" data-export-more>
+      <summary>{{ t('export.moreOptions') }}</summary>
+      <div class="sources" role="radiogroup" :aria-label="t('export.sourceLabel')">
         <button
           type="button"
           role="radio"
@@ -119,45 +150,30 @@ function exporter(action: ActionId) {
           {{ t('export.sourceCycle', { name: cycleName }) }}
         </button>
       </div>
-      <p
-        class="meta"
-        data-export-meta
-        data-export-duration
-        :data-export-duration-secs="videoMeta.duration"
-      >
+      <p class="meta">
         {{
-          videoSource === 'pose'
-            ? t('export.metaPose', {
-                name: poseLabel,
-                duration: secondes(videoMeta.duration),
-              })
-            : t('export.metaCycle', {
-                name: cycleName,
-                duration: secondes(cycleDuration),
-                count: cycleBlockCount,
-              })
+          t('export.metaCycle', {
+            name: cycleName,
+            duration: secondes(cycleDuration),
+            count: cycleBlockCount,
+          })
         }}
       </p>
       <div class="actions">
-        <button
-          type="button"
-          data-export="gif"
-          :disabled="occupe"
-          @click="exporter('gif')"
-        >
-          {{ labelVideo('gif') }}
+        <button type="button" data-export="gif" :disabled="occupe" @click="exporterCycle('gif')">
+          {{ t('export.gifCycle') }}
         </button>
         <button
           type="button"
           data-export="mp4"
           :disabled="occupe || !mp4Ok"
           :title="mp4Ok ? undefined : t('export.mp4Unavailable')"
-          @click="exporter('mp4')"
+          @click="exporterCycle('mp4')"
         >
-          {{ labelVideo('mp4') }}
+          {{ t('export.mp4Cycle') }}
         </button>
       </div>
-    </div>
+    </details>
 
     <div v-if="statut" class="status-row">
       <p
@@ -188,29 +204,66 @@ function exporter(action: ActionId) {
   text-align: left;
 }
 
-h2,
-h3 {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 h3 {
-  margin-top: 0.85rem;
+  margin: 0.85rem 0 0;
   color: var(--muted);
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
+.primary-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.primary {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--ink);
+  border-radius: 0.9rem;
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary:hover,
+.primary:focus-visible {
+  filter: brightness(1.08);
+}
+
+.primary:disabled {
+  cursor: default;
+  opacity: 0.6;
+  filter: none;
+}
+
+.secondary-actions,
 .actions,
 .sources {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  margin-top: 0.5rem;
 }
 
-.sources button,
-.actions button {
+.secondary-actions button,
+.actions button,
+.sources button {
   flex: 1 1 7rem;
   padding: 0.55rem 0.75rem;
   border: 1px solid var(--line);
@@ -224,9 +277,11 @@ h3 {
 }
 
 .sources button.selected,
+.secondary-actions button:hover,
 .actions button:hover,
-.actions button:focus-visible,
 .sources button:hover,
+.secondary-actions button:focus-visible,
+.actions button:focus-visible,
 .sources button:focus-visible {
   border-color: var(--ink);
 }
@@ -242,10 +297,43 @@ button:disabled {
 }
 
 .meta {
-  margin: 0.45rem 0 0;
+  margin: 0;
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
+}
+
+.quiet h3 {
+  margin-top: 0.85rem;
+  font-size: 0.75rem;
+}
+
+.quiet .actions button {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.more {
+  margin-top: 0.85rem;
+}
+
+.more .meta,
+.more .actions,
+.more .sources {
+  margin-top: 0.5rem;
+}
+
+.more summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.more[open] summary {
+  margin-bottom: 0.35rem;
+  color: var(--ink);
 }
 
 .status-row {

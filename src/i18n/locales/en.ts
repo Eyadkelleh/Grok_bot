@@ -4,7 +4,7 @@ const en: typeof fr = {
   app: {
     name: 'Grok_bot',
     title: 'Grok_bot — SVG avatar studio',
-    tagline: 'Customise, animate, and export stills or video.',
+    tagline: 'Three steps: pick a look, pick a motion, download the video.',
     botAria: 'Grok_bot avatar',
   },
 
@@ -14,6 +14,18 @@ const en: typeof fr = {
     customise: 'Customise',
     settings: 'Settings',
     about: 'About',
+  },
+
+  flow: {
+    stepsLabel: 'Steps to create a video',
+    look: 'Look',
+    motion: 'Motion',
+    video: 'Video',
+    lookTitle: '1. Choose the look',
+    motionTitle: '2. Choose the motion',
+    videoTitle: '3. Download the video',
+    summary: 'Ready: {pose}',
+    advancedTimeline: 'Advanced: build a sequence',
   },
 
   panel: {
@@ -130,6 +142,8 @@ const en: typeof fr = {
     title: 'Export',
     stills: 'Still image',
     video: 'Video',
+    primaryVideo: 'Download {format} · {name}',
+    moreOptions: 'Advanced: timeline cycle',
     png: 'Download PNG',
     svg: 'Download SVG',
     gif: 'Download GIF',

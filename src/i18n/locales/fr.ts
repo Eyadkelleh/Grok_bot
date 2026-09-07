@@ -2,7 +2,7 @@ export default {
   app: {
     name: 'Grok_bot',
     title: "Grok_bot — studio d'avatar SVG",
-    tagline: 'Personnalisez, animez et exportez en image ou en vidéo.',
+    tagline: 'Trois étapes : le look, le mouvement, puis la vidéo.',
     botAria: 'Avatar Grok_bot',
   },
 
@@ -12,6 +12,18 @@ export default {
     customise: 'Personnaliser',
     settings: 'Réglages',
     about: 'À propos',
+  },
+
+  flow: {
+    stepsLabel: 'Étapes pour créer une vidéo',
+    look: 'Look',
+    motion: 'Mouvement',
+    video: 'Vidéo',
+    lookTitle: '1. Choisissez le look',
+    motionTitle: '2. Choisissez le mouvement',
+    videoTitle: '3. Téléchargez la vidéo',
+    summary: 'Prêt : {pose}',
+    advancedTimeline: 'Avancé : monter une séquence',
   },
 
   panel: {
@@ -128,6 +140,8 @@ export default {
     title: 'Exporter',
     stills: 'Image fixe',
     video: 'Vidéo',
+    primaryVideo: 'Télécharger {format} · {name}',
+    moreOptions: 'Avancé : cycle de la timeline',
     png: 'Télécharger le PNG',
     svg: 'Télécharger le SVG',
     gif: 'Télécharger le GIF',

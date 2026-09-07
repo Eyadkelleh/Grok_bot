@@ -28,6 +28,7 @@ import {
 const initial = lireHash()
 const animationState = ref<AnimationState>(initial.named ? initial.state : 'Idle')
 const playing = ref(false)
+const timelinePlaying = ref(false)
 const studio = ref<HTMLElement | null>(null)
 const timeline = ref<InstanceType<typeof Timeline> | null>(null)
 const etatExport = ref<EtatExport>('pret')
@@ -38,6 +39,7 @@ let exportAbort: AbortController | undefined
 
 const CONFIRMATION_MS = 1800
 const SECTIONS = ['studio', 'customise', 'settings', 'about'] as const
+const STEPS = ['look', 'motion', 'video'] as const
 const cycleActif = computed(() => timeline.value?.cycle ?? null)
 const nomCycle = computed(() => (cycleActif.value ? nomDeCycle(cycleActif.value) : ''))
 const dureeCycle = computed(() =>
@@ -45,6 +47,7 @@ const dureeCycle = computed(() =>
 )
 const blocsCycle = computed(() => cycleActif.value?.blocks.length ?? 0)
 const skinLimited = computed(() => !FACE_STATES.has(animationState.value))
+const poseLabel = computed(() => t(`animations.${animationState.value}` as Cle))
 
 watch(
   [animationState, playing],
@@ -62,6 +65,7 @@ function surHash() {
   const next = lireHash()
   if (!next.named) return
   playing.value = false
+  timelinePlaying.value = false
   animationState.value = next.state
 }
 
@@ -75,6 +79,16 @@ function aller(id: (typeof SECTIONS)[number]) {
 function svgCourant(): SVGSVGElement | null {
   const el = studio.value?.querySelector('svg[role="img"]')
   return el instanceof SVGSVGElement ? el : null
+}
+
+watch(timelinePlaying, (on) => {
+  if (on) playing.value = true
+})
+
+function choisirMotion(id: AnimationState) {
+  timelinePlaying.value = false
+  animationState.value = id
+  playing.value = true
 }
 
 async function surExport(payload: { action: ActionId; videoSource: VideoSourceKind }) {
@@ -156,25 +170,53 @@ onBeforeUnmount(() => {
     </header>
 
     <main class="page">
-      <div class="workspace">
-        <CustomisePanel
-          id="customise"
-          v-model:shape="shape"
-          v-model:expression="expression"
-          v-model:colour="colour"
-        />
-        <section id="studio" ref="studio" class="studio">
+      <section id="studio" ref="studio" class="create" data-create-flow>
+        <p class="steps" data-create-steps :aria-label="t('flow.stepsLabel')">
+          <span v-for="(step, i) in STEPS" :key="step" class="step">
+            <span class="step-n">{{ i + 1 }}</span>
+            {{ t(`flow.${step}` as Cle) }}
+          </span>
+        </p>
+        <h1>{{ t('app.name') }}</h1>
+        <p class="tagline">{{ t('app.tagline') }}</p>
+
+        <div id="customise" class="stage" data-stage="look">
+          <h2 class="stage-title">{{ t('flow.lookTitle') }}</h2>
+          <CustomisePanel
+            layout="compact"
+            v-model:shape="shape"
+            v-model:expression="expression"
+            v-model:colour="colour"
+          />
+        </div>
+
+        <div class="preview">
           <Avatar
             :state="animationState"
-            :size="220"
+            :size="260"
             :shape="shape"
             :expression="expression"
             :colour="colour"
             :label="t('app.botAria')"
           />
-          <h1>{{ t('app.name') }}</h1>
-          <p class="tagline">{{ t('app.tagline') }}</p>
+          <p class="summary" data-create-summary>
+            {{ t('flow.summary', { pose: poseLabel }) }}
+          </p>
           <p v-if="skinLimited" class="hint" data-skin-limited>{{ t('panel.skinLimited') }}</p>
+        </div>
+
+        <div id="animations" class="stage" data-stage="motion">
+          <h2 class="stage-title">{{ t('flow.motionTitle') }}</h2>
+          <AnimationsPalette
+            layout="strip"
+            :model-value="animationState"
+            v-model:colour="colour"
+            @update:model-value="choisirMotion"
+          />
+        </div>
+
+        <div class="stage" data-stage="video">
+          <h2 class="stage-title">{{ t('flow.videoTitle') }}</h2>
           <ExportBar
             :etat="etatExport"
             :pose="animationState"
@@ -185,17 +227,16 @@ onBeforeUnmount(() => {
             @exporter="surExport"
             @annuler="annulerExport"
           />
-        </section>
-        <AnimationsPalette
-          id="animations"
-          v-model="animationState"
-          v-model:colour="colour"
-          @update:modelValue="playing = false"
-        />
-      </div>
+        </div>
+      </section>
+
+      <details class="advanced" data-advanced-timeline>
+        <summary>{{ t('flow.advancedTimeline') }}</summary>
+        <Timeline ref="timeline" v-model:state="animationState" v-model:playing="timelinePlaying" />
+      </details>
+
       <Settings />
     </main>
-    <Timeline ref="timeline" v-model:state="animationState" v-model:playing="playing" />
   </div>
 </template>
 
@@ -244,42 +285,112 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2.5rem;
-  padding: 2rem 1.5rem 14rem;
+  gap: 2rem;
+  padding: 1.25rem 1.25rem 3rem;
 }
 
-.workspace {
+.create {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.75rem;
+  width: 100%;
+  max-width: 42rem;
+  text-align: center;
+}
+
+.steps {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
   justify-content: center;
-  gap: 2rem 2.5rem;
-  width: 100%;
-  max-width: 64rem;
+  gap: 0.55rem 1rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
 }
 
-.studio {
-  display: flex;
-  flex: 1 1 16rem;
-  flex-direction: column;
+.step {
+  display: inline-flex;
   align-items: center;
-  gap: 1.25rem;
-  text-align: center;
+  gap: 0.35rem;
+}
+
+.step-n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.7rem;
+  font-weight: 600;
 }
 
 h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
   letter-spacing: -0.03em;
 }
 
 .tagline {
-  margin: 0;
-  max-width: 28rem;
+  margin: -0.5rem 0 0;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.stage {
+  padding: 1rem 1.1rem 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--paper);
+  text-align: left;
+}
+
+.stage :deep([data-customise-panel]),
+.stage :deep([data-animations-palette]),
+.stage :deep([data-export-bar]) {
+  max-width: none;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.stage :deep([data-customise-panel] > h2) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.stage-title {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.summary {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.9375rem;
+  font-weight: 500;
 }
 
 .hint {
@@ -288,5 +399,36 @@ h1 {
   color: var(--muted);
   font-size: 0.8125rem;
   line-height: 1.4;
+}
+
+.advanced {
+  width: 100%;
+  max-width: 64rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--paper);
+  padding: 0.75rem 1rem 1rem;
+}
+
+.advanced summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.advanced[open] summary {
+  margin-bottom: 0.85rem;
+  color: var(--ink);
+}
+
+.advanced :deep(.bar) {
+  position: static;
+  inset: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  width: 100%;
 }
 </style>

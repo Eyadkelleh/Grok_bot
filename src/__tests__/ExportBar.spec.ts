@@ -23,42 +23,44 @@ describe('ExportBar', () => {
     langue.value = 'en'
   })
 
-  it('groups stills and video, defaulting video to the current pose', () => {
+  it('leads with a primary pose video download', () => {
     const wrapper = mount(ExportBar, { props: baseProps })
-    expect(wrapper.get('[data-export-bar]').text()).toContain(en.export.title)
-    expect(wrapper.find('[data-export-group="still"]').exists()).toBe(true)
-    expect(wrapper.find('[data-export-group="montage"]').exists()).toBe(true)
-    expect(wrapper.get('[data-export-pose]').attributes('aria-checked')).toBe('true')
-    expect(wrapper.get('[data-export="png"]').text()).toBe(en.export.png)
-    expect(wrapper.get('[data-export="gif"]').text()).toContain('Idle')
+    expect(wrapper.get('[data-export-primary]').text()).toContain('MP4')
+    expect(wrapper.get('[data-export-primary]').text()).toContain('Idle')
     expect(wrapper.get('[data-export-meta]').text()).toContain('2 s')
+    expect(wrapper.get('[data-export="gif"]').text()).toContain('GIF')
   })
 
-  it('emits the chosen still or video format with the video source', async () => {
+  it('keeps the primary CTA on this pose even after picking the cycle', async () => {
     const wrapper = mount(ExportBar, { props: baseProps })
-    await wrapper.get('[data-export="svg"]').trigger('click')
-    await wrapper.get('[data-export="png"]').trigger('click')
-    await wrapper.get('[data-export="gif"]').trigger('click')
+    expect(wrapper.get('[data-export-more] summary').text()).toBe(en.export.moreOptions)
+    expect(wrapper.get('[data-export-group="still"] [data-export="png"]').text()).toBe(en.export.png)
+    expect(wrapper.get('[data-export-pose]').attributes('aria-checked')).toBe('true')
     await wrapper.get('[data-export-cycle]').trigger('click')
-    await wrapper.get('[data-export="mp4"]').trigger('click')
-    expect(wrapper.emitted('exporter')).toEqual([
-      [{ action: 'svg', videoSource: 'pose' }],
-      [{ action: 'png', videoSource: 'pose' }],
-      [{ action: 'gif', videoSource: 'pose' }],
-      [{ action: 'mp4', videoSource: 'cycle' }],
-    ])
+    await wrapper.get('[data-export-primary]').trigger('click')
+    const emitted = wrapper.emitted('exporter')
+    expect(emitted?.[emitted.length - 1]).toEqual([{ action: 'mp4', videoSource: 'pose' }])
   })
 
-  it('shows progress and lets the user cancel a running export', async () => {
-    const wrapper = mount(ExportBar, {
-      props: { ...baseProps, etat: 'occupe', progress: 35 },
-    })
-    expect(wrapper.get('[data-export="png"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.get('[data-export-status]').text()).toContain('35%')
-    expect(wrapper.get('[data-export-progress]').attributes('data-export-progress')).toBe('35')
-    expect(wrapper.find('[data-export-busy]').exists()).toBe(true)
-    await wrapper.get('[data-export-cancel]').trigger('click')
-    expect(wrapper.emitted('annuler')).toHaveLength(1)
+  it('exports the timeline cycle from advanced controls', async () => {
+    const wrapper = mount(ExportBar, { props: baseProps })
+    await wrapper.get('[data-export-cycle]').trigger('click')
+    await wrapper.get('[data-export-more] [data-export="gif"]').trigger('click')
+    expect(wrapper.emitted('exporter')).toEqual([[{ action: 'gif', videoSource: 'cycle' }]])
+  })
+
+  it('emits gif from the secondary control', async () => {
+    const wrapper = mount(ExportBar, { props: baseProps })
+    await wrapper.get('[data-export="gif"]').trigger('click')
+    expect(wrapper.emitted('exporter')).toEqual([[{ action: 'gif', videoSource: 'pose' }]])
+  })
+
+  it('disables the buttons while an export is running and shows busy status', () => {
+    const wrapper = mount(ExportBar, { props: { ...baseProps, etat: 'occupe', progress: 40 } })
+    expect(wrapper.get('[data-export-primary]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-export-status]').text()).toContain('40')
+    expect(wrapper.get('[data-export-busy]').attributes('data-export-busy')).toBe('')
+    expect(wrapper.get('[data-export-cancel]').text()).toBe(en.export.cancel)
   })
 
   it('confirms a finished export', () => {
@@ -69,8 +71,8 @@ describe('ExportBar', () => {
   it('translates the export labels', async () => {
     langue.value = 'fr'
     const wrapper = mount(ExportBar, { props: { ...baseProps, cycleName: fr.cycles.defaultName } })
-    expect(wrapper.get('[data-export="png"]').text()).toBe(fr.export.png)
-    expect(wrapper.get('[data-export-group="montage"]').text()).toContain(fr.export.video)
+    expect(wrapper.get('[data-export-primary]').text()).toContain('MP4')
+    expect(wrapper.get('[data-export-more] summary').text()).toBe(fr.export.moreOptions)
     langue.value = 'en'
   })
 })

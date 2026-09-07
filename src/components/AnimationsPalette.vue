@@ -14,6 +14,11 @@ import {
 } from '../engine'
 import { t, type Cle } from '../i18n'
 
+const props = withDefaults(
+  defineProps<{ layout?: 'grid' | 'strip' }>(),
+  { layout: 'grid' },
+)
+
 const selected = defineModel<AnimationState>({ default: 'Idle' })
 const colour = defineModel<ColorId>('colour', { default: DEFAULT_COLOR })
 
@@ -43,8 +48,14 @@ function auClavier(event: KeyboardEvent, index: number) {
 </script>
 
 <template>
-  <aside class="rail surface" data-animations-palette aria-labelledby="animations-title">
-    <h2 id="animations-title">{{ t('animations.title') }}</h2>
+  <aside
+    class="rail surface"
+    :class="{ strip: props.layout === 'strip' }"
+    data-animations-palette
+    :data-layout="props.layout"
+    aria-labelledby="animations-title"
+  >
+    <h2 id="animations-title" :class="{ 'sr-only': props.layout === 'strip' }">{{ t('animations.title') }}</h2>
     <div class="swatches" role="radiogroup" :aria-label="t('animations.label')">
       <button
         v-for="(pose, i) in poses"
@@ -83,16 +94,35 @@ function auClavier(event: KeyboardEvent, index: number) {
   text-align: left;
 }
 
-h2 {
-  margin: 0 0 0.65rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+.rail.strip {
+  max-width: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .swatches {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.4rem;
+}
+
+.strip .swatches {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scroll-snap-type: x proximity;
 }
 
 button {
@@ -108,6 +138,12 @@ button {
   font: inherit;
   font-size: 0.75rem;
   cursor: pointer;
+}
+
+.strip button {
+  flex: 0 0 auto;
+  min-width: 4.5rem;
+  scroll-snap-align: start;
 }
 
 button.selected {
