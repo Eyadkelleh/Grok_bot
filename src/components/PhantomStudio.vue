@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import {
+  isShapeId,
   sampleAvatar,
   viewBoxAttr,
   type AnimationState,
@@ -16,7 +17,7 @@ import CustomisePanel from './CustomisePanel.vue'
 import ExportBar from './ExportBar.vue'
 import type { ActionId, EtatExport } from '../ui/export'
 
-export type FieldId = 'shape' | 'expression' | 'colour' | 'state' | null
+type FieldId = 'shape' | 'expression' | 'colour' | 'state'
 
 const shape = defineModel<ShapeId>('shape', { required: true })
 const expression = defineModel<ExpressionId>('expression', { required: true })
@@ -35,11 +36,14 @@ const emit = defineEmits<{
 
 const stage = ref<HTMLElement | null>(null)
 const { size } = useStageGeometry(stage)
-const field = ref<FieldId>(null)
+const field = ref<FieldId | null>(null)
+const previewShape = ref<ShapeId | null>(null)
+
+const shownShape = computed(() => previewShape.value ?? shape.value)
 
 const hero = computed(() =>
   sampleAvatar({
-    shape: shape.value,
+    shape: shownShape.value,
     expression: expression.value,
     colour: colour.value,
     state: animationState.value,
@@ -48,7 +52,7 @@ const hero = computed(() =>
 
 const cavity = computed(() =>
   sampleAvatar({
-    shape: shape.value,
+    shape: shownShape.value,
     expression: expression.value,
     colour: colour.value,
     state: 'Idle',
@@ -56,11 +60,26 @@ const cavity = computed(() =>
 )
 
 const showCavity = computed(() => hero.value.geometryKind === 'symbol')
+const appearanceOpen = computed(
+  () => field.value === 'shape' || field.value === 'expression' || field.value === 'colour',
+)
 
 watch(animationState, () => emit('stop-playing'))
 
 function setField(next: FieldId) {
+  previewShape.value = null
   field.value = field.value === next ? null : next
+}
+
+function onShapePointer(event: PointerEvent) {
+  if (field.value !== 'shape') return
+  const node = (event.target as HTMLElement | null)?.closest('[data-shape]')
+  const id = node?.getAttribute('data-shape')
+  previewShape.value = id && isShapeId(id) ? id : null
+}
+
+function clearShapePreview() {
+  previewShape.value = null
 }
 
 function svgCourant(): SVGSVGElement | null {
@@ -82,13 +101,16 @@ defineExpose({ svgCourant })
           :height="size"
           :viewBox="viewBoxAttr()"
           aria-hidden="true"
+          focusable="false"
+          :data-cavity-shape="shownShape"
+          data-shape-applied="false"
         >
           <path :d="cavity.path" fill="none" stroke="currentColor" stroke-width="1.2" />
         </svg>
         <Avatar
           :state="animationState"
           :size="size"
-          :shape="shape"
+          :shape="shownShape"
           :expression="expression"
           :colour="colour"
           :label="label"
@@ -137,9 +159,10 @@ defineExpose({ svgCourant })
 
       <div
         class="field customise"
-        :data-field="'shape'"
-        :class="{ open: field === 'shape' || field === 'expression' || field === 'colour' }"
-        :data-open-band="field === 'shape' || field === 'expression' || field === 'colour' ? field : null"
+        :class="{ open: appearanceOpen, skins: field === 'shape' }"
+        :data-open-band="appearanceOpen ? field : null"
+        @pointerover="onShapePointer"
+        @pointerleave="clearShapePreview"
       >
         <CustomisePanel
           id="customise"
@@ -150,15 +173,12 @@ defineExpose({ svgCourant })
       </div>
 
       <div class="field motion" :class="{ open: field === 'state' }">
-        <AnimationsPalette
-          id="animations"
-          v-model="animationState"
-        />
+        <AnimationsPalette id="animations" v-model="animationState" />
       </div>
 
       <h1>{{ t('app.name') }}</h1>
       <p class="tagline">{{ t('app.tagline') }}</p>
-      <ExportBar :etat="etatExport" @exporter="emit('exporter', $event)" />
+      <ExportBar :etat="props.etatExport" @exporter="emit('exporter', $event)" />
     </section>
   </div>
 </template>
@@ -285,27 +305,19 @@ defineExpose({ svgCourant })
 .field.customise[data-open-band='shape'] :deep(#customise-expression),
 .field.customise[data-open-band='shape'] :deep(#customise-expression + .tiles),
 .field.customise[data-open-band='shape'] :deep(#customise-colour),
-.field.customise[data-open-band='shape'] :deep(#customise-colour + .swatches) {
-  display: none;
-}
-
+.field.customise[data-open-band='shape'] :deep(#customise-colour + .swatches),
 .field.customise[data-open-band='expression'] :deep(#customise-shape),
 .field.customise[data-open-band='expression'] :deep(#customise-shape + .tiles),
 .field.customise[data-open-band='expression'] :deep(#customise-colour),
-.field.customise[data-open-band='expression'] :deep(#customise-colour + .swatches) {
-  display: none;
-}
-
+.field.customise[data-open-band='expression'] :deep(#customise-colour + .swatches),
 .field.customise[data-open-band='colour'] :deep(#customise-shape),
 .field.customise[data-open-band='colour'] :deep(#customise-shape + .tiles),
 .field.customise[data-open-band='colour'] :deep(#customise-expression),
-.field.customise[data-open-band='colour'] :deep(#customise-expression + .tiles) {
-  display: none;
-}
-
+.field.customise[data-open-band='colour'] :deep(#customise-expression + .tiles),
 .field.customise[data-open-band='shape'] :deep(#customise-title),
 .field.customise[data-open-band='expression'] :deep(#customise-title),
-.field.customise[data-open-band='colour'] :deep(#customise-title) {
+.field.customise[data-open-band='colour'] :deep(#customise-title),
+.field.customise.skins :deep(#customise-shape) {
   display: none;
 }
 
@@ -313,8 +325,89 @@ defineExpose({ svgCourant })
   display: none;
 }
 
+.field.customise.skins {
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+  background: none;
+  pointer-events: none;
+}
+
+.field.customise.skins.open {
+  pointer-events: none;
+}
+
+.field.customise.skins :deep([data-customise-panel]) {
+  max-width: none;
+  border: none;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.field.customise.skins :deep(.tiles) {
+  display: contents;
+}
+
+.field.customise.skins :deep([data-shape]) {
+  position: absolute;
+  z-index: 5;
+  width: 3.25rem;
+  height: 3.25rem;
+  opacity: 0.4;
+  pointer-events: auto;
+  border-color: transparent;
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+
+.field.customise.skins :deep([data-shape].selected),
+.field.customise.skins :deep([data-shape]:hover),
+.field.customise.skins :deep([data-shape]:focus-visible) {
+  opacity: 0.85;
+  border-color: var(--line);
+}
+
+.field.customise.skins :deep([data-shape='circle']) {
+  left: 6%;
+  top: 24%;
+}
+.field.customise.skins :deep([data-shape='pebble']) {
+  left: 4%;
+  top: 46%;
+}
+.field.customise.skins :deep([data-shape='squircle']) {
+  left: 10%;
+  top: 68%;
+}
+.field.customise.skins :deep([data-shape='capsule']) {
+  left: 28%;
+  top: 10%;
+}
+.field.customise.skins :deep([data-shape='triangle']) {
+  right: 28%;
+  top: 10%;
+  left: auto;
+}
+.field.customise.skins :deep([data-shape='hexagon']) {
+  right: 6%;
+  top: 26%;
+  left: auto;
+}
+.field.customise.skins :deep([data-shape='cloud']) {
+  right: 4%;
+  top: 48%;
+  left: auto;
+}
+.field.customise.skins :deep([data-shape='droplet']) {
+  right: 12%;
+  top: 70%;
+  left: auto;
+}
+
 @media (max-width: 40rem) {
-  .field.customise,
+  .field.customise:not(.skins),
   .field.motion {
     left: 50%;
     right: auto;

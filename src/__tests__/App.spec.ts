@@ -85,6 +85,31 @@ describe('App', () => {
     vi.unstubAllGlobals()
   })
 
+  it('previews a shape on pointer hover without writing storage', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-mode="shape"]').trigger('click')
+    const tile = wrapper.get('[data-customise-panel] [data-shape="hexagon"]')
+    await tile.trigger('pointerover')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-shape')).toBe('hexagon')
+    expect(window.localStorage.getItem(cle('forme'))).not.toBe('hexagon')
+
+    await tile.trigger('click')
+    expect(window.localStorage.getItem(cle('forme'))).toBe('hexagon')
+  })
+
+  it('draws a cavity outline on symbol poses without a second image role', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    await wrapper.get('[data-animations-palette] [data-state="Play"]').trigger('click')
+    const figure = wrapper.get('#studio svg[role="img"]')
+    expect(figure.attributes('data-shape-applied')).toBe('false')
+    expect(figure.attributes('data-geometry-kind')).toBe('symbol')
+    expect(wrapper.get('[data-cavity-shape]').attributes('data-cavity-shape')).toBe('circle')
+    expect(wrapper.get('[data-cavity-shape]').attributes('data-shape-applied')).toBe('false')
+    expect(wrapper.get('[data-cavity-shape]').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.findAll('#studio svg[role="img"]')).toHaveLength(1)
+  })
+
   it('wires the customise panel to the avatar and persists the choice', async () => {
     const wrapper = mount(App)
     await wrapper.get('[data-mode="shape"]').trigger('click')
