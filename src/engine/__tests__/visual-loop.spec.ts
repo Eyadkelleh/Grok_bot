@@ -2,10 +2,18 @@ import { describe, expect, it } from 'vitest'
 import {
   ANIMATION_STATES,
   BODY_RADIUS,
+  DEFAULT_MORPH_MS,
   VIEW_HALF,
   sampleAvatar,
   sampleMorph,
 } from '..'
+import { VISUAL_CASES, kebab, progressOf } from '../../testing/visual/cases'
+import {
+  assertGoldenInventory,
+  expectPictureGolden,
+  wantsPicture,
+} from '../../testing/visual/golden'
+import { samplePicture, tokenizePath } from '../../testing/visual/picture'
 
 const NON_FACE_STATES = [
   'Alert',
@@ -69,5 +77,50 @@ describe('deterministic avatar visual loop', () => {
     expect(sampleAvatar({ state: 'Idle', shape: 'hexagon' }).path).not.toBe(
       sampleAvatar({ state: 'Alert', shape: 'hexagon' }).path,
     )
+  })
+})
+
+describe('visual case registry', () => {
+  it('covers every animation state plus Idle→Alert and Idle→Thinking ladders', () => {
+    const ids = new Set(VISUAL_CASES.map((visualCase) => visualCase.id))
+    for (const state of ANIMATION_STATES) {
+      expect(ids.has(kebab(state)), state).toBe(true)
+    }
+    for (const stop of ['p0', 'p25', 'p50', 'p75', 'p1']) {
+      expect(ids.has(`idle-to-alert-${stop}`), `idle-to-alert-${stop}`).toBe(true)
+      expect(ids.has(`idle-to-thinking-${stop}`), `idle-to-thinking-${stop}`).toBe(true)
+    }
+    expect(ids.has('idle-happy-hexagon')).toBe(true)
+    expect(ids.has('wink')).toBe(true)
+    expect(ids.has('wide-eyes')).toBe(true)
+  })
+
+  it('seeks Idle→Alert at 0.25 through rendAt arithmetic', () => {
+    const visualCase = VISUAL_CASES.find((row) => row.id === 'idle-to-alert-p25')
+    expect(visualCase?.seek).toBeDefined()
+    expect(progressOf(visualCase!.seek!, DEFAULT_MORPH_MS)).toBeCloseTo(0.25, 10)
+  })
+
+  it('tokenizes silhouette paths and rejects unknown commands', () => {
+    expect(tokenizePath('M1 2C3 4 5 6 7 8Z')).toEqual(['M', 1, 2, 'C', 3, 4, 5, 6, 7, 8, 'Z'])
+    expect(() => tokenizePath('M0 0H10Z')).toThrow(/unknown path token/)
+  })
+})
+
+describe.each(VISUAL_CASES.filter(wantsPicture))('picture $id — $what', (visualCase) => {
+  it('matches the reviewed PictureFrame', async () => {
+    const picture = samplePicture(visualCase)
+    expect(picture.schema).toBe(1)
+    expect(picture.eyes).toHaveLength(visualCase.expect.eyes)
+    expect(picture.dots).toHaveLength(visualCase.expect.dots)
+    if (visualCase.expect.face === 'morphing') expect(picture.eyes).toHaveLength(0)
+    if (visualCase.expect.state === 'Alert') expect(picture.eyes).toHaveLength(0)
+    await expectPictureGolden(picture, visualCase)
+  })
+})
+
+describe('visual goldens', () => {
+  it('has no orphan files', async () => {
+    await assertGoldenInventory(VISUAL_CASES)
   })
 })
