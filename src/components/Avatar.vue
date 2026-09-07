@@ -15,7 +15,7 @@ import {
   gazeAttr,
   morphProgress,
   sampleAvatar,
-  sampleMorph,
+  sampleLiveMorph,
   type AnimationState,
   type Block,
   type GazeInput,
@@ -46,9 +46,11 @@ const props = withDefaults(
 )
 
 const uid = `avatar-mask-${Math.random().toString(36).slice(2, 10)}`
-const initial = (props.state as AnimationState) ?? 'Idle'
-const from = ref<AnimationState>(initial)
-const to = ref<AnimationState>(initial)
+const initialState = (props.state as AnimationState) ?? 'Idle'
+const fromState = ref<AnimationState>(initialState)
+const toState = ref<AnimationState>(initialState)
+const fromShape = ref(props.shape)
+const toShape = ref(props.shape)
 const startedAt = ref(0)
 const now = ref(0)
 let raf = 0
@@ -60,10 +62,12 @@ function tick(ts: number) {
   }
 }
 
-function morphTo(next: AnimationState) {
-  if (next === to.value) return
-  from.value = to.value
-  to.value = next
+function morphTo(nextState: AnimationState, nextShape: string) {
+  if (nextState === toState.value && nextShape === toShape.value) return
+  fromState.value = toState.value
+  fromShape.value = toShape.value
+  toState.value = nextState
+  toShape.value = nextShape
   const t = performance.now()
   startedAt.value = t
   now.value = t
@@ -74,8 +78,13 @@ function morphTo(next: AnimationState) {
 watch(
   () => props.state,
   (next) => {
-    if (typeof next === 'string') morphTo(next as AnimationState)
+    if (typeof next === 'string') morphTo(next as AnimationState, toShape.value)
   },
+)
+
+watch(
+  () => props.shape,
+  (next) => morphTo(toState.value, next),
 )
 
 /**
@@ -90,8 +99,10 @@ function rendAt(t: number, blocks: Block[]) {
   const current = blocks[hit.index]?.state ?? 'Idle'
   const prev = hit.index > 0 ? (blocks[hit.index - 1]?.state ?? current) : current
   const morphDone = hit.index === 0 || hit.elapsed * 1000 + 1e-6 >= props.durationMs
-  from.value = morphDone ? current : prev
-  to.value = current
+  fromState.value = morphDone ? current : prev
+  toState.value = current
+  fromShape.value = props.shape
+  toShape.value = props.shape
   startedAt.value = 0
   now.value = morphDone ? props.durationMs : hit.elapsed * 1000
 }
@@ -109,34 +120,38 @@ onUnmounted(() => {
 defineExpose({ rendAt })
 
 const progress = computed(() => {
-  if (from.value === to.value) return 1
+  if (fromState.value === toState.value && fromShape.value === toShape.value) return 1
   return morphProgress(now.value - startedAt.value, props.durationMs)
 })
 
 const rest = computed(() =>
   sampleAvatar({
-    shape: props.shape,
+    shape: toShape.value,
     expression: props.expression,
     gaze: props.gaze,
     colour: props.colour,
-    state: to.value,
+    state: toState.value,
     paper: props.paper,
   }),
 )
 
 const frame = computed(() => {
   if (progress.value >= 1) return rest.value
-  const morph = sampleMorph(from.value, to.value, progress.value)
-  return {
-    ...rest.value,
-    path: morph.path,
-    dots: morph.dots,
-    eyes: [] as typeof rest.value.eyes,
-  }
+  return sampleLiveMorph({
+    from: fromState.value,
+    to: toState.value,
+    fromShape: fromShape.value,
+    toShape: toShape.value,
+    expression: props.expression,
+    gaze: props.gaze,
+    colour: props.colour,
+    paper: props.paper,
+    t: progress.value,
+  })
 })
 
 const colourAttr = computed(() => colourIdOf(props.colour, frame.value.colour))
-const shownState = computed(() => (progress.value >= 1 ? to.value : from.value))
+const shownState = computed(() => (progress.value >= 1 ? toState.value : fromState.value))
 </script>
 
 <template>
@@ -153,7 +168,7 @@ const shownState = computed(() => (progress.value >= 1 ? to.value : from.value))
     :data-colour="colourAttr"
     :data-gaze="gazeAttr(frame.gaze)"
     :data-state="shownState"
-    :data-target="to"
+    :data-target="toState"
   >
     <defs>
       <mask

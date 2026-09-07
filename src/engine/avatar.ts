@@ -1,14 +1,18 @@
 import { blinkScale, eyePoses, resolveGaze, type GazeInput, type HeadGaze } from './face'
 import { resolveExpression, type ExpressionId } from './expressions'
+import { clamp, easeOutQuint } from './math'
 import {
   BODY_RADIUS,
+  blend,
   radiusAtAngle,
   silhouetteFromRadii,
   silhouettePath,
+  type Silhouette,
   viewBoxAttr,
 } from './morph'
 import { resolveColour, resolveShape, type ColorId, type ShapeId } from './skins'
 import {
+  blendDots,
   isAnimationState,
   silhouetteFor,
   STATE_REGISTRY,
@@ -16,7 +20,6 @@ import {
   type MorphDot,
 } from './states'
 
-/** Customiser shape replaces the body on rest-like faces only. */
 const SHAPE_STATES = new Set<AnimationState>(['Idle', 'Wink', 'WideEyes', 'Notification'])
 const FACE_STATES = new Set<AnimationState>([
   'Idle',
@@ -60,6 +63,14 @@ export interface AvatarFrame {
   gaze: HeadGaze
   state: AnimationState
   viewBox: string
+}
+
+export interface LiveMorphSpec extends Omit<AvatarSpec, 'state'> {
+  from: AnimationState
+  to: AnimationState
+  fromShape?: string
+  toShape?: string
+  t: number
 }
 
 export const DEFAULT_SIZE = 220
@@ -150,14 +161,22 @@ function eyesFor(
   return { eyes, gaze: resolved, expression: expression.id }
 }
 
+export function usesCustomiserShape(state: AnimationState): boolean {
+  return SHAPE_STATES.has(state)
+}
+
+export function activeSilhouette(state: AnimationState, shapeId?: string): Silhouette {
+  return usesCustomiserShape(state)
+    ? silhouetteFromRadii(resolveShape(shapeId).radii)
+    : silhouetteFor(state)
+}
+
 export function sampleAvatar(spec: AvatarSpec = {}): AvatarFrame {
   const state = resolveState(spec.state)
   const shape = resolveShape(spec.shape)
   const fill = resolveColour(spec.colour)
   const paper = spec.paper ?? DEFAULT_PAPER
-  const silhouette = SHAPE_STATES.has(state)
-    ? silhouetteFromRadii(shape.radii)
-    : silhouetteFor(state)
+  const silhouette = activeSilhouette(state, shape.id)
   const { eyes, gaze, expression } = eyesFor(state, spec.expression, spec.gaze, silhouette.radii)
   const dots = FACE_STATES.has(state) ? [] : STATE_REGISTRY[state].dots
 
@@ -172,6 +191,39 @@ export function sampleAvatar(spec: AvatarSpec = {}): AvatarFrame {
     colour: fill,
     gaze,
     state,
+    viewBox: viewBoxAttr(),
+  }
+}
+
+export function sampleLiveMorph(spec: LiveMorphSpec): AvatarFrame {
+  const shape = resolveShape(spec.toShape ?? spec.shape)
+  const fill = resolveColour(spec.colour)
+  const k = easeOutQuint(clamp(spec.t))
+  const silhouette = blend(
+    activeSilhouette(spec.from, spec.fromShape ?? spec.shape),
+    activeSilhouette(spec.to, spec.toShape ?? spec.shape),
+    k,
+  )
+  const fromFace = FACE_STATES.has(spec.from)
+  const toFace = FACE_STATES.has(spec.to)
+  const eyeState = toFace ? spec.to : spec.from
+  const eyeFrame = eyesFor(eyeState, spec.expression, spec.gaze, silhouette.radii)
+  const eyeOpacity = fromFace && toFace ? 1 : toFace ? k : fromFace ? 1 - k : 0
+  const eyes = eyeFrame.eyes
+    .map((eye) => ({ ...eye, opacity: eye.opacity * eyeOpacity }))
+    .filter((eye) => eye.opacity > 0.01)
+
+  return {
+    path: silhouettePath(silhouette),
+    fill,
+    paper: spec.paper ?? DEFAULT_PAPER,
+    eyes,
+    dots: blendDots(STATE_REGISTRY[spec.from].dots, STATE_REGISTRY[spec.to].dots, k),
+    shape: shape.id,
+    expression: eyeFrame.expression,
+    colour: fill,
+    gaze: eyeFrame.gaze,
+    state: spec.to,
     viewBox: viewBoxAttr(),
   }
 }

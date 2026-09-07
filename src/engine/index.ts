@@ -94,12 +94,16 @@ export {
 export {
   DEFAULT_SIZE,
   DEFAULT_PAPER,
+  usesCustomiserShape,
+  activeSilhouette,
   sampleAvatar,
+  sampleLiveMorph,
   gazeAttr,
   colourIdOf,
   type AvatarSpec,
   type AvatarEye,
   type AvatarFrame,
+  type LiveMorphSpec,
 } from './avatar'
 export {
   MIN_BLOCK,

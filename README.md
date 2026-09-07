@@ -30,4 +30,6 @@ If the picture change is intentional, update goldens with `pnpm test:visual:rege
 
 `pnpm test:ui-avatar` runs the visual specs and the full shape × animation integrity matrix. The matrix checks every shape and state, face expressions, and morph midpoints for valid paths, frame bounds, glyph eye rules, and eye containment. This automated loop replaces manual clicking for Avatar integrity.
 
+Shape changes and face-state transitions keep the customiser silhouette throughout the live morph. `pnpm test` covers both paths.
+
 For an optional human pass, start `pnpm dev --port 5174` and print studio URLs with `node scripts/ui-avatar-loop.mjs --urls`. Dump standalone SVG from the same mounted cases with `node scripts/ui-avatar-loop.mjs --dump /tmp/grok-bot-visual`. That dump uses Vitest, jsdom, and `svgAutonome`, not a headless browser.

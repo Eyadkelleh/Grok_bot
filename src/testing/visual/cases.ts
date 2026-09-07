@@ -5,7 +5,7 @@ import {
   makeBlock,
   morphProgress,
   sampleAvatar,
-  sampleMorph,
+  sampleLiveMorph,
   type AnimationState,
   type Block,
 } from '../../engine'
@@ -92,22 +92,22 @@ function morphGolden(to: AnimationState, progress: number): GoldenKind {
 
 function morphCase(from: AnimationState, to: AnimationState, progress: number): VisualCase {
   const settled = progress >= 1
-  const morph = sampleMorph(from, to, progress)
+  const live = sampleLiveMorph({ from, to, t: progress })
   const expect: VisualExpectation = settled
     ? { ...settledExpect(to), target: to }
     : {
         face: 'morphing',
         state: from,
         target: to,
-        eyes: 0,
-        dots: morph.dots.length,
+        eyes: live.eyes.length,
+        dots: live.dots.length,
         silhouette: { kind: 'morph', from, to, progress },
       }
   return {
     id: `${kebab(from)}-to-${kebab(to)}-${stopId(progress)}`,
     what: settled
       ? `Idle→${to} lands on ${to}`
-      : `Idle→${to} at ${progress} drops eyes and interpolates the body`,
+      : `Idle→${to} at ${progress} fades eyes and interpolates the body`,
     props: { durationMs: DEFAULT_MORPH_MS },
     seek: morphSeek(from, to, progress),
     expect,
