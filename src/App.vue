@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { brand } from './brand'
-import AvatarStub from './components/AvatarStub.vue'
+import AvatarMorph from './components/AvatarMorph.vue'
 </script>
 
 <template>
   <main class="page">
-    <AvatarStub :label="brand.name" />
+    <AvatarMorph />
     <h1>{{ brand.name }}</h1>
     <p>{{ brand.tagline }}</p>
   </main>

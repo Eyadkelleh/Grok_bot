@@ -4,7 +4,7 @@ Grok_bot is an SVG avatar studio. You customise a circle-based avatar, animate i
 
 The product aims for feature parity with [bloub](https://github.com/jeremy-prt/bloub) (MIT), a Vue app by jeremy-prt. See the live demo at [bloub.vercel.app](https://bloub.vercel.app). This repo is an independent recreation. It is not affiliated with, endorsed by, or connected to xAI.
 
-The app is Vite + Vue 3 + TypeScript. The home page shows a circle avatar stub. Later work adds morphing states, the editor, and export.
+The app is Vite + Vue 3 + TypeScript. The home page morphs the avatar between Idle and Thinking. Later work adds the editor, the other states, and export.
 
 ## Run it
 
