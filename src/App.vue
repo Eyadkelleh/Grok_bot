@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { t } from './i18n'
-import AvatarStub from './components/AvatarStub.vue'
+import AvatarMorph from './components/AvatarMorph.vue'
 import Settings from './components/Settings.vue'
 </script>
 
@@ -17,7 +17,7 @@ import Settings from './components/Settings.vue'
 
     <main class="page">
       <section id="studio" class="studio">
-        <AvatarStub :label="t('app.botAria')" />
+        <AvatarMorph :label="t('app.botAria')" />
         <h1>{{ t('app.name') }}</h1>
         <p class="tagline">{{ t('app.tagline') }}</p>
       </section>
