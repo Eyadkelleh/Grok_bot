@@ -270,6 +270,14 @@ describe('App', () => {
     wrapper.unmount()
   })
 
+  it('ignores unknown #etat= values and falls back to Idle', () => {
+    history.replaceState(null, '', '#etat=swirl')
+    const wrapper = mount(App)
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-state')).toBe('Idle')
+    expect(location.hash).toBe('#etat=idle&stop')
+    wrapper.unmount()
+  })
+
   it('applies a later #etat= change without clobbering it from the nav', async () => {
     const wrapper = mount(App)
 

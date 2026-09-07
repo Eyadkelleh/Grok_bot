@@ -13,11 +13,11 @@ pnpm install
 pnpm dev
 ```
 
-Open the URL Vite prints, usually http://localhost:5173.
+Open the URL Vite prints, usually http://localhost:5173. Share a pose with `#etat=idle`, `#etat=thinking`, `#etat=orbit` — the same slugs as bloub. Add `&stop` to open it paused.
 
 ```sh
 pnpm test
 pnpm build
 ```
 
-`pnpm test` runs Vitest once. `pnpm build` type-checks with `vue-tsc` and writes `dist/`.
+`pnpm test` runs Vitest once. `pnpm build` type-checks with `vue-tsc` and writes `dist/`. `vercel.json` rewrites every path to `index.html`, so a Vercel deploy keeps those hashes working.

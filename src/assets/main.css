@@ -28,17 +28,23 @@ body {
   min-height: 100vh;
 }
 
-#customise,
-#studio,
-#settings,
-#about {
-  scroll-margin-top: 4.5rem;
-}
-
 .surface {
   width: 100%;
   padding: 1rem 1.1rem 1.15rem;
   border: 1px solid var(--line);
   border-radius: 1rem;
   background: var(--paper);
+}
+
+#customise,
+#studio,
+#settings,
+#about {
+  scroll-margin-top: 1.25rem;
+  scroll-margin-bottom: 12rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }

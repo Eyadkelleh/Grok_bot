@@ -272,6 +272,7 @@ defineExpose({ seek, sample, block, elapsed, cycles, activeId, cycle })
   padding: 0.85rem 1.25rem 1.15rem;
   border-top: 1px solid var(--line);
   background: var(--paper);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 0.04);
 }
 
 .transport {
@@ -328,7 +329,7 @@ defineExpose({ seek, sample, block, elapsed, cycles, activeId, cycle })
 .dialog button {
   padding: 0.35rem 0.65rem;
   border: 1px solid var(--line);
-  border-radius: 0.65rem;
+  border-radius: 0.75rem;
   background: transparent;
   color: inherit;
   font: inherit;
