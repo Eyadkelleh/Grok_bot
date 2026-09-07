@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { exporte, svgAutonome, telecharge } from '../capture'
+import { makeBlock } from '../../engine'
+import { exporte, ouvreCycle, svgAutonome, telecharge } from '../capture'
 import { viewBoxExport } from '../export'
 
 function svgDeTest() {
@@ -77,5 +78,38 @@ describe('exporte', () => {
     await exporte(svgDeTest(), 'svg', 'Idle')
     expect(names).toEqual(['grok-bot-idle.svg'])
     createSpy.mockRestore()
+  })
+
+  it('refuses GIF and MP4 on the still path', async () => {
+    await expect(exporte(svgDeTest(), 'gif', 'Idle')).rejects.toThrow(/unknown export/)
+    await expect(exporte(svgDeTest(), 'mp4', 'Idle')).rejects.toThrow(/unknown export/)
+  })
+})
+
+describe('ouvreCycle', () => {
+  const reglages = { shape: 'circle', colour: 'ink', expression: 'neutral' }
+
+  it('opens on the first block, settled, then morphs at the joint', async () => {
+    const blocs = [makeBlock('Idle', 2), makeBlock('Thinking', 2)]
+    const lecteur = await ouvreCycle(reglages, blocs, 100)
+    const t0 = await lecteur.rendre(0)
+    expect(t0.getAttribute('data-state')).toBe('Idle')
+    expect(t0.getAttribute('data-target')).toBe('Idle')
+    expect(t0.querySelectorAll('[data-eye]')).toHaveLength(2)
+
+    const joint = await lecteur.rendre(2)
+    expect(joint.getAttribute('data-target')).toBe('Thinking')
+    expect(joint.getAttribute('data-state')).toBe('Idle')
+
+    const landed = await lecteur.rendre(2.4)
+    expect(landed.getAttribute('data-state')).toBe('Thinking')
+    expect(landed.getAttribute('data-target')).toBe('Thinking')
+    expect(landed.querySelectorAll('[data-dot]')).toHaveLength(2)
+    expect(landed.querySelectorAll('[data-eye]')).toHaveLength(0)
+
+    const rewind = await lecteur.rendre(0)
+    expect(rewind.getAttribute('data-state')).toBe('Idle')
+    expect(rewind.getAttribute('data-target')).toBe('Idle')
+    lecteur.ferme()
   })
 })

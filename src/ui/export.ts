@@ -1,6 +1,8 @@
 /**
- * Framing and naming for still exports. Pure: no DOM, so it is testable in
- * Vitest like the rest of the studio logic. Rasterisation lives in capture.ts.
+ * Framing and naming for still and montage exports. Pure: no DOM, so it is
+ * testable in Vitest like the rest of the studio logic. Rasterisation lives
+ * in capture.ts; the MP4 encoder lives in video.ts and must stay a dynamic
+ * import — a static one from this file would pull mediabunny into the entry chunk.
  */
 
 import { viewBoxAttr } from '../engine'
@@ -14,24 +16,52 @@ export const PNG_TAILLE = 1024
  */
 export const SVG_TAILLE = 100
 
-export type ActionId = 'png' | 'svg'
-export type ModeExport = 'telecharge'
+export type ActionId = 'png' | 'svg' | 'gif' | 'mp4'
+export type ModeExport = 'telecharge' | 'montage'
 export type EtatExport = 'pret' | 'occupe' | 'exporte' | 'erreur'
+export type FormatCycle = 'mp4' | 'gif'
+export type FondGif = 'blanc' | 'transparent'
 
 export interface ActionExport {
   id: ActionId
   mode: ModeExport
   taille: number
-  extension: 'png' | 'svg'
+  extension: 'png' | 'svg' | 'gif' | 'mp4'
 }
 
+/** Cycle formats. No animated SVG: the body path changes every frame. */
+export const FORMATS_CYCLE: FormatCycle[] = ['mp4', 'gif']
+export const FORMAT_CYCLE_DEFAUT: FormatCycle = 'mp4'
+
 /**
- * Still catalogue only. GIF and MP4 belong to a later unit; a 1-bit GIF still
- * would stair-step the silhouette where PNG has 8-bit alpha.
+ * Rate and size are per format. GIF is capped by file weight and hundredths-of-a-second
+ * delays; video compresses motion, so 1024 at 30 fps stays cheap.
  */
+export const CYCLE_FPS = { gif: 20, mp4: 30 } as const
+export const CYCLE_TAILLE = { gif: 320, mp4: 1024 } as const
+
+export const cyclePas = (format: FormatCycle) => 1 / CYCLE_FPS[format]
+
+/** How many frames for a cycle of `duree` seconds. */
+export const cycleImages = (duree: number, format: FormatCycle) =>
+  Math.max(1, Math.round(duree * CYCLE_FPS[format]))
+
+export const cycleAccepteTransparence = (format: FormatCycle) => format === 'gif'
+
+export const FONDS_GIF: FondGif[] = ['blanc', 'transparent']
+export const FOND_GIF_DEFAUT: FondGif = 'blanc'
+
+/** Pure white, not site `--paper`: "white background" must be white. */
+export const BLANC = '#ffffff'
+
+/** Colour to paint under the ball, or `null` to leave the canvas clear. */
+export const couleurDeFond = (fond: FondGif) => (fond === 'blanc' ? BLANC : null)
+
 export const ACTIONS: ActionExport[] = [
   { id: 'png', mode: 'telecharge', taille: PNG_TAILLE, extension: 'png' },
   { id: 'svg', mode: 'telecharge', taille: SVG_TAILLE, extension: 'svg' },
+  { id: 'gif', mode: 'montage', taille: CYCLE_TAILLE.gif, extension: 'gif' },
+  { id: 'mp4', mode: 'montage', taille: CYCLE_TAILLE.mp4, extension: 'mp4' },
 ]
 
 export const ACTION_BY_ID = new Map<string, ActionExport>(ACTIONS.map((a) => [a.id, a]))
@@ -59,4 +89,27 @@ export function nomFichier(etat: string, extension: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 40)
   return propre ? `grok-bot-${propre}.${extension}` : `grok-bot.${extension}`
+}
+
+/**
+ * Can this browser encode video?
+ *
+ * Lives here, not in video.ts: any static import of video.ts pulls mediabunny
+ * into the entry chunk. video.ts only loads the library inside versMp4.
+ */
+export function videoPossible() {
+  return typeof VideoEncoder !== 'undefined'
+}
+
+/** User cancelled the export. Callers treat this as success, not an error. */
+export class Abandon extends Error {
+  constructor() {
+    super('export cancelled')
+    this.name = 'Abandon'
+  }
+}
+
+/** Throw if the user asked to cancel. */
+export function arrete(signal: AbortSignal | undefined) {
+  if (signal?.aborted) throw new Abandon()
 }

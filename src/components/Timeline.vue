@@ -158,7 +158,7 @@ function addBlock(s: AnimationState) {
   edit({ blocks: blocksWith(blocks.value, s) })
 }
 
-defineExpose({ seek, sample, block, elapsed, cycles, activeId })
+defineExpose({ seek, sample, block, elapsed, cycles, activeId, cycle })
 </script>
 
 <template>

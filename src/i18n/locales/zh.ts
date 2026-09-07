@@ -128,6 +128,8 @@ const zh: typeof fr = {
     title: '导出',
     png: '下载 PNG',
     svg: '下载 SVG',
+    gif: '下载 GIF',
+    mp4: '下载 MP4',
     done: '已导出',
     failed: '导出失败',
   },
