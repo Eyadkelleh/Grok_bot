@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { colour, expression, shape } from './customise'
 import { t } from './i18n'
 import { REST_GAZE, type AnimationState } from './engine'
 import Avatar from './components/Avatar.vue'
 import AnimationsPalette from './components/AnimationsPalette.vue'
+import CustomisePanel from './components/CustomisePanel.vue'
 import Settings from './components/Settings.vue'
 
 const animationState = ref<AnimationState>('Idle')
@@ -15,6 +17,7 @@ const animationState = ref<AnimationState>('Idle')
       <p class="brand">{{ t('app.name') }}</p>
       <nav class="nav" :aria-label="t('nav.label')">
         <a href="#studio" data-nav="studio">{{ t('nav.studio') }}</a>
+        <a href="#customise" data-nav="customise">{{ t('nav.customise') }}</a>
         <a href="#settings" data-nav="settings">{{ t('nav.settings') }}</a>
         <a href="#about" data-nav="about">{{ t('nav.about') }}</a>
       </nav>
@@ -22,14 +25,20 @@ const animationState = ref<AnimationState>('Idle')
 
     <main class="page">
       <div class="workspace">
+        <CustomisePanel
+          id="customise"
+          v-model:shape="shape"
+          v-model:expression="expression"
+          v-model:colour="colour"
+        />
         <section id="studio" class="studio">
           <Avatar
             :state="animationState"
             :size="220"
-            shape="circle"
-            expression="neutral"
+            :shape="shape"
+            :expression="expression"
             :gaze="REST_GAZE"
-            colour="ink"
+            :colour="colour"
             :label="t('app.botAria')"
           />
           <h1>{{ t('app.name') }}</h1>
@@ -98,7 +107,7 @@ const animationState = ref<AnimationState>('Idle')
   justify-content: center;
   gap: 2rem 2.5rem;
   width: 100%;
-  max-width: 48rem;
+  max-width: 64rem;
 }
 
 .studio {
