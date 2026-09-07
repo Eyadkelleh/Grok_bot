@@ -130,7 +130,11 @@ onBeforeUnmount(() => {
           <p class="tagline">{{ t('app.tagline') }}</p>
           <ExportBar :etat="etatExport" @exporter="surExport" />
         </section>
-        <AnimationsPalette v-model="animationState" @update:modelValue="playing = false" />
+        <AnimationsPalette
+          id="animations"
+          v-model="animationState"
+          @update:modelValue="playing = false"
+        />
       </div>
       <Settings />
     </main>

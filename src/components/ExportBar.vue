@@ -57,8 +57,8 @@ button {
   padding: 0.55rem 0.75rem;
   border: 1px solid var(--line);
   border-radius: 0.75rem;
-  background: var(--ink);
-  color: var(--paper);
+  background: transparent;
+  color: inherit;
   font: inherit;
   font-size: 0.875rem;
   font-weight: 500;
@@ -67,7 +67,7 @@ button {
 
 button:hover,
 button:focus-visible {
-  filter: brightness(1.08);
+  border-color: var(--ink);
 }
 
 button:disabled {

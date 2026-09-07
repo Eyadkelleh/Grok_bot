@@ -20,6 +20,9 @@ describe('hash routing', () => {
     expect(slugOf('Notification')).toBe('notify')
     expect(slugOf('Exclamation')).toBe('exclaim')
     expect(Object.keys(STATE_SLUGS)).toEqual([...ANIMATION_STATES])
+    for (const id of ANIMATION_STATES) {
+      expect(stateFromSlug(slugOf(id))).toBe(id)
+    }
   })
 
   it('accepts bloub slugs, PascalCase ids, and lowercase aliases', () => {
