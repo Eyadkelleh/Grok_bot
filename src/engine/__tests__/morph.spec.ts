@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { PROFILE_SAMPLES, blend, circle, closedPath, morphPath, toPoints } from '..'
+import {
+  PROFILE_SAMPLES,
+  SHAPES,
+  blend,
+  circle,
+  closedPath,
+  morphPath,
+  regularPolygonProfile,
+  toPoints,
+} from '..'
 
 describe('radial morph', () => {
   it('samples every silhouette at the same angle count', () => {
@@ -43,5 +52,17 @@ describe('radial morph', () => {
     expect(idle).not.toBe(thinking)
     expect(idle.endsWith('Z')).toBe(true)
     expect(thinking.endsWith('Z')).toBe(true)
+  })
+
+  it('builds tip-up triangles and flat-edge hexagons like bloub skins', () => {
+    const triangle = regularPolygonProfile(3, 1.12, 0.34, -90)
+    const hexagon = regularPolygonProfile(6, 1.04, 0.26, 0)
+    expect(triangle).toHaveLength(PROFILE_SAMPLES)
+    expect(hexagon).toHaveLength(PROFILE_SAMPLES)
+    const up = Math.round((3 / 4) * PROFILE_SAMPLES) % PROFILE_SAMPLES
+    const right = 0
+    expect(triangle[up]!).toBeGreaterThan(triangle[right]!)
+    expect(SHAPES.find((s) => s.id === 'triangle')!.radii[up]!).toBeCloseTo(triangle[up]!, 5)
+    expect(SHAPES.find((s) => s.id === 'hexagon')!.radii).toEqual(hexagon)
   })
 })

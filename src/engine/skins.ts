@@ -1,6 +1,8 @@
 import { TAU } from './math'
 import {
   PROFILE_SAMPLES,
+  hullOfCircles,
+  profileFromPolygon,
   regularPolygonProfile,
   superellipse,
 } from './morph'
@@ -85,28 +87,17 @@ const cloud = normalize(
   1.02,
 )
 
-const droplet = normalize(
-  unionOfCircles([
-    { x: 0, y: 0.28, r: 0.66 },
-    { x: 0, y: -0.55, r: 0.28 },
-  ]),
-  1.04,
-)
+const droplet = normalize(profileFromPolygon(hullOfCircles(0, 0.28, 0.66, 0, -0.96, 0.05), 0, 0), 1.04)
 
-const capsule = normalize(
-  unionOfCircles([
-    { x: -0.42, y: 0, r: 0.62 },
-    { x: 0.42, y: 0, r: 0.62 },
-  ]),
-)
+const capsule = profileFromPolygon(hullOfCircles(-0.42, 0, 0.62, 0.42, 0, 0.62), 0, 0)
 
 export const SHAPES: BotShape[] = [
   { id: 'circle', radii: Array.from({ length: PROFILE_SAMPLES }, () => 1) },
   { id: 'pebble', radii: pebble },
   { id: 'squircle', radii: normalize(superellipse(4.2), 1.15) },
   { id: 'capsule', radii: capsule },
-  { id: 'triangle', radii: regularPolygonProfile(3, 1.12) },
-  { id: 'hexagon', radii: regularPolygonProfile(6, 1.04, 0) },
+  { id: 'triangle', radii: regularPolygonProfile(3, 1.12, 0.34, -90) },
+  { id: 'hexagon', radii: regularPolygonProfile(6, 1.04, 0.26, 0) },
   { id: 'cloud', radii: cloud },
   { id: 'droplet', radii: droplet },
 ]

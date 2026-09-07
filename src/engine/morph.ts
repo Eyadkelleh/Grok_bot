@@ -60,6 +60,89 @@ export function superellipse(n: number, sx = 1, sy = 1): number[] {
   })
 }
 
+/** Radial profile of a polygon by casting rays from `(cx, cy)` at each sample angle. */
+export function profileFromPolygon(poly: Point[], cx = 0, cy = 0): number[] {
+  const radii = new Array<number>(PROFILE_SAMPLES).fill(0)
+  const n = poly.length
+  for (let k = 0; k < PROFILE_SAMPLES; k++) {
+    const dx = COS[k] ?? 0
+    const dy = SIN[k] ?? 0
+    let best = 0
+    for (let i = 0; i < n; i++) {
+      const a = poly[i]!
+      const b = poly[(i + 1) % n]!
+      const ex = b.x - a.x
+      const ey = b.y - a.y
+      const den = dx * ey - dy * ex
+      if (Math.abs(den) < 1e-9) continue
+      const px = a.x - cx
+      const py = a.y - cy
+      const t = (px * ey - py * ex) / den
+      const u = (px * dy - py * dx) / den
+      if (t > best && u >= 0 && u <= 1) best = t
+    }
+    radii[k] = best
+  }
+  return radii
+}
+
+/** Convex hull of two discs (external common tangents + arcs). */
+export function hullOfCircles(
+  x1: number,
+  y1: number,
+  r1: number,
+  x2: number,
+  y2: number,
+  r2: number,
+  steps = 96,
+): Point[] {
+  const dx = x2 - x1
+  const dy = y2 - y1
+  const dist = Math.hypot(dx, dy) || 1e-6
+  const base = Math.atan2(dy, dx)
+  const spread = Math.acos(Math.max(-1, Math.min(1, (r1 - r2) / dist)))
+  const pts: Point[] = []
+  for (let i = 0; i <= steps / 2; i++) {
+    const a = base + spread + ((TAU - 2 * spread) * i) / (steps / 2)
+    pts.push({ x: x1 + Math.cos(a) * r1, y: y1 + Math.sin(a) * r1 })
+  }
+  for (let i = 0; i <= steps / 2; i++) {
+    const a = base - spread + (2 * spread * i) / (steps / 2)
+    pts.push({ x: x2 + Math.cos(a) * r2, y: y2 + Math.sin(a) * r2 })
+  }
+  return pts
+}
+
+/**
+ * Rounded polygon via Minkowski sum with a disc. Vertices sit at `radius - rc`;
+ * clockwise winding with screen y-down.
+ */
+function roundedPolygon(verts: Point[], rc: number, arcSteps = 10): Point[] {
+  const n = verts.length
+  const out: Point[] = []
+  const normal = (a: Point, b: Point) => {
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const len = Math.hypot(dx, dy) || 1
+    return Math.atan2(-dx / len, dy / len)
+  }
+  for (let i = 0; i < n; i++) {
+    const prev = verts[(i - 1 + n) % n]!
+    const cur = verts[i]!
+    const next = verts[(i + 1) % n]!
+    const a0 = normal(prev, cur)
+    const a1 = normal(cur, next)
+    let d = a1 - a0
+    while (d > Math.PI) d -= TAU
+    while (d < -Math.PI) d += TAU
+    for (let k = 0; k <= arcSteps; k++) {
+      const a = a0 + (d * k) / arcSteps
+      out.push({ x: cur.x + Math.cos(a) * rc, y: cur.y + Math.sin(a) * rc })
+    }
+  }
+  return out
+}
+
 export function silhouetteFromRadii(radii: number[], pose: Partial<Silhouette> = {}): Silhouette {
   return {
     radii: [...radii],
@@ -138,8 +221,23 @@ export function eggProfile(): number[] {
   return superellipse(2.2, 0.82, 1)
 }
 
-export function regularPolygonProfile(sides: number, radius = 1, rotation = -Math.PI / 2): number[] {
-  return polarPolygon(sides, 0.18, rotation).map((r) => r * radius)
+/**
+ * Regular polygon with rounded corners, inscribed in `radius`.
+ * `rc` is corner radius; `rotationDeg` is clockwise with screen y-down
+ * (`-90` puts a triangle tip up).
+ */
+export function regularPolygonProfile(
+  sides: number,
+  radius = 1,
+  rc = 0.18,
+  rotationDeg = -90,
+): number[] {
+  const rot = (rotationDeg * Math.PI) / 180
+  const verts = Array.from({ length: sides }, (_, i) => {
+    const a = rot + (i / sides) * TAU
+    return { x: Math.cos(a) * (radius - rc), y: Math.sin(a) * (radius - rc) }
+  })
+  return profileFromPolygon(roundedPolygon(verts, rc), 0, 0)
 }
 
 export function silhouettePath(
