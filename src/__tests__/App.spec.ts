@@ -3,20 +3,28 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../App.vue'
 import { brand } from '../brand'
 import { rechargerApparence } from '../customise'
-import { ANIMATION_STATES, COLORS, EXPRESSIONS, SHAPES } from '../engine'
+import { ANIMATION_STATES, COLORS, EXPRESSIONS, SHAPES, type Cycle } from '../engine'
 import { cle, langue, rechargerLangue } from '../i18n'
 import en from '../i18n/locales/en'
 import fr from '../i18n/locales/fr'
 import zh from '../i18n/locales/zh'
 import { ecris } from '../i18n/stockage'
 
-const { exporte } = vi.hoisted(() => ({
+const { exporte, exporteMontage } = vi.hoisted(() => ({
   exporte: vi.fn<(svg: SVGSVGElement, id: string, etat: string) => Promise<void>>(),
+  exporteMontage: vi.fn<
+    (
+      format: 'gif' | 'mp4',
+      cycle: Cycle,
+      reglages: { shape: string; colour: string; expression: string },
+      nom: string,
+    ) => Promise<void>
+  >(),
 }))
 
 vi.mock('../ui/capture', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../ui/capture')>()
-  return { ...actual, exporte }
+  return { ...actual, exporte, exporteMontage }
 })
 
 describe('App', () => {
@@ -26,6 +34,7 @@ describe('App', () => {
     rechargerApparence()
     langue.value = 'en'
     exporte.mockClear()
+    exporteMontage.mockClear()
   })
 
   it('renders the Grok_bot avatar with default props', () => {
@@ -210,10 +219,29 @@ describe('App', () => {
     wrapper.unmount()
   })
 
-  it('does not offer GIF or MP4 stills', () => {
+  it('exports the montage as GIF', async () => {
     const wrapper = mount(App)
-    expect(wrapper.text()).toContain(en.export.title)
-    expect(wrapper.find('[data-export="gif"]').exists()).toBe(false)
-    expect(wrapper.find('[data-export="mp4"]').exists()).toBe(false)
+    await wrapper.get('[data-export="gif"]').trigger('click')
+    await flushPromises()
+    expect(exporteMontage).toHaveBeenCalledOnce()
+    expect(exporte).not.toHaveBeenCalled()
+    const [format, cycle, reglages, nom] = exporteMontage.mock.calls[0]!
+    expect(format).toBe('gif')
+    expect(cycle.blocks.length).toBe(ANIMATION_STATES.length)
+    expect(reglages).toMatchObject({ shape: 'circle', colour: 'ink', expression: 'neutral' })
+    expect(nom).toBe(en.cycles.defaultName)
+    expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
+    wrapper.unmount()
+  })
+
+  it('exports the montage as MP4', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-export="mp4"]').trigger('click')
+    await flushPromises()
+    expect(exporteMontage).toHaveBeenCalledOnce()
+    expect(exporte).not.toHaveBeenCalled()
+    expect(exporteMontage.mock.calls[0]?.[0]).toBe('mp4')
+    expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
+    wrapper.unmount()
   })
 })

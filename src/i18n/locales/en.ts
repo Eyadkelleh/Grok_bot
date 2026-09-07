@@ -128,6 +128,8 @@ const en: typeof fr = {
     title: 'Export',
     png: 'Download PNG',
     svg: 'Download SVG',
+    gif: 'Download GIF',
+    mp4: 'Download MP4',
     done: 'Exported',
     failed: 'Export failed',
   },

@@ -97,4 +97,22 @@ describe('Avatar', () => {
     expect(wrapper.get('svg').attributes('data-state')).toBe('Comet')
     expect(wrapper.get('svg path').attributes('d')).toBe(pathForState('Comet'))
   })
+
+  it('seeks a montage date without morphing in from a state that was never shown', async () => {
+    const wrapper = mount(Avatar, { props: { durationMs: 400 } })
+    const blocs = [
+      { state: 'Comet' as const, duration: 2 },
+      { state: 'Thinking' as const, duration: 2 },
+    ]
+    wrapper.vm.rendAt(0, blocs)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('svg').attributes('data-state')).toBe('Comet')
+    expect(wrapper.get('svg').attributes('data-target')).toBe('Comet')
+    expect(wrapper.get('svg path').attributes('d')).toBe(pathForState('Comet'))
+
+    wrapper.vm.rendAt(2.4, blocs)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('svg').attributes('data-state')).toBe('Thinking')
+    expect(wrapper.get('svg').attributes('data-target')).toBe('Thinking')
+  })
 })

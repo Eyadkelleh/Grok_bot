@@ -8,12 +8,14 @@ import {
   DEFAULT_PAPER,
   DEFAULT_SHAPE,
   DEFAULT_SIZE,
+  blockAt,
   colourIdOf,
   gazeAttr,
   morphProgress,
   sampleAvatar,
   sampleMorph,
   type AnimationState,
+  type Block,
   type GazeInput,
 } from '../engine'
 
@@ -74,6 +76,24 @@ watch(
   },
 )
 
+/**
+ * Seek the bot to an absolute date on a montage. Cancels the live rAF loop so
+ * export can step frame by frame. The first block is already settled: previous
+ * is itself, so t=0 does not morph in from a state that was never shown.
+ */
+function rendAt(t: number, blocks: Block[]) {
+  cancelAnimationFrame(raf)
+  raf = 0
+  const hit = blockAt(blocks, t)
+  const current = blocks[hit.index]?.state ?? 'Idle'
+  const prev = hit.index > 0 ? (blocks[hit.index - 1]?.state ?? current) : current
+  const morphDone = hit.index === 0 || hit.elapsed * 1000 + 1e-6 >= props.durationMs
+  from.value = morphDone ? current : prev
+  to.value = current
+  startedAt.value = 0
+  now.value = morphDone ? props.durationMs : hit.elapsed * 1000
+}
+
 onMounted(() => {
   const t = performance.now()
   now.value = t
@@ -83,6 +103,8 @@ onMounted(() => {
 onUnmounted(() => {
   cancelAnimationFrame(raf)
 })
+
+defineExpose({ rendAt })
 
 const progress = computed(() => {
   if (from.value === to.value) return 1

@@ -126,6 +126,8 @@ export default {
     title: 'Exporter',
     png: 'Télécharger le PNG',
     svg: 'Télécharger le SVG',
+    gif: 'Télécharger le GIF',
+    mp4: 'Télécharger le MP4',
     done: 'Exporté',
     failed: "Échec de l'export",
   },

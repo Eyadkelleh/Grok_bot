@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from 'vue'
 import { colour, expression, shape } from './customise'
-import { t } from './i18n'
+import { nomDeCycle, t } from './i18n'
 import type { AnimationState } from './engine'
 import Avatar from './components/Avatar.vue'
 import AnimationsPalette from './components/AnimationsPalette.vue'
@@ -9,12 +9,13 @@ import CustomisePanel from './components/CustomisePanel.vue'
 import ExportBar from './components/ExportBar.vue'
 import Settings from './components/Settings.vue'
 import Timeline from './components/Timeline.vue'
-import { exporte } from './ui/capture'
-import { type ActionId, type EtatExport } from './ui/export'
+import { exporte, exporteMontage } from './ui/capture'
+import { ACTION_BY_ID, type ActionId, type EtatExport } from './ui/export'
 
 const animationState = ref<AnimationState>('Idle')
 const playing = ref(false)
 const studio = ref<HTMLElement | null>(null)
+const timeline = ref<InstanceType<typeof Timeline> | null>(null)
 const etatExport = ref<EtatExport>('pret')
 let confirmation: ReturnType<typeof setTimeout> | undefined
 
@@ -25,15 +26,31 @@ function svgCourant(): SVGSVGElement | null {
   return el instanceof SVGSVGElement ? el : null
 }
 
+function cycleCourant() {
+  return timeline.value?.cycle ?? null
+}
+
 async function surExport(id: ActionId) {
   if (etatExport.value === 'occupe') return
-  const svg = svgCourant()
-  if (!svg) return
+  const action = ACTION_BY_ID.get(id)
+  if (!action) return
 
   clearTimeout(confirmation)
   etatExport.value = 'occupe'
   try {
-    await exporte(svg, id, animationState.value)
+    if (action.mode === 'montage') {
+      const cycle = cycleCourant()
+      if (!cycle) throw new Error('no montage')
+      await exporteMontage(action.extension === 'mp4' ? 'mp4' : 'gif', cycle, {
+        shape: shape.value,
+        colour: colour.value,
+        expression: expression.value,
+      }, nomDeCycle(cycle))
+    } else {
+      const svg = svgCourant()
+      if (!svg) throw new Error('no svg')
+      await exporte(svg, id, animationState.value)
+    }
     etatExport.value = 'exporte'
   } catch {
     etatExport.value = 'erreur'
@@ -81,7 +98,7 @@ onBeforeUnmount(() => clearTimeout(confirmation))
       </div>
       <Settings />
     </main>
-    <Timeline v-model:state="animationState" v-model:playing="playing" />
+    <Timeline ref="timeline" v-model:state="animationState" v-model:playing="playing" />
   </div>
 </template>
 

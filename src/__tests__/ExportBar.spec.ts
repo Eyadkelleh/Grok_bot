@@ -10,26 +10,30 @@ describe('ExportBar', () => {
     langue.value = 'en'
   })
 
-  it('offers SVG and PNG downloads of the current frame', () => {
+  it('offers SVG and PNG of the current frame, GIF and MP4 of the montage', () => {
     const wrapper = mount(ExportBar, { props: { etat: 'pret' } })
     expect(wrapper.get('[data-export-bar]').text()).toContain(en.export.title)
     expect(wrapper.get('[data-export="png"]').text()).toBe(en.export.png)
     expect(wrapper.get('[data-export="svg"]').text()).toBe(en.export.svg)
-    expect(wrapper.find('[data-export="gif"]').exists()).toBe(false)
-    expect(wrapper.find('[data-export="mp4"]').exists()).toBe(false)
+    expect(wrapper.get('[data-export="gif"]').text()).toBe(en.export.gif)
+    expect(wrapper.get('[data-export="mp4"]').text()).toBe(en.export.mp4)
   })
 
-  it('emits the chosen still format', async () => {
+  it('emits the chosen still or montage format', async () => {
     const wrapper = mount(ExportBar, { props: { etat: 'pret' } })
     await wrapper.get('[data-export="svg"]').trigger('click')
     await wrapper.get('[data-export="png"]').trigger('click')
-    expect(wrapper.emitted('exporter')).toEqual([['svg'], ['png']])
+    await wrapper.get('[data-export="gif"]').trigger('click')
+    await wrapper.get('[data-export="mp4"]').trigger('click')
+    expect(wrapper.emitted('exporter')).toEqual([['svg'], ['png'], ['gif'], ['mp4']])
   })
 
   it('disables the buttons while an export is running', () => {
     const wrapper = mount(ExportBar, { props: { etat: 'occupe' } })
     expect(wrapper.get('[data-export="png"]').attributes('disabled')).toBeDefined()
     expect(wrapper.get('[data-export="svg"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-export="gif"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-export="mp4"]').attributes('disabled')).toBeDefined()
   })
 
   it('confirms a finished export', () => {
@@ -41,6 +45,7 @@ describe('ExportBar', () => {
     langue.value = 'fr'
     const wrapper = mount(ExportBar, { props: { etat: 'pret' } })
     expect(wrapper.get('[data-export="png"]').text()).toBe(fr.export.png)
+    expect(wrapper.get('[data-export="gif"]').text()).toBe(fr.export.gif)
     langue.value = 'en'
   })
 })
