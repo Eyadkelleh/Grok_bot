@@ -16,7 +16,7 @@ describe('still catalogue', () => {
     expect(ACTIONS.map((a) => a.id)).toEqual(['png', 'svg'])
     expect(new Set(ACTIONS.map((a) => a.id)).size).toBe(ACTIONS.length)
     expect(ACTIONS.every((a) => a.mode === 'telecharge')).toBe(true)
-    expect(ACTIONS.some((a) => a.extension === 'gif')).toBe(false)
+    expect(ACTIONS.map((a) => a.extension)).toEqual(['png', 'svg'])
     expect(ACTION_BY_ID.get(ACTION_DEFAUT)?.extension).toBe('png')
   })
 
