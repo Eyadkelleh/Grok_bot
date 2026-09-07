@@ -11,7 +11,7 @@ import zh from '../i18n/locales/zh'
 import { ecris } from '../i18n/stockage'
 
 const { exporte } = vi.hoisted(() => ({
-  exporte: vi.fn(async (_svg: SVGSVGElement, _id: string, _etat: string) => {}),
+  exporte: vi.fn<(svg: SVGSVGElement, id: string, etat: string) => Promise<void>>(),
 }))
 
 vi.mock('../ui/capture', async (importOriginal) => {
@@ -186,10 +186,7 @@ describe('App', () => {
     await wrapper.get('[data-export="svg"]').trigger('click')
     await flushPromises()
     expect(exporte).toHaveBeenCalledOnce()
-    const [svg, id, etat] = exporte.mock.calls[0]!
-    expect(svg).toBeInstanceOf(SVGSVGElement)
-    expect(id).toBe('svg')
-    expect(etat).toBe('Idle')
+    expect(exporte).toHaveBeenCalledWith(expect.any(SVGSVGElement), 'svg', 'Idle')
     expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
     wrapper.unmount()
   })
@@ -199,10 +196,7 @@ describe('App', () => {
     await wrapper.get('[data-export="png"]').trigger('click')
     await flushPromises()
     expect(exporte).toHaveBeenCalledOnce()
-    const [svg, id, etat] = exporte.mock.calls[0]!
-    expect(svg).toBeInstanceOf(SVGSVGElement)
-    expect(id).toBe('png')
-    expect(etat).toBe('Idle')
+    expect(exporte).toHaveBeenCalledWith(expect.any(SVGSVGElement), 'png', 'Idle')
     expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
     wrapper.unmount()
   })
@@ -212,7 +206,7 @@ describe('App', () => {
     await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
     await wrapper.get('[data-export="svg"]').trigger('click')
     await flushPromises()
-    expect(exporte.mock.calls[0]?.[2]).toBe('Comet')
+    expect(exporte).toHaveBeenCalledWith(expect.any(SVGSVGElement), 'svg', 'Comet')
     wrapper.unmount()
   })
 

@@ -63,14 +63,19 @@ describe('telecharge', () => {
 describe('exporte', () => {
   it('downloads an SVG named from the state id', async () => {
     const names: string[] = []
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
-      this: HTMLAnchorElement,
-    ) {
-      names.push(this.download)
+    const create = document.createElement.bind(document)
+    const createSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
+      const el = create(tagName, options)
+      if (tagName === 'a') {
+        const ancre = el as HTMLAnchorElement
+        ancre.click = () => {
+          names.push(ancre.download)
+        }
+      }
+      return el
     })
     await exporte(svgDeTest(), 'svg', 'Idle')
-    expect(click).toHaveBeenCalledOnce()
     expect(names).toEqual(['grok-bot-idle.svg'])
-    click.mockRestore()
+    createSpy.mockRestore()
   })
 })
