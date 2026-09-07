@@ -13,6 +13,25 @@ export default {
     about: 'À propos',
   },
 
+  animations: {
+    title: 'États',
+    label: "États d'animation",
+    Idle: 'Repos',
+    Thinking: 'Réflexion',
+    Wink: "Clin d'œil",
+    WideEyes: 'Yeux écarquillés',
+    Alert: 'Alerte',
+    Notification: 'Notification',
+    Exclamation: 'Exclamation',
+    Sleep: 'Sommeil',
+    Egg: 'Œuf',
+    Hexagon: 'Hexagone',
+    Play: 'Lecture',
+    Orbit: 'Orbite',
+    Burst: 'Éclat',
+    Comet: 'Comète',
+  },
+
   settings: {
     title: 'Réglages',
     language: 'Langue',

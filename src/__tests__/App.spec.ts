@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 import App from '../App.vue'
 import { brand } from '../brand'
+import { ANIMATION_STATES } from '../engine'
 import { cle, langue, rechargerLangue } from '../i18n'
 import en from '../i18n/locales/en'
 import fr from '../i18n/locales/fr'
@@ -25,13 +26,27 @@ describe('App', () => {
     expect(path.attributes('d')?.startsWith('M')).toBe(true)
   })
 
-  it('morphs Idle to Thinking from the demo control', async () => {
+  it('morphs Idle to Thinking from the animations palette', async () => {
     const wrapper = mount(App)
-    const button = wrapper.get('[data-morph-toggle]')
-    expect(button.text()).toMatch(/thinking/i)
-    await button.trigger('click')
+    const palette = wrapper.get('[data-animations-palette]')
+    expect(palette.findAll('[data-state]')).toHaveLength(ANIMATION_STATES.length)
+    expect(palette.get('[data-state="Idle"]').attributes('aria-checked')).toBe('true')
+
+    await wrapper.get('[data-animations-palette] [data-state="Thinking"]').trigger('click')
+
     expect(wrapper.get('svg[role="img"]').attributes('data-target')).toBe('Thinking')
-    expect(button.text()).toMatch(/idle/i)
+    expect(wrapper.get('[data-animations-palette] [data-state="Thinking"]').attributes('aria-checked')).toBe(
+      'true',
+    )
+  })
+
+  it('drives the avatar morph to Comet from the palette', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
+    expect(wrapper.get('svg[role="img"]').attributes('data-target')).toBe('Comet')
+    expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
+      'true',
+    )
   })
 
   it('renders English nav and settings strings by default', () => {
@@ -39,6 +54,7 @@ describe('App', () => {
     expect(wrapper.get('[data-nav="studio"]').text()).toBe(en.nav.studio)
     expect(wrapper.get('[data-nav="settings"]').text()).toBe(en.nav.settings)
     expect(wrapper.get('[data-nav="about"]').text()).toBe(en.nav.about)
+    expect(wrapper.text()).toContain(en.animations.title)
     expect(wrapper.text()).toContain(en.settings.title)
     expect(wrapper.text()).toContain(en.settings.language)
     expect(wrapper.get('[data-locale="en"]').text()).toContain('English')
@@ -52,6 +68,7 @@ describe('App', () => {
 
     expect(wrapper.get('[data-nav="settings"]').text()).toBe(fr.nav.settings)
     expect(wrapper.get('[data-nav="about"]').text()).toBe(fr.nav.about)
+    expect(wrapper.text()).toContain(fr.animations.title)
     expect(wrapper.text()).toContain(fr.settings.language)
     expect(window.localStorage.getItem(cle('langue'))).toBe('fr')
     expect(document.documentElement.lang).toBe('fr')
@@ -63,6 +80,7 @@ describe('App', () => {
 
     expect(wrapper.get('[data-nav="settings"]').text()).toBe(zh.nav.settings)
     expect(wrapper.get('[data-nav="about"]').text()).toBe(zh.nav.about)
+    expect(wrapper.text()).toContain(zh.animations.title)
     expect(wrapper.text()).toContain(zh.settings.language)
     expect(window.localStorage.getItem(cle('langue'))).toBe('zh')
     expect(document.documentElement.lang).toBe('zh-Hans')

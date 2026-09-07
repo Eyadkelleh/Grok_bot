@@ -1,7 +1,12 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { t } from './i18n'
+import type { AnimationState } from './engine'
 import AvatarMorph from './components/AvatarMorph.vue'
+import AnimationsPalette from './components/AnimationsPalette.vue'
 import Settings from './components/Settings.vue'
+
+const animationState = ref<AnimationState>('Idle')
 </script>
 
 <template>
@@ -16,11 +21,14 @@ import Settings from './components/Settings.vue'
     </header>
 
     <main class="page">
-      <section id="studio" class="studio">
-        <AvatarMorph :label="t('app.botAria')" />
-        <h1>{{ t('app.name') }}</h1>
-        <p class="tagline">{{ t('app.tagline') }}</p>
-      </section>
+      <div class="workspace">
+        <section id="studio" class="studio">
+          <AvatarMorph :state="animationState" :label="t('app.botAria')" />
+          <h1>{{ t('app.name') }}</h1>
+          <p class="tagline">{{ t('app.tagline') }}</p>
+        </section>
+        <AnimationsPalette v-model="animationState" />
+      </div>
       <Settings />
     </main>
   </div>
@@ -73,14 +81,25 @@ import Settings from './components/Settings.vue'
   justify-content: center;
   gap: 2.5rem;
   padding: 2rem 1.5rem 3rem;
-  text-align: center;
+}
+
+.workspace {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2rem 2.5rem;
+  width: 100%;
+  max-width: 48rem;
 }
 
 .studio {
   display: flex;
+  flex: 1 1 16rem;
   flex-direction: column;
   align-items: center;
   gap: 1.25rem;
+  text-align: center;
 }
 
 h1 {
