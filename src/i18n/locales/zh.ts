@@ -124,6 +124,14 @@ const zh: typeof fr = {
     secondsShort: '{n}秒',
   },
 
+  export: {
+    title: '导出',
+    png: '下载 PNG',
+    svg: '下载 SVG',
+    done: '已导出',
+    failed: '导出失败',
+  },
+
   settings: {
     title: '设置',
     language: '语言',

@@ -122,6 +122,14 @@ export default {
     secondsShort: '{n}s',
   },
 
+  export: {
+    title: 'Exporter',
+    png: 'Télécharger le PNG',
+    svg: 'Télécharger le SVG',
+    done: 'Exporté',
+    failed: "Échec de l'export",
+  },
+
   settings: {
     title: 'Réglages',
     language: 'Langue',

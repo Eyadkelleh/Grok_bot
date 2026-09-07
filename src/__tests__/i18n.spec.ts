@@ -67,6 +67,13 @@ describe('dictionaries', () => {
       )
     }
   })
+
+  it('translates export copy instead of copying French', () => {
+    for (const [cle, valeur] of feuilles(fr.export)) {
+      expect(feuilles(en.export).find(([k]) => k === cle)![1], `en ${cle}`).not.toBe(valeur)
+      expect(feuilles(zh.export).find(([k]) => k === cle)![1], `zh ${cle}`).not.toBe(valeur)
+    }
+  })
 })
 
 describe('substitution', () => {

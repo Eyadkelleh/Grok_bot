@@ -1,16 +1,47 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 import { colour, expression, shape } from './customise'
 import { t } from './i18n'
 import type { AnimationState } from './engine'
 import Avatar from './components/Avatar.vue'
 import AnimationsPalette from './components/AnimationsPalette.vue'
 import CustomisePanel from './components/CustomisePanel.vue'
+import ExportBar from './components/ExportBar.vue'
 import Settings from './components/Settings.vue'
 import Timeline from './components/Timeline.vue'
+import { exporte } from './ui/capture'
+import { type ActionId, type EtatExport } from './ui/export'
 
 const animationState = ref<AnimationState>('Idle')
 const playing = ref(false)
+const studio = ref<HTMLElement | null>(null)
+const etatExport = ref<EtatExport>('pret')
+let confirmation: ReturnType<typeof setTimeout> | undefined
+
+const CONFIRMATION_MS = 1800
+
+function svgCourant(): SVGSVGElement | null {
+  const el = studio.value?.querySelector('svg[role="img"]')
+  return el instanceof SVGSVGElement ? el : null
+}
+
+async function surExport(id: ActionId) {
+  if (etatExport.value === 'occupe') return
+  const svg = svgCourant()
+  if (!svg) return
+
+  clearTimeout(confirmation)
+  etatExport.value = 'occupe'
+  try {
+    await exporte(svg, id, animationState.value)
+    etatExport.value = 'exporte'
+  } catch {
+    etatExport.value = 'erreur'
+  }
+  confirmation = setTimeout(() => (etatExport.value = 'pret'), CONFIRMATION_MS)
+}
+
+onBeforeUnmount(() => clearTimeout(confirmation))
 </script>
 
 <template>
@@ -33,7 +64,7 @@ const playing = ref(false)
           v-model:expression="expression"
           v-model:colour="colour"
         />
-        <section id="studio" class="studio">
+        <section id="studio" ref="studio" class="studio">
           <Avatar
             :state="animationState"
             :size="220"
@@ -44,6 +75,7 @@ const playing = ref(false)
           />
           <h1>{{ t('app.name') }}</h1>
           <p class="tagline">{{ t('app.tagline') }}</p>
+          <ExportBar :etat="etatExport" @exporter="surExport" />
         </section>
         <AnimationsPalette v-model="animationState" @update:modelValue="playing = false" />
       </div>
