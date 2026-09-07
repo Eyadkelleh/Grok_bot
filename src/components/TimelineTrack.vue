@@ -56,6 +56,12 @@ function label(index: number) {
   return t(`animations.${props.blocks[index]!.state}` as Cle)
 }
 
+const addAria = computed(() =>
+  t('timeline.addAnimationNamed', {
+    state: t(`animations.${props.addState}` as Cle),
+  }),
+)
+
 function frameOf(state: AnimationState) {
   return sampleMorph(state, state, 1)
 }
@@ -273,7 +279,7 @@ function pick(state: AnimationState) {
               type="button"
               data-add
               :data-add-state="addState"
-              :aria-label="t('timeline.addAnimation')"
+              :aria-label="addAria"
               @click="emit('add', addState)"
             >
               +

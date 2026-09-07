@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { colour, expression, shape } from './customise'
 import { nomDeCycle, t, type Cle } from './i18n'
-import { ecrireHash, lireHash, type AnimationState } from './engine'
+import {
+  ecrireHash,
+  lireHash,
+  totalDuration,
+  type AnimationState,
+} from './engine'
 import Avatar from './components/Avatar.vue'
 import AnimationsPalette from './components/AnimationsPalette.vue'
 import CustomisePanel from './components/CustomisePanel.vue'
@@ -11,6 +16,13 @@ import Settings from './components/Settings.vue'
 import Timeline from './components/Timeline.vue'
 import { exporte, exporteMontage } from './ui/capture'
 import { ACTION_BY_ID, type ActionId, type EtatExport } from './ui/export'
+import {
+  cycleForSource,
+  makeVideoIntent,
+  sourceFromCycle,
+  sourceFromPose,
+  type VideoSourceKind,
+} from './ui/intent'
 
 const initial = lireHash()
 const animationState = ref<AnimationState>(initial.named ? initial.state : 'Idle')
@@ -23,6 +35,13 @@ let ecritParNous = ''
 
 const CONFIRMATION_MS = 1800
 const SECTIONS = ['studio', 'customise', 'settings', 'about'] as const
+
+const cycleActif = computed(() => timeline.value?.cycle ?? null)
+const nomCycle = computed(() => (cycleActif.value ? nomDeCycle(cycleActif.value) : ''))
+const dureeCycle = computed(() =>
+  cycleActif.value ? totalDuration(cycleActif.value.blocks) : 0,
+)
+const blocsCycle = computed(() => cycleActif.value?.blocks.length ?? 0)
 
 watch(
   [animationState, playing],
@@ -55,30 +74,37 @@ function svgCourant(): SVGSVGElement | null {
   return el instanceof SVGSVGElement ? el : null
 }
 
-function cycleCourant() {
-  return timeline.value?.cycle ?? null
-}
-
-async function surExport(id: ActionId) {
+async function surExport(payload: { action: ActionId; videoSource: VideoSourceKind }) {
   if (etatExport.value === 'occupe') return
-  const action = ACTION_BY_ID.get(id)
+  const action = ACTION_BY_ID.get(payload.action)
   if (!action) return
 
   clearTimeout(confirmation)
   etatExport.value = 'occupe'
   try {
     if (action.mode === 'montage') {
-      const cycle = cycleCourant()
+      const cycle = cycleActif.value
       if (!cycle) throw new Error('no montage')
-      await exporteMontage(action.extension === 'mp4' ? 'mp4' : 'gif', cycle, {
-        shape: shape.value,
-        colour: colour.value,
-        expression: expression.value,
-      }, nomDeCycle(cycle))
+      const source =
+        payload.videoSource === 'pose'
+          ? sourceFromPose(animationState.value)
+          : sourceFromCycle(cycle)
+      const intent = makeVideoIntent(source, action.extension === 'mp4' ? 'mp4' : 'gif')
+      const montage = cycleForSource(intent.source)
+      await exporteMontage(
+        intent.format,
+        montage,
+        {
+          shape: shape.value,
+          colour: colour.value,
+          expression: expression.value,
+        },
+        intent.source.kind === 'pose' ? intent.source.state : nomDeCycle(cycle),
+      )
     } else {
       const svg = svgCourant()
       if (!svg) throw new Error('no svg')
-      await exporte(svg, id, animationState.value)
+      await exporte(svg, payload.action, animationState.value)
     }
     etatExport.value = 'exporte'
   } catch {
@@ -128,11 +154,19 @@ onBeforeUnmount(() => {
           />
           <h1>{{ t('app.name') }}</h1>
           <p class="tagline">{{ t('app.tagline') }}</p>
-          <ExportBar :etat="etatExport" @exporter="surExport" />
+          <ExportBar
+            :etat="etatExport"
+            :pose="animationState"
+            :cycle-name="nomCycle"
+            :cycle-duration="dureeCycle"
+            :cycle-block-count="blocsCycle"
+            @exporter="surExport"
+          />
         </section>
         <AnimationsPalette
           id="animations"
           v-model="animationState"
+          v-model:colour="colour"
           @update:modelValue="playing = false"
         />
       </div>

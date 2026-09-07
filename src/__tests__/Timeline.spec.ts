@@ -124,6 +124,15 @@ describe('Timeline', () => {
     expect(wrapper.findAll('[data-carte]')).toHaveLength(ANIMATION_STATES.length + 1)
   })
 
+  it('seeds a new cycle from the selected animation state', async () => {
+    wrapper = mountTimeline()
+    await wrapper.setProps({ state: 'Comet' as AnimationState })
+    await wrapper.get('[data-cycle-new]').trigger('click')
+    await wrapper.get('[data-cycle-form]').trigger('submit')
+    expect(wrapper.findAll('[data-carte]')).toHaveLength(1)
+    expect(wrapper.get('[data-block="0"]').attributes('data-state')).toBe('Comet')
+  })
+
   it('translates transport copy', async () => {
     wrapper = mountTimeline()
     langue.value = 'fr'

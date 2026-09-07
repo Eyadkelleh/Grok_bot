@@ -1,9 +1,26 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ANIMATION_STATES, BODY_RADIUS, sampleMorph, viewBoxAttr, type AnimationState } from '../engine'
+import {
+  ANIMATION_STATES,
+  BODY_RADIUS,
+  COLORS,
+  COLOR_BY_ID,
+  DEFAULT_COLOR,
+  isColorId,
+  sampleMorph,
+  viewBoxAttr,
+  type AnimationState,
+  type ColorId,
+} from '../engine'
 import { t, type Cle } from '../i18n'
 
 const selected = defineModel<AnimationState>({ default: 'Idle' })
+const colour = defineModel<ColorId>('colour', { default: DEFAULT_COLOR })
+
+const fill = computed(() => {
+  const id = isColorId(colour.value) ? colour.value : DEFAULT_COLOR
+  return COLOR_BY_ID.get(id)?.hex ?? COLORS[0]!.hex
+})
 
 const poses = computed(() =>
   ANIMATION_STATES.map((id) => ({
@@ -43,14 +60,14 @@ function auClavier(event: KeyboardEvent, index: number) {
         @click="selected = pose.id"
       >
         <svg :viewBox="viewBoxAttr()" aria-hidden="true">
-          <path :d="pose.frame.path" fill="currentColor" />
+          <path :d="pose.frame.path" :fill="fill" />
           <circle
             v-for="(dot, di) in pose.frame.dots"
             :key="di"
             :cx="dot.x * BODY_RADIUS"
             :cy="dot.y * BODY_RADIUS"
             :r="dot.r * BODY_RADIUS"
-            fill="currentColor"
+            :fill="fill"
             :opacity="dot.opacity"
           />
         </svg>

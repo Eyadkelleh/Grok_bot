@@ -126,7 +126,7 @@ function createCycle() {
   const neuf: Cycle = {
     id: nextCycleId(cycles.value),
     name,
-    blocks: [makeBlock('Idle')],
+    blocks: [makeBlock(state.value)],
   }
   cycles.value = [...cycles.value, neuf]
   naming.value = null

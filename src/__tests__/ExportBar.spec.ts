@@ -1,51 +1,71 @@
 import { mount } from '@vue/test-utils'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import ExportBar from '../components/ExportBar.vue'
 import { langue } from '../i18n'
 import en from '../i18n/locales/en'
 import fr from '../i18n/locales/fr'
+
+vi.mock('../ui/export', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../ui/export')>()
+  return { ...actual, videoPossible: () => true }
+})
+
+const baseProps = {
+  etat: 'pret' as const,
+  pose: 'Idle' as const,
+  cycleName: en.cycles.defaultName,
+  cycleDuration: 28,
+  cycleBlockCount: 14,
+}
 
 describe('ExportBar', () => {
   afterEach(() => {
     langue.value = 'en'
   })
 
-  it('offers SVG and PNG of the current frame, GIF and MP4 of the montage', () => {
-    const wrapper = mount(ExportBar, { props: { etat: 'pret' } })
+  it('groups stills and video, defaulting video to the current pose', () => {
+    const wrapper = mount(ExportBar, { props: baseProps })
     expect(wrapper.get('[data-export-bar]').text()).toContain(en.export.title)
+    expect(wrapper.get('[data-export-group="still"]').exists()).toBe(true)
+    expect(wrapper.get('[data-export-group="montage"]').exists()).toBe(true)
+    expect(wrapper.get('[data-export-pose]').attributes('aria-checked')).toBe('true')
     expect(wrapper.get('[data-export="png"]').text()).toBe(en.export.png)
-    expect(wrapper.get('[data-export="svg"]').text()).toBe(en.export.svg)
-    expect(wrapper.get('[data-export="gif"]').text()).toBe(en.export.gif)
-    expect(wrapper.get('[data-export="mp4"]').text()).toBe(en.export.mp4)
+    expect(wrapper.get('[data-export="gif"]').text()).toContain('Idle')
+    expect(wrapper.get('[data-export-meta]').text()).toContain('2 s')
   })
 
-  it('emits the chosen still or montage format', async () => {
-    const wrapper = mount(ExportBar, { props: { etat: 'pret' } })
+  it('emits the chosen still or video format with the video source', async () => {
+    const wrapper = mount(ExportBar, { props: baseProps })
     await wrapper.get('[data-export="svg"]').trigger('click')
     await wrapper.get('[data-export="png"]').trigger('click')
     await wrapper.get('[data-export="gif"]').trigger('click')
+    await wrapper.get('[data-export-cycle]').trigger('click')
     await wrapper.get('[data-export="mp4"]').trigger('click')
-    expect(wrapper.emitted('exporter')).toEqual([['svg'], ['png'], ['gif'], ['mp4']])
+    expect(wrapper.emitted('exporter')).toEqual([
+      [{ action: 'svg', videoSource: 'pose' }],
+      [{ action: 'png', videoSource: 'pose' }],
+      [{ action: 'gif', videoSource: 'pose' }],
+      [{ action: 'mp4', videoSource: 'cycle' }],
+    ])
   })
 
-  it('disables the buttons while an export is running', () => {
-    const wrapper = mount(ExportBar, { props: { etat: 'occupe' } })
+  it('disables the buttons while an export is running and shows busy status', () => {
+    const wrapper = mount(ExportBar, { props: { ...baseProps, etat: 'occupe' } })
     expect(wrapper.get('[data-export="png"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.get('[data-export="svg"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.get('[data-export="gif"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.get('[data-export="mp4"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-export-status]').text()).toBe(en.export.busy)
+    expect(wrapper.get('[data-export-busy]').exists()).toBe(true)
   })
 
   it('confirms a finished export', () => {
-    const wrapper = mount(ExportBar, { props: { etat: 'exporte' } })
+    const wrapper = mount(ExportBar, { props: { ...baseProps, etat: 'exporte' } })
     expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
   })
 
   it('translates the export labels', async () => {
     langue.value = 'fr'
-    const wrapper = mount(ExportBar, { props: { etat: 'pret' } })
+    const wrapper = mount(ExportBar, { props: { ...baseProps, cycleName: fr.cycles.defaultName } })
     expect(wrapper.get('[data-export="png"]').text()).toBe(fr.export.png)
-    expect(wrapper.get('[data-export="gif"]').text()).toBe(fr.export.gif)
+    expect(wrapper.get('[data-export-group="montage"]').text()).toContain(fr.export.video)
     langue.value = 'en'
   })
 })

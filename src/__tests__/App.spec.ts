@@ -227,29 +227,44 @@ describe('App', () => {
     wrapper.unmount()
   })
 
-  it('exports the montage as GIF', async () => {
+  it('exports the selected pose as a short GIF by default', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
     await wrapper.get('[data-export="gif"]').trigger('click')
     await flushPromises()
     expect(exporteMontage).toHaveBeenCalledOnce()
     expect(exporte).not.toHaveBeenCalled()
     const [format, cycle, reglages, nom] = exporteMontage.mock.calls[0]!
     expect(format).toBe('gif')
-    expect(cycle.blocks.length).toBe(ANIMATION_STATES.length)
+    expect(cycle.blocks).toEqual([{ state: 'Comet', duration: 2 }])
     expect(reglages).toMatchObject({ shape: 'circle', colour: 'ink', expression: 'neutral' })
-    expect(nom).toBe(en.cycles.defaultName)
+    expect(nom).toBe('Comet')
     expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
     wrapper.unmount()
   })
 
-  it('exports the montage as MP4', async () => {
+  it('exports the timeline cycle when that video source is chosen', async () => {
     const wrapper = mount(App)
-    await wrapper.get('[data-export="mp4"]').trigger('click')
+    await wrapper.get('[data-export-source="cycle"]').trigger('click')
+    await wrapper.get('[data-export="gif"]').trigger('click')
     await flushPromises()
     expect(exporteMontage).toHaveBeenCalledOnce()
-    expect(exporte).not.toHaveBeenCalled()
-    expect(exporteMontage.mock.calls[0]?.[0]).toBe('mp4')
-    expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
+    const [, cycle, , nom] = exporteMontage.mock.calls[0]!
+    expect(cycle.blocks.length).toBe(ANIMATION_STATES.length)
+    expect(nom).toBe(en.cycles.defaultName)
+    wrapper.unmount()
+  })
+
+  it('gates MP4 when the browser cannot encode video', async () => {
+    const { videoPossible } = await import('../ui/export')
+    const wrapper = mount(App)
+    await flushPromises()
+    const mp4 = wrapper.get('[data-export="mp4"]')
+    if (videoPossible()) {
+      expect(mp4.attributes('disabled')).toBeUndefined()
+    } else {
+      expect(mp4.attributes('disabled')).toBeDefined()
+    }
     wrapper.unmount()
   })
 

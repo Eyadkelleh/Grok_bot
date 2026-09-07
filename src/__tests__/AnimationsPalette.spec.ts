@@ -19,4 +19,9 @@ describe('AnimationsPalette', () => {
     await wrapper.get('[data-state="Comet"]').trigger('click')
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['Comet'])
   })
+
+  it('tints swatches with the selected colour', () => {
+    const wrapper = mount(AnimationsPalette, { props: { modelValue: 'Idle', colour: 'blue' } })
+    expect(wrapper.get('[data-state="Idle"] svg path').attributes('fill')).toBe('#3b93f0')
+  })
 })
