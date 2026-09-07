@@ -4,7 +4,6 @@ import { secondes, t, type Cle } from '../i18n'
 import { type AnimationState } from '../engine'
 import { videoPossible, type ActionId, type EtatExport } from '../ui/export'
 import {
-  DEFAULT_POSE_CLIP_DURATION,
   durationForSource,
   type VideoSourceKind,
 } from '../ui/intent'
@@ -15,15 +14,20 @@ const props = defineProps<{
   cycleName: string
   cycleDuration: number
   cycleBlockCount: number
+  progress?: number | null
 }>()
 
 const emit = defineEmits<{
   exporter: [payload: { action: ActionId; videoSource: VideoSourceKind }]
+  annuler: []
 }>()
 
 const videoSource = ref<VideoSourceKind>('pose')
 const occupe = computed(() => props.etat === 'occupe')
 const mp4Ok = computed(() => videoPossible())
+const progressPercent = computed(() =>
+  Math.round(Math.min(100, Math.max(0, props.progress ?? 0))),
+)
 
 const poseLabel = computed(() => t(`animations.${props.pose}` as Cle))
 
@@ -34,7 +38,6 @@ const videoMeta = computed(() => {
       duration: durationForSource({
         kind: 'pose',
         state: props.pose,
-        duration: DEFAULT_POSE_CLIP_DURATION,
       }),
     }
   }
@@ -42,7 +45,7 @@ const videoMeta = computed(() => {
 })
 
 const statut = computed(() => {
-  if (props.etat === 'occupe') return t('export.busy')
+  if (props.etat === 'occupe') return t('export.progress', { percent: progressPercent.value })
   if (props.etat === 'exporte') return t('export.done')
   if (props.etat === 'erreur') return t('export.failed')
   return ''
@@ -156,15 +159,26 @@ function exporter(action: ActionId) {
       </div>
     </div>
 
-    <p
-      v-if="statut"
-      class="status"
-      data-export-status
-      :data-export-busy="etat === 'occupe' ? '' : undefined"
-      role="status"
-    >
-      {{ statut }}
-    </p>
+    <div v-if="statut" class="status-row">
+      <p
+        class="status"
+        data-export-status
+        :data-export-busy="etat === 'occupe' ? '' : undefined"
+        :data-export-progress="etat === 'occupe' ? progressPercent : undefined"
+        role="status"
+      >
+        {{ statut }}
+      </p>
+      <button
+        v-if="occupe"
+        type="button"
+        class="cancel"
+        data-export-cancel
+        @click="emit('annuler')"
+      >
+        {{ t('export.cancel') }}
+      </button>
+    </div>
   </section>
 </template>
 
@@ -234,9 +248,27 @@ button:disabled {
   line-height: 1.4;
 }
 
-.status {
+.status-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
   margin: 0.5rem 0 0;
+}
+
+.status {
+  margin: 0;
   color: var(--muted);
   font-size: 0.75rem;
+}
+
+.cancel {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  cursor: pointer;
 }
 </style>

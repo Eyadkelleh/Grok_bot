@@ -4,7 +4,7 @@ const en: typeof fr = {
   app: {
     name: 'Grok_bot',
     title: 'Grok_bot — SVG avatar studio',
-    tagline: 'Customise, animate, and export an SVG avatar.',
+    tagline: 'Customise, animate, and export stills or video.',
     botAria: 'Grok_bot avatar',
   },
 
@@ -21,6 +21,7 @@ const en: typeof fr = {
     shape: 'Shape',
     expression: 'Expression',
     colour: 'Colour',
+    skinLimited: 'Shape and expression may not apply to this state.',
   },
 
   shapes: {
@@ -143,6 +144,8 @@ const en: typeof fr = {
     metaPose: '{name} · {duration} · matches preview',
     metaCycle: '{name} · {duration} · {count} animations in the timeline',
     busy: 'Exporting…',
+    progress: 'Exporting… {percent}%',
+    cancel: 'Cancel export',
     mp4Unavailable: 'This browser cannot encode MP4',
     done: 'Exported',
     failed: 'Export failed',

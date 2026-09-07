@@ -8,21 +8,29 @@ import {
   sourceFromCycle,
   sourceFromPose,
 } from '../ui/intent'
-import { defaultCycle } from '../engine'
+import { defaultCycle, poseCycle } from '../engine'
 
 describe('export intent', () => {
-  it('builds a one-block cycle from a pose', () => {
+  it('builds a morphing pose cycle so the clip is not a frozen frame', () => {
     const source = sourceFromPose('Comet')
-    expect(blocksForSource(source)).toEqual([{ state: 'Comet', duration: 2 }])
+    expect(blocksForSource(source)).toEqual([
+      { state: 'Idle', duration: 0.4 },
+      { state: 'Comet', duration: 1.2 },
+      { state: 'Idle', duration: 0.4 },
+    ])
     expect(durationForSource(source)).toBe(2)
     expect(cycleForSource(source).id).toBe('pose-Comet')
+  })
+
+  it('keeps Idle as a single settled block', () => {
+    expect(poseCycle('Idle').blocks).toEqual([{ state: 'Idle', duration: 2 }])
   })
 
   it('keeps timeline blocks for a cycle source', () => {
     const cycle = defaultCycle()
     const source = sourceFromCycle(cycle)
-    expect(blocksForSource(source)).toHaveLength(cycle.blocks.length)
-    expect(durationForSource(source)).toBe(28)
+    expect(blocksForSource(source)).toEqual([{ state: 'Idle', duration: 2 }])
+    expect(durationForSource(source)).toBe(2)
   })
 
   it('discriminates still vs video intents', () => {

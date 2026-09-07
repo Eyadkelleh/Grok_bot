@@ -14,8 +14,8 @@ const baseProps = {
   etat: 'pret' as const,
   pose: 'Idle' as const,
   cycleName: en.cycles.defaultName,
-  cycleDuration: 28,
-  cycleBlockCount: 14,
+  cycleDuration: 2,
+  cycleBlockCount: 1,
 }
 
 describe('ExportBar', () => {
@@ -26,8 +26,8 @@ describe('ExportBar', () => {
   it('groups stills and video, defaulting video to the current pose', () => {
     const wrapper = mount(ExportBar, { props: baseProps })
     expect(wrapper.get('[data-export-bar]').text()).toContain(en.export.title)
-    expect(wrapper.get('[data-export-group="still"]').exists()).toBe(true)
-    expect(wrapper.get('[data-export-group="montage"]').exists()).toBe(true)
+    expect(wrapper.find('[data-export-group="still"]').exists()).toBe(true)
+    expect(wrapper.find('[data-export-group="montage"]').exists()).toBe(true)
     expect(wrapper.get('[data-export-pose]').attributes('aria-checked')).toBe('true')
     expect(wrapper.get('[data-export="png"]').text()).toBe(en.export.png)
     expect(wrapper.get('[data-export="gif"]').text()).toContain('Idle')
@@ -49,11 +49,16 @@ describe('ExportBar', () => {
     ])
   })
 
-  it('disables the buttons while an export is running and shows busy status', () => {
-    const wrapper = mount(ExportBar, { props: { ...baseProps, etat: 'occupe' } })
+  it('shows progress and lets the user cancel a running export', async () => {
+    const wrapper = mount(ExportBar, {
+      props: { ...baseProps, etat: 'occupe', progress: 35 },
+    })
     expect(wrapper.get('[data-export="png"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.get('[data-export-status]').text()).toBe(en.export.busy)
-    expect(wrapper.get('[data-export-busy]').exists()).toBe(true)
+    expect(wrapper.get('[data-export-status]').text()).toContain('35%')
+    expect(wrapper.get('[data-export-progress]').attributes('data-export-progress')).toBe('35')
+    expect(wrapper.find('[data-export-busy]').exists()).toBe(true)
+    await wrapper.get('[data-export-cancel]').trigger('click')
+    expect(wrapper.emitted('annuler')).toHaveLength(1)
   })
 
   it('confirms a finished export', () => {

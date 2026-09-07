@@ -2,7 +2,7 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 import Timeline from '../components/Timeline.vue'
-import { ANIMATION_STATES, type AnimationState } from '../engine'
+import { type AnimationState } from '../engine'
 import { langue, rechargerLangue, t } from '../i18n'
 import { cle } from '../i18n/stockage'
 import en from '../i18n/locales/en'
@@ -34,14 +34,16 @@ describe('Timeline', () => {
   it('lays out the default montage on a bottom track', () => {
     wrapper = mountTimeline()
     expect(wrapper.find('[data-timeline]').exists()).toBe(true)
-    expect(wrapper.findAll('[data-carte]')).toHaveLength(ANIMATION_STATES.length)
+    expect(wrapper.findAll('[data-carte]')).toHaveLength(1)
     expect(wrapper.get('[data-play]').attributes('aria-label')).toBe(en.timeline.play)
-    expect(wrapper.get('[data-total]').text()).toBe('0:28')
+    expect(wrapper.get('[data-total]').text()).toBe('0:02')
     expect(wrapper.get('[data-cycle-select]').text()).toContain(en.cycles.defaultName)
   })
 
   it('plays, stops, and seeks a block onto the avatar state', async () => {
     wrapper = mountTimeline()
+    await wrapper.setProps({ state: 'Thinking' as AnimationState })
+    await wrapper.get('[data-add]').trigger('click')
     await wrapper.get('[data-play]').trigger('click')
     expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-play]').attributes('aria-label')).toBe(en.timeline.pause)
@@ -63,11 +65,10 @@ describe('Timeline', () => {
 
   it('adds, reorders, retimes, and removes blocks', async () => {
     wrapper = mountTimeline()
+    await wrapper.setProps({ state: 'Thinking' as AnimationState })
     await wrapper.get('[data-add]').trigger('click')
-    expect(wrapper.findAll('[data-carte]')).toHaveLength(ANIMATION_STATES.length + 1)
-    expect(wrapper.findAll('[data-block]')[ANIMATION_STATES.length]?.attributes('data-state')).toBe(
-      'Idle',
-    )
+    expect(wrapper.findAll('[data-carte]')).toHaveLength(2)
+    expect(wrapper.get('[data-block="1"]').attributes('data-state')).toBe('Thinking')
 
     await wrapper.get('[data-add-menu]').trigger('click')
     await wrapper.get('[data-pick="Comet"]').trigger('click')
@@ -111,7 +112,7 @@ describe('Timeline', () => {
     await wrapper.get('[data-cycle-remove]').trigger('click')
     await wrapper.get('[data-cycle-confirm]').trigger('submit')
     expect((wrapper.get('[data-cycle-select]').element as HTMLSelectElement).options).toHaveLength(1)
-    expect(wrapper.findAll('[data-carte]')).toHaveLength(ANIMATION_STATES.length)
+    expect(wrapper.findAll('[data-carte]')).toHaveLength(1)
   })
 
   it('persists the montage and restores it on a later visit', async () => {
@@ -121,7 +122,7 @@ describe('Timeline', () => {
     wrapper.unmount()
 
     wrapper = mountTimeline()
-    expect(wrapper.findAll('[data-carte]')).toHaveLength(ANIMATION_STATES.length + 1)
+    expect(wrapper.findAll('[data-carte]')).toHaveLength(2)
   })
 
   it('seeds a new cycle from the selected animation state', async () => {

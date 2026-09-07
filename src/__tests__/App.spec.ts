@@ -9,6 +9,7 @@ import en from '../i18n/locales/en'
 import fr from '../i18n/locales/fr'
 import zh from '../i18n/locales/zh'
 import { ecris } from '../i18n/stockage'
+import { Abandon } from '../ui/export'
 
 const { exporte, exporteMontage } = vi.hoisted(() => ({
   exporte: vi.fn<(svg: SVGSVGElement, id: string, etat: string) => Promise<void>>(),
@@ -18,6 +19,8 @@ const { exporte, exporteMontage } = vi.hoisted(() => ({
       cycle: Cycle,
       reglages: { shape: string; colour: string; expression: string },
       nom: string,
+      avance?: (fait: number, total: number) => void,
+      signal?: AbortSignal,
     ) => Promise<void>
   >(),
 }))
@@ -171,6 +174,8 @@ describe('App', () => {
     expect(wrapper.find('[data-timeline]').exists()).toBe(true)
     expect(wrapper.get('[data-timeline] [data-block="0"]').attributes('data-state')).toBe('Idle')
 
+    await wrapper.get('[data-animations-palette] [data-state="Thinking"]').trigger('click')
+    await wrapper.get('[data-add]').trigger('click')
     await wrapper.get('[data-timeline] [data-block="1"] [data-carte]').trigger('click')
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Thinking')
 
@@ -236,7 +241,11 @@ describe('App', () => {
     expect(exporte).not.toHaveBeenCalled()
     const [format, cycle, reglages, nom] = exporteMontage.mock.calls[0]!
     expect(format).toBe('gif')
-    expect(cycle.blocks).toEqual([{ state: 'Comet', duration: 2 }])
+    expect(cycle.blocks).toEqual([
+      { state: 'Idle', duration: 0.4 },
+      { state: 'Comet', duration: 1.2 },
+      { state: 'Idle', duration: 0.4 },
+    ])
     expect(reglages).toMatchObject({ shape: 'circle', colour: 'ink', expression: 'neutral' })
     expect(nom).toBe('Comet')
     expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
@@ -250,8 +259,26 @@ describe('App', () => {
     await flushPromises()
     expect(exporteMontage).toHaveBeenCalledOnce()
     const [, cycle, , nom] = exporteMontage.mock.calls[0]!
-    expect(cycle.blocks.length).toBe(ANIMATION_STATES.length)
+    expect(cycle.blocks).toEqual([{ state: 'Idle', duration: 2 }])
     expect(nom).toBe(en.cycles.defaultName)
+    wrapper.unmount()
+  })
+
+  it('reports export progress and treats cancellation as neutral', async () => {
+    exporteMontage.mockImplementationOnce(
+      (_format, _cycle, _reglages, _nom, avance, signal) =>
+        new Promise<void>((_resolve, reject) => {
+          avance?.(1, 2)
+          signal?.addEventListener('abort', () => reject(new Abandon()), { once: true })
+        }),
+    )
+    const wrapper = mount(App)
+    await wrapper.get('[data-export="gif"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-export-status]').text()).toContain('50%')
+    await wrapper.get('[data-export-cancel]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[data-export-status]').exists()).toBe(false)
     wrapper.unmount()
   })
 

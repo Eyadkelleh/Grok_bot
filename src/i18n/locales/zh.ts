@@ -4,7 +4,7 @@ const zh: typeof fr = {
   app: {
     name: 'Grok_bot',
     title: 'Grok_bot — SVG 头像工作室',
-    tagline: '自定义、制作动画并导出 SVG 头像。',
+    tagline: '自定义、制作动画，并导出静态图或视频。',
     botAria: 'Grok_bot 头像',
   },
 
@@ -21,6 +21,7 @@ const zh: typeof fr = {
     shape: '形状',
     expression: '表情',
     colour: '颜色',
+    skinLimited: '形状和表情可能不适用于此状态。',
   },
 
   shapes: {
@@ -143,6 +144,8 @@ const zh: typeof fr = {
     metaPose: '{name} · {duration} · 与预览一致',
     metaCycle: '{name} · {duration} · {count} 个动画',
     busy: '正在导出…',
+    progress: '正在导出… {percent}%',
+    cancel: '取消导出',
     mp4Unavailable: '此浏览器无法编码 MP4',
     done: '已导出',
     failed: '导出失败',

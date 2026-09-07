@@ -6,7 +6,12 @@ import { rechargerApparence } from '../customise'
 import { rechargerLangue, langue } from '../i18n'
 import en from '../i18n/locales/en'
 import { FRICTION_VERSION, maxFriction, scoreFriction } from '../ui/friction'
-import { probeFriction, probeNewCycleFromPose } from '../ui/frictionProbe'
+import {
+  probeBusyFriction,
+  probeFriction,
+  probeNewCycleFromPose,
+  probeSkinHonesty,
+} from '../ui/frictionProbe'
 
 describe('video friction harness (issue #33)', () => {
   beforeEach(() => {
@@ -30,21 +35,26 @@ describe('video friction harness (issue #33)', () => {
       await wrapper.get('[data-cycle-form]').trigger('submit')
       await flushPromises()
     })
+    flags.skinHonesty = await probeSkinHonesty(wrapper, async () => {
+      await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
+      await flushPromises()
+    })
 
     const busy = mount(ExportBar, {
       props: {
         etat: 'occupe',
         pose: 'Idle',
         cycleName: en.cycles.defaultName,
-        cycleDuration: 28,
-        cycleBlockCount: 14,
+        cycleDuration: 2,
+        cycleBlockCount: 1,
+        progress: 40,
       },
     })
-    flags.busyStatus = busy.find('[data-export-busy]').exists()
+    Object.assign(flags, probeBusyFriction(busy))
     busy.unmount()
 
     const score = scoreFriction(flags)
-    // Baseline on origin/main was 18. Stop predicate met at 0.
+    expect(flags.catalogDefaultShort).toBe(true)
     expect(score).toBe(0)
     expect(score).toBeLessThanOrEqual(maxFriction())
 

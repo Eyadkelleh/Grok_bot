@@ -93,6 +93,7 @@ export {
 export {
   DEFAULT_SIZE,
   DEFAULT_PAPER,
+  FACE_STATES,
   sampleAvatar,
   gazeAttr,
   colourIdOf,
@@ -112,6 +113,10 @@ export {
   makeBlock,
   defaultCycle,
   defaultMontage,
+  poseCycle,
+  POSE_LEAD,
+  POSE_HOLD,
+  POSE_CYCLE_ID,
   totalDuration,
   offsetOf,
   blockAt,

@@ -2,7 +2,7 @@ export default {
   app: {
     name: 'Grok_bot',
     title: "Grok_bot — studio d'avatar SVG",
-    tagline: 'Personnalisez, animez et exportez un avatar SVG.',
+    tagline: 'Personnalisez, animez et exportez en image ou en vidéo.',
     botAria: 'Avatar Grok_bot',
   },
 
@@ -19,6 +19,7 @@ export default {
     shape: 'Forme',
     expression: 'Expression',
     colour: 'Couleur',
+    skinLimited: 'La forme et l’expression peuvent ne pas s’appliquer à cet état.',
   },
 
   shapes: {
@@ -141,6 +142,8 @@ export default {
     metaPose: '{name} · {duration} · correspond à l’aperçu',
     metaCycle: '{name} · {duration} · {count} animations',
     busy: 'Export en cours…',
+    progress: 'Export en cours… {percent} %',
+    cancel: 'Annuler l’export',
     mp4Unavailable: 'Ce navigateur ne peut pas encoder le MP4',
     done: 'Exporté',
     failed: "Échec de l'export",

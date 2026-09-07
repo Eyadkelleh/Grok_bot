@@ -4,8 +4,7 @@
  */
 
 import {
-  DEFAULT_BLOCK_DURATION,
-  makeBlock,
+  poseCycle,
   totalDuration,
   type AnimationState,
   type Block,
@@ -20,7 +19,6 @@ export type VideoSourceKind = 'pose' | 'cycle'
 export interface PoseExportSource {
   kind: 'pose'
   state: AnimationState
-  duration: number
 }
 
 export interface CycleExportSource {
@@ -45,13 +43,11 @@ export type ExportIntent =
       background: FondGif
     }
 
-export const DEFAULT_POSE_CLIP_DURATION = DEFAULT_BLOCK_DURATION
+/** Total length of a pose-as-video clip (Idle lead + hold + Idle return). */
+export const DEFAULT_POSE_CLIP_DURATION = 2
 
-export function sourceFromPose(
-  state: AnimationState,
-  duration = DEFAULT_POSE_CLIP_DURATION,
-): PoseExportSource {
-  return { kind: 'pose', state, duration }
+export function sourceFromPose(state: AnimationState): PoseExportSource {
+  return { kind: 'pose', state }
 }
 
 export function sourceFromCycle(cycle: Cycle): CycleExportSource {
@@ -63,7 +59,10 @@ export function sourceFromCycle(cycle: Cycle): CycleExportSource {
   }
 }
 
-export function makeStillIntent(state: AnimationState, format: StillFormat): ExportIntent {
+export function makeStillIntent(
+  state: AnimationState,
+  format: StillFormat,
+): Extract<ExportIntent, { kind: 'still' }> {
   return { kind: 'still', format, state }
 }
 
@@ -71,12 +70,12 @@ export function makeVideoIntent(
   source: SourceExport,
   format: VideoFormat,
   background: FondGif = 'blanc',
-): ExportIntent {
+): Extract<ExportIntent, { kind: 'video' }> {
   return { kind: 'video', format, source, background }
 }
 
 export function blocksForSource(source: SourceExport): Block[] {
-  if (source.kind === 'pose') return [makeBlock(source.state, source.duration)]
+  if (source.kind === 'pose') return poseCycle(source.state).blocks.map((b) => ({ ...b }))
   return source.blocks.map((b) => ({ ...b }))
 }
 
@@ -86,10 +85,11 @@ export function durationForSource(source: SourceExport): number {
 
 export function cycleForSource(source: SourceExport): Cycle {
   if (source.kind === 'pose') {
+    const cycle = poseCycle(source.state)
     return {
       id: `pose-${source.state}`,
       name: source.state,
-      blocks: blocksForSource(source),
+      blocks: cycle.blocks.map((b) => ({ ...b })),
     }
   }
   return {

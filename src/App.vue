@@ -4,6 +4,7 @@ import { colour, expression, shape } from './customise'
 import { nomDeCycle, t, type Cle } from './i18n'
 import {
   ecrireHash,
+  FACE_STATES,
   lireHash,
   totalDuration,
   type AnimationState,
@@ -15,7 +16,7 @@ import ExportBar from './components/ExportBar.vue'
 import Settings from './components/Settings.vue'
 import Timeline from './components/Timeline.vue'
 import { exporte, exporteMontage } from './ui/capture'
-import { ACTION_BY_ID, type ActionId, type EtatExport } from './ui/export'
+import { ACTION_BY_ID, Abandon, type ActionId, type EtatExport } from './ui/export'
 import {
   cycleForSource,
   makeVideoIntent,
@@ -30,18 +31,20 @@ const playing = ref(false)
 const studio = ref<HTMLElement | null>(null)
 const timeline = ref<InstanceType<typeof Timeline> | null>(null)
 const etatExport = ref<EtatExport>('pret')
+const exportProgress = ref<number | null>(null)
 let confirmation: ReturnType<typeof setTimeout> | undefined
 let ecritParNous = ''
+let exportAbort: AbortController | undefined
 
 const CONFIRMATION_MS = 1800
 const SECTIONS = ['studio', 'customise', 'settings', 'about'] as const
-
 const cycleActif = computed(() => timeline.value?.cycle ?? null)
 const nomCycle = computed(() => (cycleActif.value ? nomDeCycle(cycleActif.value) : ''))
 const dureeCycle = computed(() =>
   cycleActif.value ? totalDuration(cycleActif.value.blocks) : 0,
 )
 const blocsCycle = computed(() => cycleActif.value?.blocks.length ?? 0)
+const skinLimited = computed(() => !FACE_STATES.has(animationState.value))
 
 watch(
   [animationState, playing],
@@ -80,6 +83,9 @@ async function surExport(payload: { action: ActionId; videoSource: VideoSourceKi
   if (!action) return
 
   clearTimeout(confirmation)
+  exportAbort?.abort()
+  exportAbort = new AbortController()
+  exportProgress.value = action.mode === 'montage' ? 0 : null
   etatExport.value = 'occupe'
   try {
     if (action.mode === 'montage') {
@@ -100,6 +106,10 @@ async function surExport(payload: { action: ActionId; videoSource: VideoSourceKi
           expression: expression.value,
         },
         intent.source.kind === 'pose' ? intent.source.state : nomDeCycle(cycle),
+        (fait, total) => {
+          exportProgress.value = total > 0 ? Math.min(100, Math.round((100 * fait) / total)) : 0
+        },
+        exportAbort.signal,
       )
     } else {
       const svg = svgCourant()
@@ -107,15 +117,25 @@ async function surExport(payload: { action: ActionId; videoSource: VideoSourceKi
       await exporte(svg, payload.action, animationState.value)
     }
     etatExport.value = 'exporte'
-  } catch {
-    etatExport.value = 'erreur'
+  } catch (err) {
+    etatExport.value = err instanceof Abandon ? 'pret' : 'erreur'
+  } finally {
+    exportProgress.value = null
+    exportAbort = undefined
   }
-  confirmation = setTimeout(() => (etatExport.value = 'pret'), CONFIRMATION_MS)
+  if (etatExport.value !== 'pret') {
+    confirmation = setTimeout(() => (etatExport.value = 'pret'), CONFIRMATION_MS)
+  }
+}
+
+function annulerExport() {
+  exportAbort?.abort()
 }
 
 onMounted(() => window.addEventListener('hashchange', surHash))
 onBeforeUnmount(() => {
   clearTimeout(confirmation)
+  exportAbort?.abort()
   window.removeEventListener('hashchange', surHash)
 })
 </script>
@@ -154,13 +174,16 @@ onBeforeUnmount(() => {
           />
           <h1>{{ t('app.name') }}</h1>
           <p class="tagline">{{ t('app.tagline') }}</p>
+          <p v-if="skinLimited" class="hint" data-skin-limited>{{ t('panel.skinLimited') }}</p>
           <ExportBar
             :etat="etatExport"
             :pose="animationState"
             :cycle-name="nomCycle"
             :cycle-duration="dureeCycle"
             :cycle-block-count="blocsCycle"
+            :progress="exportProgress"
             @exporter="surExport"
+            @annuler="annulerExport"
           />
         </section>
         <AnimationsPalette
@@ -257,5 +280,13 @@ h1 {
   max-width: 28rem;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.hint {
+  margin: 0;
+  max-width: 28rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
 }
 </style>

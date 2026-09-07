@@ -6,6 +6,8 @@ import { type FrictionFlags } from './friction'
 const MONTAGE_HINT =
   /\b(cycle|montage|sequence|timeline|clip|vid[eé]o|boucle|s[eé]quence)\b/i
 
+const VIDEO_TAGLINE = /(?:\b(?:video|vid[eé]o|gif|mp4|clip)\b|视频)/i
+
 function textOf(el: Element | undefined): string {
   return (el?.textContent ?? '').replace(/\s+/g, ' ').trim()
 }
@@ -50,7 +52,7 @@ export function probeFriction(wrapper: VueWrapper): FrictionFlags {
   const cycleNamed =
     wrapper.find('[data-export-cycle]').exists() ||
     (bar.find('[data-export-meta]').exists() &&
-      /default cycle|cycle par d[eé]faut|默认循环/i.test(barText))
+      /default cycle|cycle par d[eé]faut|默认循环|默认序列/i.test(barText))
 
   const poseVideoPath =
     wrapper.find('[data-export-pose], [data-use-pose], [data-loop-pose]').exists() ||
@@ -66,6 +68,8 @@ export function probeFriction(wrapper: VueWrapper): FrictionFlags {
     wrapper.find('[data-export-duration-secs]').attributes('data-export-duration-secs') ?? 'NaN',
   )
 
+  const tagline = textOf(wrapper.find('.tagline').element)
+
   return {
     montageLabeled,
     durationShown,
@@ -79,7 +83,37 @@ export function probeFriction(wrapper: VueWrapper): FrictionFlags {
     saneDefaultDuration: Number.isFinite(durationSecs)
       ? durationSecs <= 8
       : totalDuration(defaultCycle().blocks) <= 8,
+    taglineMentionsVideo: VIDEO_TAGLINE.test(tagline),
+    catalogDefaultShort: totalDuration(defaultCycle().blocks) <= 8,
+    exportProgress: false,
+    exportCancel: false,
+    skinHonesty: false,
   }
+}
+
+/** Busy-state flags need an ExportBar mounted with etat=occupe. */
+export function probeBusyFriction(
+  wrapper: VueWrapper,
+): Pick<FrictionFlags, 'exportProgress' | 'exportCancel' | 'busyStatus'> {
+  return {
+    busyStatus:
+      wrapper.find('[data-export-busy]').exists() ||
+      /exporting|encod|en cours|导出中/i.test(textOf(wrapper.element)),
+    exportProgress:
+      wrapper.find('[data-export-progress]').exists() ||
+      /\d+\s*%/.test(textOf(wrapper.find('[data-export-status]').element)),
+    exportCancel: wrapper.find('[data-export-cancel]').exists(),
+  }
+}
+
+/** After selecting a non-face pose, the studio must warn about limited skin. */
+export async function probeSkinHonesty(
+  wrapper: VueWrapper,
+  pickNonFace: () => Promise<void> | void,
+): Promise<boolean> {
+  await pickNonFace()
+  await wrapper.vm.$nextTick()
+  return wrapper.find('[data-skin-limited]').exists()
 }
 
 /** Interactive flag: create a cycle and see if first block matches current state. */
@@ -93,7 +127,6 @@ export async function probeNewCycleFromPose(
   const selectedId = (select.element as HTMLSelectElement).value
   const option = wrapper.find(`[data-cycle="${selectedId}"]`)
   const first = wrapper.find('[data-timeline] [data-block="0"]').attributes('data-state')
-  // Debug-friendly: require active cycle's first card to be Comet after the scripted create.
   return Boolean(option.exists() && first === 'Comet')
 }
 
