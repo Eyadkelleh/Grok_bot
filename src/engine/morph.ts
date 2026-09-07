@@ -9,6 +9,8 @@ export const BODY_RADIUS = 46
 export const VIEW_SCALE = BODY_RADIUS
 export const VIEW_CX = 0
 export const VIEW_CY = 0
+export const VIEW_HALF = BODY_RADIUS * 1.58
+export const VIEW_SIZE = VIEW_HALF * 2
 
 export interface Point {
   x: number
@@ -129,7 +131,7 @@ export function closedPath(pts: Point[], tension = 1 / 6): string {
 }
 
 export function viewBoxAttr(): string {
-  return '-50 -50 100 100'
+  return `${-VIEW_HALF} ${-VIEW_HALF} ${VIEW_SIZE} ${VIEW_SIZE}`
 }
 
 export function eggProfile(): number[] {

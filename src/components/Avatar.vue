@@ -8,6 +8,8 @@ import {
   DEFAULT_PAPER,
   DEFAULT_SHAPE,
   DEFAULT_SIZE,
+  VIEW_HALF,
+  VIEW_SIZE,
   blockAt,
   colourIdOf,
   gazeAttr,
@@ -157,10 +159,10 @@ const shownState = computed(() => (progress.value >= 1 ? to.value : from.value))
       <mask
         :id="uid"
         maskUnits="userSpaceOnUse"
-        x="-50"
-        y="-50"
-        width="100"
-        height="100"
+        :x="-VIEW_HALF"
+        :y="-VIEW_HALF"
+        :width="VIEW_SIZE"
+        :height="VIEW_SIZE"
       >
         <path :d="frame.path" fill="#fff" />
         <ellipse
@@ -179,7 +181,14 @@ const shownState = computed(() => (progress.value >= 1 ? to.value : from.value))
     </defs>
     <path data-body-paper :d="frame.path" :fill="frame.paper" />
     <g :mask="`url(#${uid})`">
-      <rect data-body x="-50" y="-50" width="100" height="100" :fill="frame.fill" />
+      <rect
+        data-body
+        :x="-VIEW_HALF"
+        :y="-VIEW_HALF"
+        :width="VIEW_SIZE"
+        :height="VIEW_SIZE"
+        :fill="frame.fill"
+      />
     </g>
     <circle
       v-for="(dot, i) in frame.dots"

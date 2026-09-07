@@ -9,6 +9,7 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:ui-avatar": "node scripts/ui-avatar-loop.mjs",
     "test:unit": "vitest",
     "build-only": "vite build",
     "type-check": "vue-tsc --build"

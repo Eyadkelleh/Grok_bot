@@ -17,6 +17,8 @@ export {
   VIEW_SCALE,
   VIEW_CX,
   VIEW_CY,
+  VIEW_HALF,
+  VIEW_SIZE,
   type Point,
   type Silhouette,
 } from './morph'
