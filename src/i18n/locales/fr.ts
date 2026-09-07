@@ -21,6 +21,15 @@ export default {
     colour: 'Couleur',
   },
 
+  studio: {
+    modes: 'Modes du studio',
+    shape: 'Forme',
+    face: 'Visage',
+    aura: 'Aura',
+    motion: 'Mouvement',
+    shapeLocked: 'Cette pose garde son propre contour.',
+  },
+
   shapes: {
     circle: 'Cercle',
     pebble: 'Galet',

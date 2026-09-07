@@ -3,22 +3,17 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { colour, expression, shape } from './customise'
 import { nomDeCycle, t, type Cle } from './i18n'
 import { ecrireHash, lireHash, type AnimationState } from './engine'
-import Avatar from './components/Avatar.vue'
-import AnimationsPalette from './components/AnimationsPalette.vue'
-import CustomisePanel from './components/CustomisePanel.vue'
-import ExportBar from './components/ExportBar.vue'
+import PhantomStudio from './components/PhantomStudio.vue'
 import Settings from './components/Settings.vue'
 import Timeline from './components/Timeline.vue'
 import { exporte, exporteMontage } from './ui/capture'
-import { useStageGeometry } from './ui/useStageGeometry'
 import { ACTION_BY_ID, type ActionId, type EtatExport } from './ui/export'
 
 const initial = lireHash()
 const animationState = ref<AnimationState>(initial.named ? initial.state : 'Idle')
 const playing = ref(false)
-const studio = ref<HTMLElement | null>(null)
-const { size: stageSize } = useStageGeometry(studio)
 const timeline = ref<InstanceType<typeof Timeline> | null>(null)
+const phantom = ref<InstanceType<typeof PhantomStudio> | null>(null)
 const etatExport = ref<EtatExport>('pret')
 let confirmation: ReturnType<typeof setTimeout> | undefined
 let ecritParNous = ''
@@ -53,8 +48,7 @@ function aller(id: (typeof SECTIONS)[number]) {
 }
 
 function svgCourant(): SVGSVGElement | null {
-  const el = studio.value?.querySelector('svg[role="img"]')
-  return el instanceof SVGSVGElement ? el : null
+  return phantom.value?.svgCourant() ?? null
 }
 
 function cycleCourant() {
@@ -112,32 +106,17 @@ onBeforeUnmount(() => {
     </header>
 
     <main class="page">
-      <div class="workspace">
-        <CustomisePanel
-          id="customise"
-          v-model:shape="shape"
-          v-model:expression="expression"
-          v-model:colour="colour"
-        />
-        <section id="studio" ref="studio" class="studio">
-          <Avatar
-            :state="animationState"
-            :size="stageSize"
-            :shape="shape"
-            :expression="expression"
-            :colour="colour"
-            :label="t('app.botAria')"
-          />
-          <h1>{{ t('app.name') }}</h1>
-          <p class="tagline">{{ t('app.tagline') }}</p>
-          <ExportBar :etat="etatExport" @exporter="surExport" />
-        </section>
-        <AnimationsPalette
-          id="animations"
-          v-model="animationState"
-          @update:modelValue="playing = false"
-        />
-      </div>
+      <PhantomStudio
+        ref="phantom"
+        v-model:shape="shape"
+        v-model:expression="expression"
+        v-model:colour="colour"
+        v-model:state="animationState"
+        :label="t('app.botAria')"
+        :etat-export="etatExport"
+        @exporter="surExport"
+        @stop-playing="playing = false"
+      />
       <Settings />
     </main>
     <Timeline ref="timeline" v-model:state="animationState" v-model:playing="playing" />
@@ -191,39 +170,6 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   gap: 2.5rem;
-  padding: 2rem 1.5rem 14rem;
-}
-
-.workspace {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 2rem 2.5rem;
-  width: 100%;
-  max-width: 64rem;
-}
-
-.studio {
-  display: flex;
-  flex: 1 1 16rem;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-  text-align: center;
-}
-
-h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-}
-
-.tagline {
-  margin: 0;
-  max-width: 28rem;
-  color: var(--muted);
-  line-height: 1.5;
+  padding: 1rem 1.5rem 14rem;
 }
 </style>

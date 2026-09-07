@@ -87,14 +87,19 @@ describe('App', () => {
 
   it('wires the customise panel to the avatar and persists the choice', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-mode="shape"]').trigger('click')
     const panel = wrapper.get('[data-customise-panel]')
     expect(panel.findAll('[data-shape]')).toHaveLength(SHAPES.length)
-    expect(panel.findAll('[data-expression]')).toHaveLength(EXPRESSIONS.length)
-    expect(panel.findAll('[data-colour]')).toHaveLength(COLORS.length)
 
     await panel.get('[data-shape="hexagon"]').trigger('click')
-    await panel.get('[data-expression="happy"]').trigger('click')
-    await panel.get('[data-colour="blue"]').trigger('click')
+    await wrapper.get('[data-mode="expression"]').trigger('click')
+    expect(wrapper.get('[data-customise-panel]').findAll('[data-expression]')).toHaveLength(
+      EXPRESSIONS.length,
+    )
+    await wrapper.get('[data-expression="happy"]').trigger('click')
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    expect(wrapper.get('[data-customise-panel]').findAll('[data-colour]')).toHaveLength(COLORS.length)
+    await wrapper.get('[data-colour="blue"]').trigger('click')
 
     const svg = wrapper.get('#studio svg[role="img"]')
     expect(svg.attributes('data-shape')).toBe('hexagon')
@@ -105,7 +110,7 @@ describe('App', () => {
     expect(window.localStorage.getItem(cle('couleur'))).toBe('blue')
   })
 
-  it('restores stored shape, expression, and colour on load', () => {
+  it('restores stored shape, expression, and colour on load', async () => {
     ecris('forme', 'droplet')
     ecris('expression', 'sleepy')
     ecris('couleur', 'cream')
@@ -115,13 +120,23 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('droplet')
     expect(svg.attributes('data-expression')).toBe('sleepy')
     expect(svg.attributes('data-colour')).toBe('cream')
-    expect(wrapper.get('[data-shape="droplet"]').attributes('aria-checked')).toBe('true')
-    expect(wrapper.get('[data-expression="sleepy"]').attributes('aria-checked')).toBe('true')
-    expect(wrapper.get('[data-colour="cream"]').attributes('aria-checked')).toBe('true')
+    await wrapper.get('[data-mode="shape"]').trigger('click')
+    expect(wrapper.get('[data-customise-panel] [data-shape="droplet"]').attributes('aria-checked')).toBe(
+      'true',
+    )
+    await wrapper.get('[data-mode="expression"]').trigger('click')
+    expect(
+      wrapper.get('[data-customise-panel] [data-expression="sleepy"]').attributes('aria-checked'),
+    ).toBe('true')
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    expect(wrapper.get('[data-customise-panel] [data-colour="cream"]').attributes('aria-checked')).toBe(
+      'true',
+    )
   })
 
   it('morphs Idle to Thinking from the animations palette', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
     const palette = wrapper.get('[data-animations-palette]')
     expect(palette.findAll('[data-state]')).toHaveLength(ANIMATION_STATES.length)
     expect(palette.get('[data-state="Idle"]').attributes('aria-checked')).toBe('true')
@@ -137,6 +152,7 @@ describe('App', () => {
 
   it('drives the avatar morph to Comet from the palette', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
     await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Comet')
     expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
@@ -207,6 +223,7 @@ describe('App', () => {
     expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('true')
     expect(location.hash).toBe('#etat=thinking')
 
+    await wrapper.get('[data-mode="state"]').trigger('click')
     await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
     expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('false')
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Comet')
@@ -249,6 +266,7 @@ describe('App', () => {
 
   it('names the download after the selected animation state', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
     await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
     await wrapper.get('[data-export="svg"]').trigger('click')
     await flushPromises()
