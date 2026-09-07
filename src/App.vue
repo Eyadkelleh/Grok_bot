@@ -5,8 +5,10 @@ import { REST_GAZE, type AnimationState } from './engine'
 import Avatar from './components/Avatar.vue'
 import AnimationsPalette from './components/AnimationsPalette.vue'
 import Settings from './components/Settings.vue'
+import Timeline from './components/Timeline.vue'
 
 const animationState = ref<AnimationState>('Idle')
+const playing = ref(false)
 </script>
 
 <template>
@@ -35,10 +37,11 @@ const animationState = ref<AnimationState>('Idle')
           <h1>{{ t('app.name') }}</h1>
           <p class="tagline">{{ t('app.tagline') }}</p>
         </section>
-        <AnimationsPalette v-model="animationState" />
+        <AnimationsPalette v-model="animationState" @update:modelValue="playing = false" />
       </div>
       <Settings />
     </main>
+    <Timeline v-model:state="animationState" v-model:playing="playing" />
   </div>
 </template>
 
@@ -88,7 +91,7 @@ const animationState = ref<AnimationState>('Idle')
   align-items: center;
   justify-content: center;
   gap: 2.5rem;
-  padding: 2rem 1.5rem 3rem;
+  padding: 2rem 1.5rem 14rem;
 }
 
 .workspace {

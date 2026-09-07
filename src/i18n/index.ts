@@ -50,6 +50,24 @@ export function t(cle: Cle, valeurs?: Record<string, string | number>): string {
   return interpoler(brut(cle), valeurs)
 }
 
+export function formaterNombre(n: number): string {
+  const rounded = Math.round(n * 10) / 10
+  const s = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
+  return courante.value === 'fr' ? s.replace('.', ',') : s
+}
+
+export function secondes(n: number): string {
+  return t('units.seconds', { n: formaterNombre(n) })
+}
+
+export function secondesCourtes(n: number): string {
+  return t('units.secondsShort', { n: formaterNombre(n) })
+}
+
+export function nomDeCycle(cycle: { name: string }): string {
+  return cycle.name.trim() || t('cycles.defaultName')
+}
+
 export function rechargerLangue(): Langue {
   courante.value = choisirLangue(lis('langue'), navigator.languages ?? [navigator.language])
   return courante.value
