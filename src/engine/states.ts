@@ -50,8 +50,8 @@ export interface MorphFrame {
   progress: number
 }
 
-const hexagonRadii = regularPolygonProfile(6)
-const triangleRadii = regularPolygonProfile(3)
+const hexagonRadii = regularPolygonProfile(6, 1, 0.18, -90)
+const triangleRadii = regularPolygonProfile(3, 1, 0.18, -90)
 const eggRadii = eggProfile()
 
 function entry(silhouette: Silhouette, dots: MorphDot[] = []): StateEntry {
