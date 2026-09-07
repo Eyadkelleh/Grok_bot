@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:ui-avatar": "node scripts/ui-avatar-loop.mjs",
+    "test:visual": "node scripts/ui-avatar-loop.mjs",
+    "test:visual:regen": "node scripts/regen-visual-golden.mjs",
     "test:unit": "vitest",
     "build-only": "vite build",
     "type-check": "vue-tsc --build"
