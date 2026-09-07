@@ -16,9 +16,7 @@ const FACE_STATES = new Set<AnimationState>([
   'Idle',
   'Wink',
   'WideEyes',
-  'Alert',
   'Notification',
-  'Sleep',
 ])
 
 export interface AvatarSpec {
@@ -88,10 +86,6 @@ function eyesFor(
       cfg.h *= 1.2
     }
   }
-  if (state === 'Sleep') {
-    for (const cfg of cfgs) cfg.open *= 0.28
-  }
-
   const poses = eyePoses(resolved, BODY_RADIUS, expression.split)
   const eyes: AvatarEye[] = poses.map((pose, i) => {
     const cfg = cfgs[i]!

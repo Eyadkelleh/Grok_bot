@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { viewBoxAttr } from '../../engine'
+import { VIEW_SIZE, viewBoxAttr } from '../../engine'
 import {
   ACTION_BY_ID,
   ACTION_DEFAUT,
@@ -39,8 +39,8 @@ describe('export catalogue', () => {
 
   it('sizes the SVG from the on-screen viewBox', () => {
     expect(viewBoxExport()).toBe(viewBoxAttr())
-    expect(viewBoxExport()).toBe('-50 -50 100 100')
-    expect(SVG_TAILLE).toBe(100)
+    expect(viewBoxExport()).toBe('-72.68 -72.68 145.36 145.36')
+    expect(SVG_TAILLE).toBe(VIEW_SIZE)
     expect(ACTION_BY_ID.get('svg')?.taille).toBe(SVG_TAILLE)
   })
 

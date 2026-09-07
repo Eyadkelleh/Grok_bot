@@ -50,6 +50,10 @@ describe('expressions', () => {
 })
 
 describe('sampleAvatar', () => {
+  it.each(['Alert', 'Sleep'] as const)('does not render expression eyes for %s', (state) => {
+    expect(sampleAvatar({ state }).eyes).toHaveLength(0)
+  })
+
   it('changes the body path when the shape changes', () => {
     const circle = sampleAvatar({ shape: 'circle' })
     const hexagon = sampleAvatar({ shape: 'hexagon' })

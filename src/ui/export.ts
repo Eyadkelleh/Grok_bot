@@ -5,7 +5,7 @@
  * import — a static one from this file would pull mediabunny into the entry chunk.
  */
 
-import { viewBoxAttr } from '../engine'
+import { VIEW_SIZE, viewBoxAttr } from '../engine'
 
 /** One PNG size: 1024 covers Discord/X/GitHub/Slack avatars and downscales cleanly. */
 export const PNG_TAILLE = 1024
@@ -14,7 +14,7 @@ export const PNG_TAILLE = 1024
  * Intrinsic SVG size in CSS pixels. Matches the on-screen viewBox side so the
  * file opens 1:1 with the studio frame; it still scales because it is vector.
  */
-export const SVG_TAILLE = 100
+export const SVG_TAILLE = VIEW_SIZE
 
 export type ActionId = 'png' | 'svg' | 'gif' | 'mp4'
 export type ModeExport = 'telecharge' | 'montage'
