@@ -15,6 +15,25 @@ const en: typeof fr = {
     about: 'About',
   },
 
+  animations: {
+    title: 'Animations',
+    label: 'Animation states',
+    Idle: 'Idle',
+    Thinking: 'Thinking',
+    Wink: 'Wink',
+    WideEyes: 'Wide eyes',
+    Alert: 'Alert',
+    Notification: 'Notification',
+    Exclamation: 'Exclamation',
+    Sleep: 'Sleep',
+    Egg: 'Egg',
+    Hexagon: 'Hexagon',
+    Play: 'Play',
+    Orbit: 'Orbit',
+    Burst: 'Burst',
+    Comet: 'Comet',
+  },
+
   settings: {
     title: 'Settings',
     language: 'Language',

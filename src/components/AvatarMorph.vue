@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
   BODY_RADIUS,
   DEFAULT_MORPH_MS,
@@ -13,12 +13,13 @@ const props = withDefaults(
   defineProps<{
     durationMs?: number
     label?: string
+    state?: AnimationState
   }>(),
-  { durationMs: DEFAULT_MORPH_MS, label: 'Grok_bot' },
+  { durationMs: DEFAULT_MORPH_MS, label: 'Grok_bot', state: 'Idle' },
 )
 
 const from = ref<AnimationState>('Idle')
-const to = ref<AnimationState>('Idle')
+const to = ref<AnimationState>(props.state)
 const startedAt = ref(0)
 const now = ref(0)
 let raf = 0
@@ -34,9 +35,10 @@ function tick(ts: number) {
   }
 }
 
-function toggleIdleThinking() {
+function morphTo(next: AnimationState) {
+  if (next === to.value) return
   from.value = to.value
-  to.value = to.value === 'Thinking' ? 'Idle' : 'Thinking'
+  to.value = next
   const t = performance.now()
   startedAt.value = t
   now.value = t
@@ -45,6 +47,11 @@ function toggleIdleThinking() {
     raf = requestAnimationFrame(tick)
   }
 }
+
+watch(
+  () => props.state,
+  (next) => morphTo(next),
+)
 
 onMounted(() => {
   const t = performance.now()
@@ -55,6 +62,8 @@ onMounted(() => {
 onUnmounted(() => {
   cancelAnimationFrame(raf)
 })
+
+defineExpose({ morphTo })
 </script>
 
 <template>
@@ -78,14 +87,6 @@ onUnmounted(() => {
         :opacity="dot.opacity"
       />
     </svg>
-    <button
-      type="button"
-      data-morph-toggle
-      :aria-pressed="frame.to === 'Thinking'"
-      @click="toggleIdleThinking"
-    >
-      {{ frame.to === 'Thinking' ? 'Show idle' : 'Show thinking' }}
-    </button>
   </div>
 </template>
 
@@ -94,27 +95,11 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
 }
 
 .avatar {
   display: block;
   width: 220px;
   height: 220px;
-}
-
-button {
-  margin: 0;
-  padding: 0.45rem 0.9rem;
-  border: 1px solid #d6d3d1;
-  border-radius: 999px;
-  background: #fff;
-  color: #1c1917;
-  font: inherit;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #f5f5f4;
 }
 </style>
