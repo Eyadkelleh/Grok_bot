@@ -37,3 +37,52 @@ export {
   type MorphFrame,
   type StateEntry,
 } from './states'
+export {
+  EYE_H,
+  EYE_SPLIT,
+  EYE_W,
+  REST_GAZE,
+  blinkScale,
+  eyePoses,
+  resolveGaze,
+  type EyePose,
+  type GazeInput,
+  type HeadGaze,
+} from './face'
+export {
+  SHAPES,
+  SHAPE_BY_ID,
+  DEFAULT_SHAPE,
+  COLORS,
+  COLOR_BY_ID,
+  DEFAULT_COLOR,
+  isShapeId,
+  isColorId,
+  resolveShape,
+  resolveColour,
+  type ShapeId,
+  type BotShape,
+  type ColorId,
+  type BotColor,
+} from './skins'
+export {
+  EXPRESSIONS,
+  EXPRESSION_BY_ID,
+  DEFAULT_EXPRESSION,
+  isExpressionId,
+  resolveExpression,
+  blendExpression,
+  type ExpressionId,
+  type EyeCfg,
+  type BotExpression,
+} from './expressions'
+export {
+  DEFAULT_SIZE,
+  DEFAULT_PAPER,
+  sampleAvatar,
+  gazeAttr,
+  colourIdOf,
+  type AvatarSpec,
+  type AvatarEye,
+  type AvatarFrame,
+} from './avatar'

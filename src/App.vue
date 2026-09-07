@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { t } from './i18n'
 import type { AnimationState } from './engine'
-import AvatarMorph from './components/AvatarMorph.vue'
+import Avatar from './components/Avatar.vue'
 import AnimationsPalette from './components/AnimationsPalette.vue'
 import Settings from './components/Settings.vue'
 
@@ -23,7 +23,14 @@ const animationState = ref<AnimationState>('Idle')
     <main class="page">
       <div class="workspace">
         <section id="studio" class="studio">
-          <AvatarMorph :state="animationState" :label="t('app.botAria')" />
+          <Avatar
+            :state="animationState"
+            :size="220"
+            shape="circle"
+            expression="neutral"
+            colour="ink"
+            :label="t('app.botAria')"
+          />
           <h1>{{ t('app.name') }}</h1>
           <p class="tagline">{{ t('app.tagline') }}</p>
         </section>
