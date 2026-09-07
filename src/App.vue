@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { colour, expression, shape } from './customise'
-import { nomDeCycle, t } from './i18n'
-import type { AnimationState } from './engine'
+import { nomDeCycle, t, type Cle } from './i18n'
+import { ecrireHash, lireHash, type AnimationState } from './engine'
 import Avatar from './components/Avatar.vue'
 import AnimationsPalette from './components/AnimationsPalette.vue'
 import CustomisePanel from './components/CustomisePanel.vue'
@@ -12,14 +12,43 @@ import Timeline from './components/Timeline.vue'
 import { exporte, exporteMontage } from './ui/capture'
 import { ACTION_BY_ID, type ActionId, type EtatExport } from './ui/export'
 
-const animationState = ref<AnimationState>('Idle')
+const initial = lireHash()
+const animationState = ref<AnimationState>(initial.named ? initial.state : 'Idle')
 const playing = ref(false)
 const studio = ref<HTMLElement | null>(null)
 const timeline = ref<InstanceType<typeof Timeline> | null>(null)
 const etatExport = ref<EtatExport>('pret')
 let confirmation: ReturnType<typeof setTimeout> | undefined
+let ecritParNous = ''
 
 const CONFIRMATION_MS = 1800
+const SECTIONS = ['studio', 'customise', 'settings', 'about'] as const
+
+watch(
+  [animationState, playing],
+  ([id, on]) => {
+    ecritParNous = ecrireHash(id, on)
+  },
+  { immediate: true },
+)
+
+function surHash() {
+  if (location.hash === ecritParNous) {
+    ecritParNous = ''
+    return
+  }
+  const next = lireHash()
+  if (!next.named) return
+  playing.value = false
+  animationState.value = next.state
+}
+
+function aller(id: (typeof SECTIONS)[number]) {
+  const cible = document.getElementById(id)
+  if (!cible) return
+  const calme = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  cible.scrollIntoView({ behavior: calme ? 'auto' : 'smooth', block: 'start' })
+}
 
 function svgCourant(): SVGSVGElement | null {
   const el = studio.value?.querySelector('svg[role="img"]')
@@ -58,7 +87,11 @@ async function surExport(id: ActionId) {
   confirmation = setTimeout(() => (etatExport.value = 'pret'), CONFIRMATION_MS)
 }
 
-onBeforeUnmount(() => clearTimeout(confirmation))
+onMounted(() => window.addEventListener('hashchange', surHash))
+onBeforeUnmount(() => {
+  clearTimeout(confirmation)
+  window.removeEventListener('hashchange', surHash)
+})
 </script>
 
 <template>
@@ -66,10 +99,13 @@ onBeforeUnmount(() => clearTimeout(confirmation))
     <header class="topbar">
       <p class="brand">{{ t('app.name') }}</p>
       <nav class="nav" :aria-label="t('nav.label')">
-        <a href="#studio" data-nav="studio">{{ t('nav.studio') }}</a>
-        <a href="#customise" data-nav="customise">{{ t('nav.customise') }}</a>
-        <a href="#settings" data-nav="settings">{{ t('nav.settings') }}</a>
-        <a href="#about" data-nav="about">{{ t('nav.about') }}</a>
+        <a
+          v-for="id in SECTIONS"
+          :key="id"
+          :href="`#${id}`"
+          :data-nav="id"
+          @click.prevent="aller(id)"
+        >{{ t(`nav.${id}` as Cle) }}</a>
       </nav>
     </header>
 
@@ -127,7 +163,8 @@ onBeforeUnmount(() => clearTimeout(confirmation))
 
 .nav {
   display: flex;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
 }
 
 .nav a {

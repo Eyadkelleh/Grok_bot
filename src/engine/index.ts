@@ -38,6 +38,16 @@ export {
   type StateEntry,
 } from './states'
 export {
+  STATE_SLUGS,
+  slugOf,
+  stateFromSlug,
+  fragmentPour,
+  lireHash,
+  ecrireHash,
+  type StateSlug,
+  type HashEtat,
+} from './hash'
+export {
   EYE_H,
   EYE_SPLIT,
   EYE_W,

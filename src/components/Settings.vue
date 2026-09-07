@@ -21,7 +21,7 @@ function auClavier(event: KeyboardEvent, index: number) {
 </script>
 
 <template>
-  <section id="settings" class="settings" aria-labelledby="settings-title">
+  <section id="settings" class="settings surface" aria-labelledby="settings-title">
     <h2 id="settings-title">{{ t('settings.title') }}</h2>
 
     <h3>{{ t('settings.language') }}</h3>
@@ -88,7 +88,6 @@ function auClavier(event: KeyboardEvent, index: number) {
 
 <style scoped>
 .settings {
-  width: 100%;
   max-width: 22rem;
   text-align: left;
 }

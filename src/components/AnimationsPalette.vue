@@ -26,7 +26,7 @@ function auClavier(event: KeyboardEvent, index: number) {
 </script>
 
 <template>
-  <aside class="rail" data-animations-palette aria-labelledby="animations-title">
+  <aside class="rail surface" data-animations-palette aria-labelledby="animations-title">
     <h2 id="animations-title">{{ t('animations.title') }}</h2>
     <div class="swatches" role="radiogroup" :aria-label="t('animations.label')">
       <button
@@ -62,8 +62,7 @@ function auClavier(event: KeyboardEvent, index: number) {
 
 <style scoped>
 .rail {
-  width: 100%;
-  max-width: 16rem;
+  max-width: var(--rail);
   text-align: left;
 }
 
