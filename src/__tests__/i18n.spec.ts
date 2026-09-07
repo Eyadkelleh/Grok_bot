@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { interpoler } from '../i18n/format'
 import { choisirLangue, LANGUES, tagDe } from '../i18n/langues'
+import { langue, rechargerLangue, secondes } from '../i18n'
 import en from '../i18n/locales/en'
 import fr from '../i18n/locales/fr'
 import zh from '../i18n/locales/zh'
@@ -91,5 +92,15 @@ describe('language catalogue', () => {
 
   it('gives Chinese a script subtag', () => {
     expect(tagDe('zh')).toBe('zh-Hans')
+  })
+})
+
+describe('units', () => {
+  it('formats seconds with the active locale', () => {
+    rechargerLangue()
+    langue.value = 'en'
+    expect(secondes(1.5)).toBe('1.5 s')
+    langue.value = 'fr'
+    expect(secondes(1.5)).toBe('1,5 s')
   })
 })

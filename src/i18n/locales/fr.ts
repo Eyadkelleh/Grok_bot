@@ -85,6 +85,43 @@ export default {
     Comet: 'Comète',
   },
 
+  timeline: {
+    play: 'Lancer la lecture',
+    pause: 'Arrêter la lecture',
+    addAnimation: 'Ajouter une animation',
+    cycles: 'Montages',
+    blockAria: '{state}, {duration}',
+    blockDurationAria: 'Durée de {state}, {duration}',
+    blockRemoveAria: 'Retirer {state}',
+    moveLeft: 'Déplacer {state} vers la gauche',
+    moveRight: 'Déplacer {state} vers la droite',
+  },
+
+  dialog: {
+    cancel: 'Annuler',
+    nameCreateTitle: 'Nouveau cycle',
+    nameRenameTitle: 'Renommer le cycle',
+    nameField: 'Nom du cycle',
+    nameCreate: 'Créer',
+    nameRename: 'Renommer',
+    removeTitle: 'Supprimer « {name} » ?',
+    removeDetail: 'Ce montage sera perdu, avec ses {n} animations.',
+    removeConfirm: 'Supprimer',
+  },
+
+  cycles: {
+    defaultName: 'Cycle par défaut',
+    newName: 'Mon cycle',
+    menuNew: 'Nouveau cycle',
+    menuRenameAria: 'Renommer {name}',
+    menuRemoveAria: 'Supprimer {name}',
+  },
+
+  units: {
+    seconds: '{n} s',
+    secondsShort: '{n}s',
+  },
+
   settings: {
     title: 'Réglages',
     language: 'Langue',

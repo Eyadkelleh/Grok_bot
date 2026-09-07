@@ -87,6 +87,43 @@ const zh: typeof fr = {
     Comet: '彗星',
   },
 
+  timeline: {
+    play: '开始播放',
+    pause: '停止播放',
+    addAnimation: '添加动画',
+    cycles: '序列',
+    blockAria: '{state}，{duration}',
+    blockDurationAria: '{state} 的时长，{duration}',
+    blockRemoveAria: '移除 {state}',
+    moveLeft: '将 {state} 左移',
+    moveRight: '将 {state} 右移',
+  },
+
+  dialog: {
+    cancel: '取消',
+    nameCreateTitle: '新建序列',
+    nameRenameTitle: '重命名序列',
+    nameField: '序列名称',
+    nameCreate: '创建',
+    nameRename: '重命名',
+    removeTitle: '删除“{name}”？',
+    removeDetail: '该序列将被删除，其中包含的 {n} 个动画也将一并丢失。',
+    removeConfirm: '删除',
+  },
+
+  cycles: {
+    defaultName: '默认序列',
+    newName: '我的序列',
+    menuNew: '新建序列',
+    menuRenameAria: '重命名 {name}',
+    menuRemoveAria: '删除 {name}',
+  },
+
+  units: {
+    seconds: '{n} 秒',
+    secondsShort: '{n}秒',
+  },
+
   settings: {
     title: '设置',
     language: '语言',
