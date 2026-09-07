@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { t } from './i18n'
-import type { AnimationState } from './engine'
+import { REST_GAZE, type AnimationState } from './engine'
 import Avatar from './components/Avatar.vue'
 import AnimationsPalette from './components/AnimationsPalette.vue'
 import Settings from './components/Settings.vue'
@@ -28,6 +28,7 @@ const animationState = ref<AnimationState>('Idle')
             :size="220"
             shape="circle"
             expression="neutral"
+            :gaze="REST_GAZE"
             colour="ink"
             :label="t('app.botAria')"
           />
