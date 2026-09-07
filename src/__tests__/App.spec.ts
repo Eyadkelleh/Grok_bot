@@ -16,12 +16,16 @@ describe('App', () => {
     langue.value = 'en'
   })
 
-  it('renders the Grok_bot placeholder and a morphing avatar', () => {
+  it('renders the Grok_bot avatar with default props', () => {
     const wrapper = mount(App)
     expect(wrapper.text()).toContain(brand.name)
     expect(wrapper.text()).toContain(en.app.tagline)
     const svg = wrapper.get('svg[role="img"]')
     expect(svg.attributes('data-state')).toBe('Idle')
+    expect(svg.attributes('data-shape')).toBe('circle')
+    expect(svg.attributes('data-expression')).toBe('neutral')
+    expect(svg.attributes('data-colour')).toBe('ink')
+    expect(svg.findAll('[data-eye]')).toHaveLength(2)
     const path = svg.get('path')
     expect(path.attributes('d')?.startsWith('M')).toBe(true)
   })
