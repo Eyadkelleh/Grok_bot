@@ -1,6 +1,7 @@
 export const brand = {
   name: 'Grok_bot',
-  tagline: 'Customise, animate, and export an SVG avatar.',
+  github: 'https://github.com/Eyadkelleh/Grok_bot',
+  bloub: 'https://github.com/jeremy-prt/bloub',
 } as const
 
 export type Brand = typeof brand
