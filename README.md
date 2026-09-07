@@ -21,3 +21,11 @@ pnpm build
 ```
 
 `pnpm test` runs Vitest once. `pnpm build` type-checks with `vue-tsc` and writes `dist/`. `vercel.json` rewrites every path to `index.html`, so a Vercel deploy keeps those hashes working.
+
+## Visual correctness
+
+Avatar pictures are locked by one `VISUAL_CASES` table in `src/testing/visual/`. Add a row with the props you would pass to `<Avatar>`, a `rendAt` seek if the frame is mid-morph, and the claim (eye count, dot count, silhouette oracle). Then run `pnpm test`.
+
+If the picture change is intentional, update goldens with `pnpm test:visual:regen` and review the JSON diff.
+
+`pnpm test:ui-avatar` runs the visual specs. For a human pass, start `pnpm dev --port 5174` and print studio URLs with `node scripts/ui-avatar-loop.mjs --urls`. Dump standalone SVG from the same mounted cases with `node scripts/ui-avatar-loop.mjs --dump /tmp/grok-bot-visual`. That dump uses Vitest, jsdom, and `svgAutonome`, not a headless browser.
