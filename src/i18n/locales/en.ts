@@ -124,6 +124,14 @@ const en: typeof fr = {
     secondsShort: '{n}s',
   },
 
+  export: {
+    title: 'Export',
+    png: 'Download PNG',
+    svg: 'Download SVG',
+    done: 'Exported',
+    failed: 'Export failed',
+  },
+
   settings: {
     title: 'Settings',
     language: 'Language',

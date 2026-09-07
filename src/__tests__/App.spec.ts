@@ -1,5 +1,5 @@
-import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../App.vue'
 import { brand } from '../brand'
 import { rechargerApparence } from '../customise'
@@ -10,12 +10,22 @@ import fr from '../i18n/locales/fr'
 import zh from '../i18n/locales/zh'
 import { ecris } from '../i18n/stockage'
 
+const { exporte } = vi.hoisted(() => ({
+  exporte: vi.fn(async (_svg: SVGSVGElement, _id: string, _etat: string) => {}),
+}))
+
+vi.mock('../ui/capture', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../ui/capture')>()
+  return { ...actual, exporte }
+})
+
 describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear()
     rechargerLangue()
     rechargerApparence()
     langue.value = 'en'
+    exporte.mockClear()
   })
 
   it('renders the Grok_bot avatar with default props', () => {
@@ -169,5 +179,47 @@ describe('App', () => {
     expect(wrapper.get('[data-disclaimer]').text().toLowerCase()).toMatch(
       /not affiliated|sans affiliation|没有任何/,
     )
+  })
+
+  it('exports the current avatar frame as SVG', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-export="svg"]').trigger('click')
+    await flushPromises()
+    expect(exporte).toHaveBeenCalledOnce()
+    const [svg, id, etat] = exporte.mock.calls[0]!
+    expect(svg).toBeInstanceOf(SVGSVGElement)
+    expect(id).toBe('svg')
+    expect(etat).toBe('Idle')
+    expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
+    wrapper.unmount()
+  })
+
+  it('exports the current avatar frame as PNG', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-export="png"]').trigger('click')
+    await flushPromises()
+    expect(exporte).toHaveBeenCalledOnce()
+    const [svg, id, etat] = exporte.mock.calls[0]!
+    expect(svg).toBeInstanceOf(SVGSVGElement)
+    expect(id).toBe('png')
+    expect(etat).toBe('Idle')
+    expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
+    wrapper.unmount()
+  })
+
+  it('names the download after the selected animation state', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
+    await wrapper.get('[data-export="svg"]').trigger('click')
+    await flushPromises()
+    expect(exporte.mock.calls[0]?.[2]).toBe('Comet')
+    wrapper.unmount()
+  })
+
+  it('does not offer GIF or MP4 stills', () => {
+    const wrapper = mount(App)
+    expect(wrapper.text()).toContain(en.export.title)
+    expect(wrapper.find('[data-export="gif"]').exists()).toBe(false)
+    expect(wrapper.find('[data-export="mp4"]').exists()).toBe(false)
   })
 })
