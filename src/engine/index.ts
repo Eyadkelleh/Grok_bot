@@ -101,15 +101,6 @@ export {
   type AvatarFrame,
 } from './avatar'
 export {
-  FACE_STATES,
-  SHAPE_STATES,
-  STATE_CAPABILITIES,
-  honours,
-  type StateCapability,
-} from './gating'
-export { frameToSvg, type FrameToSvgOptions } from './frame'
-export { sampleAt, sampleSettled, type SampleSpec, type SampleResult } from './sample'
-export {
   MIN_BLOCK,
   MAX_BLOCK,
   MAX_BLOCS,
