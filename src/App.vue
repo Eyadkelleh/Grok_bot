@@ -10,12 +10,14 @@ import ExportBar from './components/ExportBar.vue'
 import Settings from './components/Settings.vue'
 import Timeline from './components/Timeline.vue'
 import { exporte, exporteMontage } from './ui/capture'
+import { useStageGeometry } from './ui/useStageGeometry'
 import { ACTION_BY_ID, type ActionId, type EtatExport } from './ui/export'
 
 const initial = lireHash()
 const animationState = ref<AnimationState>(initial.named ? initial.state : 'Idle')
 const playing = ref(false)
 const studio = ref<HTMLElement | null>(null)
+const { size: stageSize } = useStageGeometry(studio)
 const timeline = ref<InstanceType<typeof Timeline> | null>(null)
 const etatExport = ref<EtatExport>('pret')
 let confirmation: ReturnType<typeof setTimeout> | undefined
@@ -120,7 +122,7 @@ onBeforeUnmount(() => {
         <section id="studio" ref="studio" class="studio">
           <Avatar
             :state="animationState"
-            :size="220"
+            :size="stageSize"
             :shape="shape"
             :expression="expression"
             :colour="colour"

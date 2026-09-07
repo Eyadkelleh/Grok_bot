@@ -51,9 +51,38 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('circle')
     expect(svg.attributes('data-expression')).toBe('neutral')
     expect(svg.attributes('data-colour')).toBe('ink')
+    expect(wrapper.findAll('#studio svg[role="img"]')).toHaveLength(1)
     expect(svg.findAll('[data-eye]')).toHaveLength(2)
     const path = svg.get('path')
     expect(path.attributes('d')?.startsWith('M')).toBe(true)
+  })
+
+  it('grows the studio avatar from the stage box', async () => {
+    const seen: ResizeObserverCallback[] = []
+    class FakeObserver implements ResizeObserver {
+      constructor(cb: ResizeObserverCallback) {
+        seen.push(cb)
+      }
+      disconnect() {}
+      observe() {}
+      unobserve() {}
+      takeRecords(): ResizeObserverEntry[] {
+        return []
+      }
+    }
+    vi.stubGlobal('ResizeObserver', FakeObserver)
+    const wrapper = mount(App)
+    expect(wrapper.get('#studio svg[role="img"]').attributes('width')).toBe('220')
+
+    const entry = { contentRect: { width: 800, height: 600 } } as ResizeObserverEntry
+    seen[0]!([entry], {} as ResizeObserver)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('#studio svg[role="img"]').attributes('width')).toBe('432')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('height')).toBe('432')
+    expect(wrapper.findAll('#studio svg[role="img"]')).toHaveLength(1)
+    wrapper.unmount()
+    vi.unstubAllGlobals()
   })
 
   it('wires the customise panel to the avatar and persists the choice', async () => {
