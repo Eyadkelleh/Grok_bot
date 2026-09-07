@@ -30,6 +30,16 @@ const ANGLES = Array.from({ length: PROFILE_SAMPLES }, (_, i) => (i / PROFILE_SA
 const COS = ANGLES.map((a) => Math.cos(a))
 const SIN = ANGLES.map((a) => Math.sin(a))
 
+/** Linearly sample a radial profile at any angle. */
+export function radiusAtAngle(radii: number[], angle: number): number {
+  if (radii.length === 0) return 0
+  const turn = ((angle / TAU) % 1 + 1) % 1
+  const sample = turn * radii.length
+  const lo = Math.floor(sample)
+  const hi = (lo + 1) % radii.length
+  return lerp(radii[lo] ?? 0, radii[hi] ?? 0, sample - lo)
+}
+
 export function circle(radius = 1, pose: Partial<Silhouette> = {}): Silhouette {
   return {
     radii: Array.from({ length: PROFILE_SAMPLES }, () => radius),

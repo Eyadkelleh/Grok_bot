@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { sampleAvatar } from '../avatar'
-import { BODY_RADIUS, PROFILE_SAMPLES, VIEW_HALF, blend, circle, silhouetteFromRadii } from '../morph'
+import {
+  BODY_RADIUS,
+  PROFILE_SAMPLES,
+  VIEW_HALF,
+  blend,
+  circle,
+  radiusAtAngle,
+  silhouetteFromRadii,
+} from '../morph'
 import { SHAPES, type BotShape } from '../skins'
 import {
   ANIMATION_STATES,
@@ -14,15 +22,6 @@ const FACE_STATE_IDS = new Set<AnimationState>(FACE_STATES)
 const EXPRESSIONS = ['neutral', 'surprised', 'laughing'] as const
 const EPSILON = 0.01
 const EYE_MARGIN = 1
-
-function sampledRadius(radii: number[], angle: number): number {
-  const turn = ((angle / (Math.PI * 2)) % 1 + 1) % 1
-  const sample = turn * radii.length
-  const lo = Math.floor(sample)
-  const hi = (lo + 1) % radii.length
-  const t = sample - lo
-  return (radii[lo] ?? 0) * (1 - t) + (radii[hi] ?? 0) * t
-}
 
 function activeRadii(shape: BotShape, state: AnimationState): number[] {
   return FACE_STATE_IDS.has(state) ? shape.radii : STATE_REGISTRY[state].silhouette.radii
@@ -69,7 +68,7 @@ describe('shape × animation integrity matrix', () => {
           expect(frame.eyes.length, `${label}: face eye count`).toBe(2)
           for (const [index, eye] of frame.eyes.entries()) {
             const distance = Math.hypot(eye.x, eye.y)
-            const edge = sampledRadius(shape.radii, Math.atan2(eye.y, eye.x)) * BODY_RADIUS
+            const edge = radiusAtAngle(shape.radii, Math.atan2(eye.y, eye.x)) * BODY_RADIUS
             const effectiveRadius = Math.max(eye.rx, eye.ry) * 0.6
             if (distance >= edge - EYE_MARGIN) {
               violations.push(

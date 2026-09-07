@@ -1,6 +1,12 @@
 import { blinkScale, eyePoses, resolveGaze, type GazeInput, type HeadGaze } from './face'
 import { resolveExpression, type ExpressionId } from './expressions'
-import { BODY_RADIUS, silhouetteFromRadii, silhouettePath, viewBoxAttr } from './morph'
+import {
+  BODY_RADIUS,
+  radiusAtAngle,
+  silhouetteFromRadii,
+  silhouettePath,
+  viewBoxAttr,
+} from './morph'
 import { resolveColour, resolveShape, type ColorId, type ShapeId } from './skins'
 import {
   isAnimationState,
@@ -68,6 +74,7 @@ function eyesFor(
   state: AnimationState,
   expressionId: string | undefined,
   gaze: GazeInput | undefined,
+  radii: number[],
 ): { eyes: AvatarEye[]; gaze: HeadGaze; expression: ExpressionId } {
   const expression = resolveExpression(expressionId)
   const resolved = resolveGaze(expression.gaze, gaze)
@@ -104,6 +111,42 @@ function eyesFor(
     }
   })
 
+  const margin = 1
+  for (const eye of eyes) {
+    const factor = radiusAtAngle(radii, Math.atan2(eye.y, eye.x))
+    eye.x *= factor
+    eye.y *= factor
+  }
+
+  let commonEyeScale = 1
+  for (const eye of eyes) {
+    const edge = radiusAtAngle(radii, Math.atan2(eye.y, eye.x)) * BODY_RADIUS
+    const effectiveRadius = Math.max(eye.rx, eye.ry) * 0.6
+    if (effectiveRadius > 0) {
+      commonEyeScale = Math.min(commonEyeScale, Math.max(0, (edge - margin) / effectiveRadius))
+    }
+  }
+  for (const eye of eyes) {
+    eye.rx *= commonEyeScale
+    eye.ry *= commonEyeScale
+  }
+
+  let commonOffset = 0
+  for (const eye of eyes) {
+    const distance = Math.hypot(eye.x, eye.y)
+    const edge = radiusAtAngle(radii, Math.atan2(eye.y, eye.x)) * BODY_RADIUS
+    const effectiveRadius = Math.max(eye.rx, eye.ry) * 0.6
+    commonOffset = Math.max(commonOffset, distance + effectiveRadius + margin - edge)
+  }
+  if (commonOffset > 0) {
+    for (const eye of eyes) {
+      const distance = Math.hypot(eye.x, eye.y)
+      const scale = distance > 0 ? Math.max(0, distance - commonOffset) / distance : 0
+      eye.x *= scale
+      eye.y *= scale
+    }
+  }
+
   return { eyes, gaze: resolved, expression: expression.id }
 }
 
@@ -115,7 +158,7 @@ export function sampleAvatar(spec: AvatarSpec = {}): AvatarFrame {
   const silhouette = SHAPE_STATES.has(state)
     ? silhouetteFromRadii(shape.radii)
     : silhouetteFor(state)
-  const { eyes, gaze, expression } = eyesFor(state, spec.expression, spec.gaze)
+  const { eyes, gaze, expression } = eyesFor(state, spec.expression, spec.gaze, silhouette.radii)
   const dots = FACE_STATES.has(state) ? [] : STATE_REGISTRY[state].dots
 
   return {

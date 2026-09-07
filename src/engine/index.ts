@@ -10,6 +10,7 @@ export {
   superellipse,
   profileFromPolygon,
   hullOfCircles,
+  radiusAtAngle,
   silhouetteFromRadii,
   eggProfile,
   regularPolygonProfile,
