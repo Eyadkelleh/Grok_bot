@@ -1,3 +1,9 @@
+import { beforeEach } from 'vitest'
+
+beforeEach(() => {
+  history.replaceState(null, '', '/')
+})
+
 class MemoryStorage implements Storage {
   private readonly data = new Map<string, string>()
 
