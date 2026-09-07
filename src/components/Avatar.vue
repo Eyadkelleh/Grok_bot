@@ -169,6 +169,8 @@ const shownState = computed(() => (progress.value >= 1 ? toState.value : fromSta
     :data-gaze="gazeAttr(frame.gaze)"
     :data-state="shownState"
     :data-target="toState"
+    :data-shape-applied="frame.shapeApplied ? 'true' : 'false'"
+    :data-geometry-kind="frame.geometryKind"
   >
     <defs>
       <mask

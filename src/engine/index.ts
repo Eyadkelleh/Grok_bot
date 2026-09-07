@@ -92,9 +92,18 @@ export {
   type BotExpression,
 } from './expressions'
 export {
+  STATE_GEOMETRY,
+  poseRadii,
+  resolveStateGeometry,
+  usesCustomiserShape,
+  type FacePolicy,
+  type PoseTransform,
+  type ResolvedGeometry,
+  type StateGeometry,
+} from './authority'
+export {
   DEFAULT_SIZE,
   DEFAULT_PAPER,
-  usesCustomiserShape,
   activeSilhouette,
   sampleAvatar,
   sampleLiveMorph,

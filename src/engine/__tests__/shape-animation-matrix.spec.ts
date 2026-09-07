@@ -10,6 +10,7 @@ import {
   silhouetteFromRadii,
 } from '../morph'
 import { SHAPES, type BotShape } from '../skins'
+import { resolveStateGeometry } from '../authority'
 import {
   ANIMATION_STATES,
   STATE_REGISTRY,
@@ -24,7 +25,7 @@ const EPSILON = 0.01
 const EYE_MARGIN = 1
 
 function activeRadii(shape: BotShape, state: AnimationState): number[] {
-  return FACE_STATE_IDS.has(state) ? shape.radii : STATE_REGISTRY[state].silhouette.radii
+  return resolveStateGeometry(state, shape.id).silhouette.radii
 }
 
 function pathNumbers(path: string): number[] {
@@ -53,7 +54,8 @@ describe('shape × animation integrity matrix', () => {
         const label = `${shape.id}/${state}`
         const frame = sampleAvatar({ shape: shape.id, state })
         expectIntegrity(frame.path, activeRadii(shape, state), label)
-        expect(frame.eyes.length, `${label}: glyph eye count`).toBe(FACE_STATE_IDS.has(state) ? 2 : 0)
+        const face = resolveStateGeometry(state, shape.id).face
+        expect(frame.eyes.length, `${label}: glyph eye count`).toBe(face === 'none' ? 0 : 2)
       }
     }
   })

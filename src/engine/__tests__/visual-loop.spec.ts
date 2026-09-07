@@ -73,10 +73,15 @@ describe('deterministic avatar visual loop', () => {
     }
   })
 
-  it('does not leak the custom hexagon silhouette into Alert', () => {
-    expect(sampleAvatar({ state: 'Idle', shape: 'hexagon' }).path).not.toBe(
-      sampleAvatar({ state: 'Alert', shape: 'hexagon' }).path,
-    )
+  it('wears custom shape on Alert and ignores it on Play', () => {
+    const alertHex = sampleAvatar({ state: 'Alert', shape: 'hexagon' })
+    const alertCircle = sampleAvatar({ state: 'Alert', shape: 'circle' })
+    const idleHex = sampleAvatar({ state: 'Idle', shape: 'hexagon' })
+    const playHex = sampleAvatar({ state: 'Play', shape: 'hexagon' })
+    const playCircle = sampleAvatar({ state: 'Play', shape: 'circle' })
+    expect(alertHex.path).not.toBe(alertCircle.path)
+    expect(alertHex.path).not.toBe(idleHex.path)
+    expect(playHex.path).toBe(playCircle.path)
   })
 })
 
