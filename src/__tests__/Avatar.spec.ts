@@ -9,6 +9,7 @@ import {
   DEFAULT_SIZE,
   REST_GAZE,
   pathForState,
+  poseCycle,
   sampleAvatar,
 } from '../engine'
 
@@ -114,5 +115,27 @@ describe('Avatar', () => {
     await wrapper.vm.$nextTick()
     expect(wrapper.get('svg').attributes('data-state')).toBe('Thinking')
     expect(wrapper.get('svg').attributes('data-target')).toBe('Thinking')
+  })
+
+  it('morphs through a poseCycle instead of freezing on a single settled block', async () => {
+    const wrapper = mount(Avatar, { props: { durationMs: 400 } })
+    const blocs = poseCycle('Comet').blocks
+
+    wrapper.vm.rendAt(0, blocs)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('svg').attributes('data-state')).toBe('Idle')
+    expect(wrapper.get('svg path').attributes('d')).toBe(pathForState('Idle'))
+
+    wrapper.vm.rendAt(0.6, blocs)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('svg').attributes('data-state')).toBe('Idle')
+    expect(wrapper.get('svg').attributes('data-target')).toBe('Comet')
+    expect(wrapper.get('svg path').attributes('d')).not.toBe(pathForState('Idle'))
+    expect(wrapper.get('svg path').attributes('d')).not.toBe(pathForState('Comet'))
+
+    wrapper.vm.rendAt(1.0, blocs)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('svg').attributes('data-target')).toBe('Comet')
+    expect(wrapper.get('svg path').attributes('d')).toBe(pathForState('Comet'))
   })
 })

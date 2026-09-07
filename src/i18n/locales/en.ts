@@ -141,7 +141,7 @@ const en: typeof fr = {
     sourceLabel: 'Video source',
     sourcePose: 'This pose · {name}',
     sourceCycle: 'Timeline cycle · {name}',
-    metaPose: '{name} · {duration} · matches preview',
+    metaPose: '{name} · {duration} · short clip of this pose',
     metaCycle: '{name} · {duration} · {count} animations in the timeline',
     busy: 'Exporting…',
     progress: 'Exporting… {percent}%',

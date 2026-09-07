@@ -141,7 +141,7 @@ const zh: typeof fr = {
     sourceLabel: '视频来源',
     sourcePose: '当前动作 · {name}',
     sourceCycle: '循环 · {name}',
-    metaPose: '{name} · {duration} · 与预览一致',
+    metaPose: '{name} · {duration} · 该动作的短片',
     metaCycle: '{name} · {duration} · {count} 个动画',
     busy: '正在导出…',
     progress: '正在导出… {percent}%',

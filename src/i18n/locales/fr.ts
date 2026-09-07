@@ -139,7 +139,7 @@ export default {
     sourceLabel: 'Source de la vidéo',
     sourcePose: 'Cette pose · {name}',
     sourceCycle: 'Cycle · {name}',
-    metaPose: '{name} · {duration} · correspond à l’aperçu',
+    metaPose: '{name} · {duration} · court clip de cette pose',
     metaCycle: '{name} · {duration} · {count} animations',
     busy: 'Export en cours…',
     progress: 'Export en cours… {percent} %',
