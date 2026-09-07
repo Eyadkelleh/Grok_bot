@@ -70,9 +70,13 @@ export const STATE_REGISTRY: Record<AnimationState, StateEntry> = {
   ]),
   Wink: entry(circle(1)),
   WideEyes: entry(circle(1)),
-  Alert: entry(circle(1, { sx: 0.32, sy: 1.12, rot: 0.31, cy: -0.08 })),
+  Alert: entry(circle(1, { sx: 0.22, sy: 1.02, rot: 0.28, cy: -0.22 }), [
+    { x: 0.19, y: 1.13, r: 0.18, opacity: 1 },
+  ]),
   Notification: entry(circle(1)),
-  Exclamation: entry(circle(1, { sx: 0.28, sy: 1.18, cy: -0.12 })),
+  Exclamation: entry(circle(1, { sx: 0.22, sy: 1.02, cy: -0.22 }), [
+    { x: 0, y: 1.13, r: 0.18, opacity: 1 },
+  ]),
   Sleep: entry(circle(0.16, { cy: 0.12 })),
   Egg: entry(fromRadii(eggRadii)),
   Hexagon: entry(fromRadii(hexagonRadii)),

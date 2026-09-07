@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import { makeBlock } from '../../engine'
+import { makeBlock, viewBoxAttr } from '../../engine'
 import { exporte, ouvreCycle, svgAutonome, telecharge } from '../capture'
 import { viewBoxExport } from '../export'
 
 function svgDeTest() {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  svg.setAttribute('viewBox', '-50 -50 100 100')
+  svg.setAttribute('viewBox', viewBoxAttr())
   svg.setAttribute('class', 'avatar')
   svg.setAttribute('data-state', 'Idle')
   svg.setAttribute('data-target', 'Idle')
@@ -24,7 +24,7 @@ describe('svgAutonome', () => {
     expect(markup).toContain('xmlns="http://www.w3.org/2000/svg"')
     expect(markup).toContain('width="100"')
     expect(markup).toContain('height="100"')
-    expect(markup).toContain('viewBox="-50 -50 100 100"')
+    expect(markup).toContain(`viewBox="${viewBoxAttr()}"`)
     expect(markup).toContain('M10 0C10 5.5 5.5 10 0 10Z')
     expect(markup).toContain('fill="#111111"')
     expect(markup).toContain(viewBoxExport())
