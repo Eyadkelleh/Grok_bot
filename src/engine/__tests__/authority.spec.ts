@@ -54,13 +54,30 @@ describe('STATE_GEOMETRY', () => {
     expect(sleep.face).toBe('none')
   })
 
-  it('keeps Alert and Exclamation as eyeless glyph symbols', () => {
+  it('authorizes Alert and Exclamation as G5 symbol glyphs', () => {
     expect(STATE_GEOMETRY.Alert.kind).toBe('symbol')
     expect(STATE_GEOMETRY.Exclamation.kind).toBe('symbol')
+    expect(usesCustomiserShape('Alert')).toBe(false)
+    expect(usesCustomiserShape('Exclamation')).toBe(false)
     expect(STATE_GEOMETRY.Alert.face).toBe('none')
     expect(STATE_GEOMETRY.Exclamation.face).toBe('none')
     expect(STATE_GEOMETRY.Alert.dots).toEqual(STATE_REGISTRY.Alert.dots)
     expect(STATE_GEOMETRY.Exclamation.dots).toEqual(STATE_REGISTRY.Exclamation.dots)
+  })
+
+  it('keeps Burst and Comet wearable under G1', () => {
+    expect(STATE_GEOMETRY.Burst.kind).toBe('wearable')
+    expect(STATE_GEOMETRY.Comet.kind).toBe('wearable')
+    expect(usesCustomiserShape('Burst')).toBe(true)
+    expect(usesCustomiserShape('Comet')).toBe(true)
+  })
+
+  it('keeps Egg, Hexagon, Play, and Orbit eyeless under G2', () => {
+    for (const state of ['Egg', 'Hexagon', 'Play', 'Orbit'] as const) {
+      expect(STATE_GEOMETRY[state].kind, state).toBe('symbol')
+      expect(STATE_GEOMETRY[state].face, state).toBe('none')
+      expect(sampleAvatar({ state, expression: 'happy' }).eyes, state).toHaveLength(0)
+    }
   })
 })
 
