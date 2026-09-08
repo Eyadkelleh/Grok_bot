@@ -14,6 +14,7 @@ import { createApp, h, nextTick, ref } from 'vue'
 import Avatar from '../components/Avatar.vue'
 import { DEFAULT_MORPH_MS, totalDuration, type Block, type Cycle } from '../engine'
 import { gifIndexe, indexe, nouvellePalette, recense } from './gif'
+import { aplatitSurFond, poseFond, scelleMatte } from './matte'
 import {
   ACTION_BY_ID,
   BLANC,
@@ -69,7 +70,7 @@ export function svgAutonome(svg: SVGSVGElement, taille: number, viewBox = viewBo
   return sansCommentaires(new XMLSerializer().serializeToString(clone))
 }
 
-async function dessine(
+export async function dessine(
   markup: string,
   taille: number,
   canvas: HTMLCanvasElement,
@@ -84,12 +85,9 @@ async function dessine(
     canvas.height = taille
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('canvas unavailable')
-    ctx.clearRect(0, 0, taille, taille)
-    if (fond) {
-      ctx.fillStyle = fond
-      ctx.fillRect(0, 0, taille, taille)
-    }
+    poseFond(ctx, taille, fond)
     ctx.drawImage(img, 0, 0, taille, taille)
+    scelleMatte(ctx, taille, fond)
     return ctx
   } finally {
     URL.revokeObjectURL(url)
@@ -263,7 +261,9 @@ export async function cycleVersGif(
       arrete(signal)
       const svg = await lecteur.rendre(i * pas)
       const ctx = await dessine(svgAutonome(svg, taille), taille, canvas, fond)
-      lis(i, ctx.getImageData(0, 0, taille, taille).data)
+      const pixels = ctx.getImageData(0, 0, taille, taille).data
+      aplatitSurFond(pixels, fond)
+      lis(i, pixels)
     }
   }
 
