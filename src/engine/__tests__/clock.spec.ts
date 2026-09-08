@@ -149,4 +149,31 @@ describe('AvatarEngine.sample(t)', () => {
     expect(eyeCentres(later)).not.toEqual(eyeCentres(early))
     expectSameFrame(alive.sample(0.4), early)
   })
+
+  it('masks a blinkIn target with shut lids at mid-morph', () => {
+    const e = new AvatarEngine({ state: 'Idle' })
+    e.setState('Wink', 0)
+    const mid = e.sample(AvatarEngine.MORPH * 0.5)
+    const live = sampleLiveMorph({ from: 'Idle', to: 'Wink', t: 0.5 })
+    const idle = sampleAvatar({ state: 'Idle' })
+    const settled = e.sample(1)
+
+    expectSameFrame(mid, live)
+    expect(mid.eyes).toHaveLength(2)
+    // Both lids shut; Wink's measured dash may leave asymmetric ry under the mask.
+    expect(mid.eyes[0]!.ry).toBeLessThan(idle.eyes[0]!.ry * 0.2)
+    expect(mid.eyes[1]!.ry).toBeLessThan(idle.eyes[1]!.ry * 0.2)
+    expect(settled.eyes[1]!.ry).toBeLessThan(settled.eyes[0]!.ry)
+    expectSameFrame(e.sample(AvatarEngine.MORPH * 0.5), mid)
+  })
+
+  it('leaves non-blinkIn morph eyes on the prior open-lid path', () => {
+    const e = new AvatarEngine({ state: 'Wink' })
+    e.setState('Idle', 0)
+    const mid = e.sample(AvatarEngine.MORPH * 0.5)
+    const idle = sampleAvatar({ state: 'Idle' })
+    expectSameFrame(mid, sampleLiveMorph({ from: 'Wink', to: 'Idle', t: 0.5 }))
+    expect(mid.eyes[0]!.ry).toBeCloseTo(idle.eyes[0]!.ry, 5)
+    expect(mid.eyes[1]!.ry).toBeCloseTo(idle.eyes[1]!.ry, 5)
+  })
 })

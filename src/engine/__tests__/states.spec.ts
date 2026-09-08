@@ -4,6 +4,7 @@ import {
   ANIMATION_STATES,
   STATE_REGISTRY,
   STATE_SILHOUETTES,
+  blinksIn,
   isAnimationState,
   pathForState,
   type AnimationState,
@@ -110,5 +111,20 @@ describe('ANIMATION_STATES', () => {
     expect(pathForState('Egg')).toMatch(/^M38\.5 /)
     expect(pathForState('Hexagon')).toMatch(/^M42\.37 /)
     expect(pathForState('Play')).toMatch(/^M35\.97 /)
+  })
+
+  it('flags blinkIn on the arriving states that hide a shape morph', () => {
+    const masked: AnimationState[] = [
+      'Thinking',
+      'Wink',
+      'WideEyes',
+      'Notification',
+      'Egg',
+      'Hexagon',
+      'Play',
+    ]
+    const open: AnimationState[] = ['Idle', 'Alert', 'Exclamation', 'Sleep', 'Orbit', 'Burst', 'Comet']
+    for (const state of masked) expect(blinksIn(state), state).toBe(true)
+    for (const state of open) expect(blinksIn(state), state).toBe(false)
   })
 })

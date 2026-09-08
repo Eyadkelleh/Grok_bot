@@ -11,6 +11,7 @@ import {
   blinkScale,
   eyeAxes,
   eyePoses,
+  forcedBlinkLid,
   lifeFromSpec,
   liveliness,
   projectEye,
@@ -40,6 +41,13 @@ describe('liveliness(t)', () => {
     const mid = liveliness(1.49, { wander: 0, blink: true, float: false }).lid
     expect(mid).toBeLessThan(0.5)
     expect(liveliness(1.7, { wander: 0, blink: true, float: false }).lid).toBe(1)
+  })
+
+  it('shuts the forced blink lid at mid-phase and opens it at the ends', () => {
+    expect(forcedBlinkLid(0)).toBe(1)
+    expect(forcedBlinkLid(0.5)).toBe(0)
+    expect(forcedBlinkLid(1)).toBe(1)
+    expect(forcedBlinkLid(0.25)).toBeCloseTo(0.5)
   })
 
   it('drifts gaze across a multi-second rest', () => {
