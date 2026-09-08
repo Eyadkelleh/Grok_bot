@@ -10,6 +10,7 @@ import fr from '../i18n/locales/fr'
 import zh from '../i18n/locales/zh'
 import { ecris } from '../i18n/stockage'
 import { Abandon } from '../ui/export'
+import Timeline from '../components/Timeline.vue'
 
 const { exporte, exporteMontage } = vi.hoisted(() => ({
   exporte: vi.fn<(svg: SVGSVGElement, id: string, etat: string) => Promise<void>>(),
@@ -98,6 +99,36 @@ describe('App', () => {
 
     await tile.trigger('click')
     expect(window.localStorage.getItem(cle('forme'))).toBe('hexagon')
+  })
+
+  it('previews a face on pointer hover without writing storage', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-mode="expression"]').trigger('click')
+    const tile = wrapper.get('[data-customise-panel] [data-expression="happy"]')
+    await tile.trigger('pointerover')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-expression')).toBe('happy')
+    expect(window.localStorage.getItem(cle('expression'))).not.toBe('happy')
+
+    await tile.trigger('click')
+    expect(window.localStorage.getItem(cle('expression'))).toBe('happy')
+  })
+
+  it('previews a motion pose on pointer hover without committing', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    const tile = wrapper.get('[data-animations-palette] [data-state="Comet"]')
+    await tile.trigger('pointerover')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Comet')
+    expect(wrapper.get('[data-animations-palette] [data-state="Idle"]').attributes('aria-checked')).toBe(
+      'true',
+    )
+    expect(location.hash).toBe('#etat=idle&stop')
+
+    await tile.trigger('click')
+    expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
+      'true',
+    )
+    expect(location.hash).toBe('#etat=comet&stop')
   })
 
   it('draws a cavity outline on symbol poses without a second image role', async () => {
@@ -261,6 +292,23 @@ describe('App', () => {
       'true',
     )
     expect(location.hash).toBe('#etat=comet&stop')
+  })
+
+  it('keeps playing when the timeline advances onto the next block', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    await wrapper.get('[data-animations-palette] [data-state="Thinking"]').trigger('click')
+    await wrapper.get('[data-add]').trigger('click')
+    await wrapper.get('[data-play]').trigger('click')
+    expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('true')
+
+    wrapper.getComponent(Timeline).vm.sample(2.1)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('true')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Thinking')
+    expect(location.hash).toBe('#etat=thinking')
+    wrapper.unmount()
   })
 
   it('shows about/credits for Grok_bot, bloub MIT, and no xAI affiliation', () => {

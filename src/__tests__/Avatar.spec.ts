@@ -206,4 +206,57 @@ describe('Avatar', () => {
     expect(wrapper.get('svg').attributes('data-target')).toBe('Comet')
     expect(wrapper.get('svg path').attributes('d')).toBe(sampleAt(0.6, { state: 'Comet' }).path)
   })
+
+  it('dates Burst pose(t) from a live playhead instead of freezing after morph', async () => {
+    const blocs = [{ state: 'Burst' as const, duration: 2 }]
+    const wrapper = mount(Avatar, {
+      props: { durationMs: 400, playhead: 0, blocks: blocs },
+    })
+    await wrapper.vm.$nextTick()
+    const atRest = sampleAt(0, { state: 'Burst' })
+    expect(wrapper.get('svg').attributes('data-target')).toBe('Burst')
+    expect(wrapper.get('svg path').attributes('d')).toBe(atRest.path)
+
+    await wrapper.setProps({ playhead: 0.9 })
+    await wrapper.vm.$nextTick()
+    const mid = sampleAt(0.9, { state: 'Burst' })
+    expect(wrapper.get('svg path').attributes('d')).toBe(mid.path)
+    expect(mid.path !== atRest.path || JSON.stringify(mid.dots) !== JSON.stringify(atRest.dots)).toBe(
+      true,
+    )
+  })
+
+  it('dates Comet and Orbit playheads past the arrival morph', async () => {
+    for (const state of ['Comet', 'Orbit'] as const) {
+      const blocs = [{ state, duration: 2 }]
+      const wrapper = mount(Avatar, {
+        props: { durationMs: 400, playhead: 0, blocks: blocs },
+      })
+      await wrapper.vm.$nextTick()
+      const rest = wrapper.get('svg path').attributes('d')
+      await wrapper.setProps({ playhead: 1.1 })
+      await wrapper.vm.$nextTick()
+      expect(wrapper.get('svg path').attributes('d'), state).toBe(sampleAt(1.1, { state }).path)
+      expect(wrapper.get('svg path').attributes('d'), state).not.toBe(rest)
+      wrapper.unmount()
+    }
+  })
+
+  it('applies a new shape while seeking without dropping the playhead pose', async () => {
+    const blocs = [{ state: 'Orbit' as const, duration: 2 }]
+    const wrapper = mount(Avatar, {
+      props: { durationMs: 400, playhead: 0.85, blocks: blocs, shape: 'circle' },
+    })
+    await wrapper.vm.$nextTick()
+    await wrapper.setProps({ shape: 'hexagon' })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('svg').attributes('data-shape')).toBe('hexagon')
+    expect(wrapper.get('svg').attributes('data-target')).toBe('Orbit')
+    await wrapper.setProps({ playhead: 1.2 })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('svg').attributes('data-shape')).toBe('hexagon')
+    expect(wrapper.get('svg path').attributes('d')).toBe(
+      sampleAt(1.2, { state: 'Orbit', shape: 'hexagon' }).path,
+    )
+  })
 })
