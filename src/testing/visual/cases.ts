@@ -4,6 +4,7 @@ import {
   DEFAULT_MORPH_MS,
   makeBlock,
   morphProgress,
+  morphSecondsOf,
   resolveStateGeometry,
   sampleAvatar,
   sampleLiveMorph,
@@ -84,7 +85,7 @@ function settledCase(state: AnimationState): VisualCase {
 function morphSeek(from: AnimationState, to: AnimationState, progress: number): Seek {
   return {
     blocks: [block(from), block(to)],
-    at: BLOCK_S + progress * (DEFAULT_MORPH_MS / 1000),
+    at: BLOCK_S + progress * morphSecondsOf(to),
   }
 }
 
