@@ -6,6 +6,7 @@ import {
   type PoseTransform,
   type ResolvedGeometry,
 } from './authority'
+import { blendArcs, rasterizeArcs, type ArcRender } from './decor'
 import { blendEyeOffset, eyeOffset, type EyeOffset } from './eyefit'
 import { resolveExpression, type ExpressionId } from './expressions'
 import {
@@ -83,6 +84,8 @@ export interface AvatarFrame {
   paper: string
   eyes: AvatarEye[]
   dots: MorphDot[]
+  dotsBehind: boolean
+  arcs: ArcRender[]
   shape: ShapeId
   expression: ExpressionId
   colour: string
@@ -203,6 +206,8 @@ function geometryAt(state: AnimationState, shapeId?: string, localT?: number): R
       kind: 'symbol',
       face: recipe.face,
       dots: posed.dots,
+      arcs: posed.arcs,
+      dotsBehind: posed.dotsBehind,
     }
   }
   return {
@@ -211,6 +216,8 @@ function geometryAt(state: AnimationState, shapeId?: string, localT?: number): R
     kind: 'wearable',
     face: recipe.face,
     dots: posed.dots,
+    arcs: posed.arcs,
+    dotsBehind: posed.dotsBehind,
   }
 }
 
@@ -244,6 +251,8 @@ export function sampleAvatar(spec: AvatarSpec = {}): AvatarFrame {
     paper,
     eyes,
     dots,
+    dotsBehind: geometry.dotsBehind,
+    arcs: rasterizeArcs(geometry.arcs),
     shape: shape.id,
     expression,
     colour: fill,
@@ -323,6 +332,8 @@ export function sampleLiveMorph(spec: LiveMorphSpec): AvatarFrame {
     paper: spec.paper ?? DEFAULT_PAPER,
     eyes,
     dots: blendDots(fromGeometry.dots, toGeometry.dots, k),
+    dotsBehind: k < 0.5 ? fromGeometry.dotsBehind : toGeometry.dotsBehind,
+    arcs: blendArcs(rasterizeArcs(fromGeometry.arcs), rasterizeArcs(toGeometry.arcs), k),
     shape: shape.id,
     expression: eyeFrame.expression,
     colour: fill,

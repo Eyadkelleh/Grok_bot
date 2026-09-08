@@ -70,6 +70,25 @@ export {
 } from './states'
 export { poseAt } from './pose'
 export {
+  RINGS,
+  SWOOSH,
+  COMET_RIBBONS,
+  BURST_REST_T,
+  COMET_REST_T,
+  COMET_DOT,
+  arcRender,
+  rasterizeArcs,
+  particles,
+  burstParticles,
+  cometArcSpecs,
+  cometFade,
+  blendArcs,
+  type ArcSeed,
+  type ArcSpec,
+  type ArcRender,
+  type DecorDot,
+} from './decor'
+export {
   STATE_SLUGS,
   slugOf,
   stateFromSlug,

@@ -81,6 +81,33 @@ describe('Avatar', () => {
     expect(wrapper.get('svg').attributes('data-state')).toBe('Thinking')
   })
 
+  it('paints Burst specks behind the body', () => {
+    const wrapper = mount(Avatar, { props: { state: 'Burst', durationMs: 0 } })
+    const dots = wrapper.findAll('[data-dot]')
+    expect(dots.length).toBeGreaterThan(0)
+    expect(wrapper.findAll('[data-dot-behind]')).toHaveLength(dots.length)
+    const svg = wrapper.get('svg').element
+    const behind = wrapper.get('[data-dot-behind]').element
+    const body = wrapper.get('[data-body-paper]').element
+    expect(Boolean(behind.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
+    expect(svg.querySelector('[data-arc-front]')).toBeNull()
+  })
+
+  it('paints Comet ribbons in front of and behind the body', () => {
+    const wrapper = mount(Avatar, { props: { state: 'Comet', durationMs: 0 } })
+    const backs = wrapper.findAll('[data-arc-back]')
+    const fronts = wrapper.findAll('[data-arc-front]')
+    expect(backs).toHaveLength(4)
+    expect(fronts).toHaveLength(4)
+    const svg = wrapper.get('svg').element
+    const back = wrapper.get('[data-arc-back]').element
+    const body = wrapper.get('[data-body-paper]').element
+    const front = wrapper.get('[data-arc-front]').element
+    expect(Boolean(back.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
+    expect(Boolean(body.compareDocumentPosition(front) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
+    expect(svg.querySelector('[data-dot-behind]')).toBeNull()
+  })
+
   it('morphs Idle to Thinking when the state prop changes', async () => {
     const wrapper = mount(Avatar, { props: { durationMs: 0 } })
     const idlePath = wrapper.get('svg path').attributes('d')

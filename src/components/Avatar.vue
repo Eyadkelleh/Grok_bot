@@ -192,7 +192,48 @@ const shownState = computed(() => {
           :transform="`translate(${eye.x} ${eye.y}) matrix(${eye.a} ${eye.b} ${eye.c} ${eye.d} 0 0) rotate(${eye.tilt})`"
         />
       </mask>
+      <linearGradient
+        v-for="arc in frame.arcs"
+        :id="`${uid}-${arc.id}`"
+        :key="arc.id"
+        gradientUnits="userSpaceOnUse"
+        :x1="arc.grad.x1"
+        :y1="arc.grad.y1"
+        :x2="arc.grad.x2"
+        :y2="arc.grad.y2"
+      >
+        <stop
+          v-for="(c, i) in arc.grad.stops"
+          :key="i"
+          :offset="i / (arc.grad.stops.length - 1)"
+          :stop-color="c"
+        />
+      </linearGradient>
     </defs>
+    <g v-if="frame.arcs.length" fill="none" stroke-linecap="round">
+      <path
+        v-for="arc in frame.arcs"
+        :key="`b${arc.id}`"
+        data-arc-back
+        :d="arc.back"
+        :stroke="`url(#${uid}-${arc.id})`"
+        :stroke-width="arc.width"
+        :opacity="arc.opacity"
+      />
+    </g>
+    <template v-if="frame.dotsBehind">
+      <circle
+        v-for="(dot, i) in frame.dots"
+        :key="`dot-b-${i}`"
+        data-dot
+        data-dot-behind
+        :cx="dot.x * BODY_RADIUS"
+        :cy="dot.y * BODY_RADIUS"
+        :r="dot.r * BODY_RADIUS"
+        :fill="frame.fill"
+        :opacity="dot.opacity"
+      />
+    </template>
     <path data-body-paper :d="frame.path" :fill="frame.paper" />
     <g :mask="`url(#${uid})`">
       <rect
@@ -204,16 +245,29 @@ const shownState = computed(() => {
         :fill="frame.fill"
       />
     </g>
-    <circle
-      v-for="(dot, i) in frame.dots"
-      :key="`dot-${i}`"
-      data-dot
-      :cx="dot.x * BODY_RADIUS"
-      :cy="dot.y * BODY_RADIUS"
-      :r="dot.r * BODY_RADIUS"
-      :fill="frame.fill"
-      :opacity="dot.opacity"
-    />
+    <template v-if="!frame.dotsBehind">
+      <circle
+        v-for="(dot, i) in frame.dots"
+        :key="`dot-${i}`"
+        data-dot
+        :cx="dot.x * BODY_RADIUS"
+        :cy="dot.y * BODY_RADIUS"
+        :r="dot.r * BODY_RADIUS"
+        :fill="frame.fill"
+        :opacity="dot.opacity"
+      />
+    </template>
+    <g v-if="frame.arcs.length" fill="none" stroke-linecap="round">
+      <path
+        v-for="arc in frame.arcs"
+        :key="`f${arc.id}`"
+        data-arc-front
+        :d="arc.front"
+        :stroke="`url(#${uid}-${arc.id})`"
+        :stroke-width="arc.width"
+        :opacity="arc.opacity"
+      />
+    </g>
   </svg>
 </template>
 

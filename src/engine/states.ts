@@ -1,3 +1,4 @@
+import { burstParticles, cometArcSpecs, type ArcSpec } from './decor'
 import { type EyeCfg } from './expressions'
 import { type HeadGaze } from './face'
 import {
@@ -53,6 +54,8 @@ export interface MorphDot {
   d?: string
   /** Rotation of `d`, in degrees. */
   rot?: number
+  /** Depth fog: 0 fades into the paper, 1 is full body colour. */
+  depth?: number
 }
 
 export interface StateEntry {
@@ -62,6 +65,9 @@ export interface StateEntry {
   blinkIn?: boolean
   /** Entrance morph length in seconds, from the bloub catalogue. */
   morph: number
+  arcs: ArcSpec[]
+  /** True: specks are painted before the body so the silhouette occludes them. */
+  dotsBehind: boolean
 }
 
 /** Measured gaze, split, and eye sizes for G3 state faces. */
@@ -137,8 +143,21 @@ export interface MorphFrame {
 
 const orbitTriangleRadii = regularPolygonProfile(3, 1, 0.18, -90)
 
-function entry(silhouette: Silhouette, morph: number, dots: MorphDot[] = [], blinkIn = false): StateEntry {
-  return { silhouette, dots, blinkIn, morph }
+function entry(
+  silhouette: Silhouette,
+  morph: number,
+  dots: MorphDot[] = [],
+  blinkIn = false,
+  decor: { arcs?: ArcSpec[]; dotsBehind?: boolean } = {},
+): StateEntry {
+  return {
+    silhouette,
+    dots,
+    blinkIn,
+    morph,
+    arcs: decor.arcs ?? [],
+    dotsBehind: decor.dotsBehind ?? false,
+  }
 }
 
 function fromRadii(radii: readonly number[], pose: Partial<Silhouette> = {}): Silhouette {
@@ -175,8 +194,8 @@ export const STATE_REGISTRY: Record<AnimationState, StateEntry> = {
   Hexagon: entry(fromRadii(PROFILES.hexagon), 0.4, [], true),
   Play: entry(fromRadii(PROFILES.triangle), 0.5, [], true),
   Orbit: entry(fromRadii(orbitTriangleRadii, { rot: 0.4 }), 0.6),
-  Burst: entry(circle(0.18), 0.4),
-  Comet: entry(circle(0.2, { cy: 0.04 }), 0.45),
+  Burst: entry(circle(0.18), 0.4, burstParticles(0), false, { dotsBehind: true }),
+  Comet: entry(circle(0.2, { cy: 0.04 }), 0.45, [], false, { arcs: cometArcSpecs(0) }),
 }
 
 /** True when the arriving state's shape morph should be hidden by a blink. */
@@ -240,6 +259,7 @@ export function blendDots(a: MorphDot[], b: MorphDot[], t: number): MorphDot[] {
       const path = t >= 0.5 ? db.d ?? da.d : da.d ?? db.d
       if (path) blended.d = path
       if (da.rot != null || db.rot != null) blended.rot = lerp(da.rot ?? 0, db.rot ?? 0, t)
+      if (da.depth != null || db.depth != null) blended.depth = lerp(da.depth ?? 1, db.depth ?? 1, t)
       out.push(blended)
     } else if (db) {
       out.push({ ...db, r: db.r * Math.max(t, 0.001), opacity: db.opacity * t })

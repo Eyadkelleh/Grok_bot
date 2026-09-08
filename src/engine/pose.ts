@@ -8,6 +8,7 @@
  * pose(0) matches STATE_REGISTRY so palette thumbnails and durationMs=0
  * snapshots stay the still frame.
  */
+import { burstParticles, cometArcSpecs, type ArcSpec } from './decor'
 import { clamp, easeInOutCubic, easeOutQuint, TAU } from './math'
 import { circle, regularPolygonProfile, type Silhouette } from './morph'
 import { notifyBadge, STATE_REGISTRY, type AnimationState, type MorphDot, type StateEntry } from './states'
@@ -32,17 +33,17 @@ const BURST_CORE = 0.18
 const COMET_CORE = 0.2
 const COMET_CY = 0.04
 
-/** Five deterministic burst specks: staggered births, no RNG. */
-const BURST_PARTICLES = [
-  { birth: 0, angle: 0.42, rho: 0.62 },
-  { birth: 0.2, angle: 1.88, rho: 0.71 },
-  { birth: 0.4, angle: 3.51, rho: 0.58 },
-  { birth: 0.6, angle: 4.92, rho: 0.74 },
-  { birth: 0.8, angle: 5.7, rho: 0.65 },
-] as const
-
-function entry(silhouette: Silhouette, dots: MorphDot[] = []): StateEntry {
-  return { silhouette, dots }
+function entry(
+  silhouette: Silhouette,
+  dots: MorphDot[] = [],
+  decor: { arcs?: ArcSpec[]; dotsBehind?: boolean } = {},
+): StateEntry {
+  return {
+    silhouette,
+    dots,
+    arcs: decor.arcs ?? [],
+    dotsBehind: decor.dotsBehind ?? false,
+  }
 }
 
 function thinkingWave(t: number): number {
@@ -93,30 +94,11 @@ function orbitPose(t: number): StateEntry {
   })
 }
 
-function burstDots(t: number): MorphDot[] {
-  const out: MorphDot[] = []
-  for (const p of BURST_PARTICLES) {
-    const u = t - p.birth
-    if (u < 0 || u > 0.62) continue
-    const rho = p.rho * 0.75 ** (u * 10)
-    const a = p.angle + (u * 100 * Math.PI) / 180
-    const opacity = clamp(u / 0.06) * clamp((0.62 - u) / 0.08)
-    if (opacity <= 0.01) continue
-    out.push({
-      x: Math.cos(a) * rho,
-      y: Math.sin(a) * rho,
-      r: 0.04 + 0.028 * clamp(u / 0.55),
-      opacity,
-    })
-  }
-  return out
-}
-
 function burstPose(t: number): StateEntry {
   const squeeze = 1 - 0.55 * easeOutQuint(clamp(t / 0.7))
   const regrow = easeOutQuint(clamp((t - 1.7) / 0.7))
   const radius = BURST_CORE * squeeze + (1 - BURST_CORE) * regrow
-  return entry(circle(radius), burstDots(t))
+  return entry(circle(radius), burstParticles(t), { dotsBehind: true })
 }
 
 function cometPose(t: number): StateEntry {
@@ -126,6 +108,8 @@ function cometPose(t: number): StateEntry {
     circle(COMET_CORE * squeeze + (1 - COMET_CORE) * regrow, {
       cy: COMET_CY + Math.sin(clamp(t / 1.7) * Math.PI) * 0.035,
     }),
+    [],
+    { arcs: cometArcSpecs(t) },
   )
 }
 

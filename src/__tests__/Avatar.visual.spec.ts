@@ -19,7 +19,8 @@ describe.each(VISUAL_CASES)('$id — $what', (visualCase) => {
     const mask = wrapper.get('mask')
     const maskId = mask.attributes('id')
     expect(maskId).toMatch(/^avatar-mask-/)
-    expect(wrapper.get('g').attributes('mask')).toBe(`url(#${maskId})`)
+    const bodyGroup = wrapper.findAll('g').find((group) => group.attributes('mask'))
+    expect(bodyGroup?.attributes('mask')).toBe(`url(#${maskId})`)
     expect(mask.get('path').attributes('fill')).toBe('#fff')
 
     const maskEyes = mask.findAll('[data-eye]')

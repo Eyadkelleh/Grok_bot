@@ -21,6 +21,8 @@ describe('pose(t)', () => {
       expect(posed.silhouette.cy, state).toBeCloseTo(rest.silhouette.cy, 5)
       expect(posed.silhouette.rot, state).toBeCloseTo(rest.silhouette.rot, 5)
       expect(posed.dots).toHaveLength(rest.dots.length)
+      expect(posed.arcs).toEqual(rest.arcs)
+      expect(posed.dotsBehind).toBe(rest.dotsBehind)
     }
   })
 
