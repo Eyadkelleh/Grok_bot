@@ -10,7 +10,7 @@ import {
   type Block,
 } from '../../engine'
 import { dessine, exporte, ouvreCycle, svgAutonome, telecharge } from '../capture'
-import { BLANC, viewBoxExport } from '../export'
+import { BLANC, DEMI_CADRE, DEMI_ECRAN, viewBoxCycle, viewBoxExport } from '../export'
 import { matteEstOpaque } from '../matte'
 
 function svgDeTest() {
@@ -66,6 +66,14 @@ describe('svgAutonome', () => {
     expect(viewBoxExport()).toBe(viewBoxAttr())
     expect(markup).toContain(`viewBox="${viewBoxAttr()}"`)
     expect(markup).toContain('viewBox="-72.68 -72.68 145.36 145.36"')
+    expect(markup).not.toContain(`viewBox="${viewBoxExport(DEMI_CADRE)}"`)
+  })
+
+  it('serialises a cycle frame on the screen box, not the tight cadre', () => {
+    const markup = svgAutonome(svgDeTest(), 320, viewBoxCycle())
+    expect(markup).toContain(`viewBox="${viewBoxExport(DEMI_ECRAN)}"`)
+    expect(markup).toContain(`viewBox="${viewBoxAttr()}"`)
+    expect(markup).not.toContain(`viewBox="${viewBoxExport(DEMI_CADRE)}"`)
   })
 })
 
@@ -255,6 +263,25 @@ function montageJoints(): Block[] {
 }
 
 describe('ouvreCycle', () => {
+  /**
+   * Cycle framing must be the box the Avatar draws, not a number that looks
+   * like it. If someone widens the stage for bigger décor rings, cycle export
+   * has to follow — otherwise every GIF/MP4 grows empty bands with tests still
+   * green. Compare to the live attribute, not to DEMI_ECRAN vs itself.
+   */
+  it('exports the cycle on the viewBox the component draws', async () => {
+    const blocs = [makeBlock('Idle', 2), makeBlock('Orbit', 2)]
+    const lecteur = await ouvreCycle(REGLAGES, blocs, 128)
+    try {
+      const svg = await lecteur.rendre(0)
+      expect(svg.getAttribute('viewBox')).toBe(viewBoxCycle())
+      expect(svg.getAttribute('viewBox')).toBe(viewBoxExport(DEMI_ECRAN))
+      expect(svgAutonome(svg, 320, viewBoxCycle())).toContain(`viewBox="${viewBoxAttr()}"`)
+    } finally {
+      lecteur.ferme()
+    }
+  })
+
   it('opens on the first block, settled, then morphs at the joint', async () => {
     const blocs = [makeBlock('Idle', 2), makeBlock('Thinking', 2)]
     const lecteur = await ouvreCycle(REGLAGES, blocs, 100)
@@ -276,6 +303,9 @@ describe('ouvreCycle', () => {
     const rewind = await lecteur.rendre(0)
     expect(rewind.getAttribute('data-state')).toBe('Idle')
     expect(rewind.getAttribute('data-target')).toBe('Idle')
+    expect(corpsDe(rewind)).toBe(moteurAuMemeInstant(blocs, 0).path)
+    expect(yeuxDe(rewind)).toEqual(yeuxAttendus(moteurAuMemeInstant(blocs, 0)))
+    expect(rewind.getAttribute('viewBox')).toBe(viewBoxCycle())
     lecteur.ferme()
   })
 
@@ -309,6 +339,8 @@ describe('ouvreCycle', () => {
         expect(yeuxAttendus(sought), `seek eyes t=${t}`).toEqual(yeuxAttendus(attendu))
         expect(corpsDe(svg), `path t=${t}`).toBe(attendu.path)
         expect(yeuxDe(svg), `eyes t=${t}`).toEqual(yeuxAttendus(attendu))
+        expect(svg.getAttribute('viewBox'), `viewBox t=${t}`).toBe(viewBoxCycle())
+        expect(svgAutonome(svg, 320, viewBoxCycle())).toContain(`viewBox="${viewBoxCycle()}"`)
       }
     } finally {
       lecteur.ferme()
@@ -332,9 +364,13 @@ describe('ouvreCycle', () => {
     try {
       for (let t = 0; t < 12; t += 1.5) await rejoue.rendre(t)
       const apres = await rejoue.rendre(0)
+      const attendu = moteurAuMemeInstant(blocs, 0)
       expect(corpsDe(apres)).toBe(reference.corps)
       expect(yeuxDe(apres)).toEqual(reference.yeux)
       expect(yeuxDe(apres)).toHaveLength(2)
+      expect(corpsDe(apres)).toBe(attendu.path)
+      expect(yeuxDe(apres)).toEqual(yeuxAttendus(attendu))
+      expect(apres.getAttribute('viewBox')).toBe(viewBoxCycle())
     } finally {
       rejoue.ferme()
     }
