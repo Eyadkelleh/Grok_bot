@@ -43,6 +43,8 @@ export {
   STATE_SILHOUETTES,
   DEFAULT_MORPH_MS,
   blinksIn,
+  morphMsOf,
+  morphSecondsOf,
   WINK_FACE,
   WIDE_FACE,
   NOTIFY_FACE,
