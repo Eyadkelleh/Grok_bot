@@ -6,6 +6,7 @@
  *
  * After the morph, `sample(t)` evaluates pose(t) at local time in the current
  * state. Idle is identity. Thinking / Sleep / Orbit / Burst / Comet move.
+ * Notification pops its badge then settles.
  */
 import { sampleAvatar, sampleLiveMorph, type AvatarFrame, type AvatarSpec } from './avatar'
 import { blockAt, type Block } from './cycles'

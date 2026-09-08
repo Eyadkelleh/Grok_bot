@@ -54,6 +54,10 @@ describe('sampleAvatar', () => {
     expect(sampleAvatar({ state }).eyes).toHaveLength(0)
   })
 
+  it('keeps a notification badge on the still Notification frame', () => {
+    expect(sampleAvatar({ state: 'Notification' }).dots).toHaveLength(1)
+  })
+
   it('changes the body path when the shape changes', () => {
     const circle = sampleAvatar({ shape: 'circle' })
     const hexagon = sampleAvatar({ shape: 'hexagon' })

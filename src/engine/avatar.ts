@@ -6,12 +6,7 @@ import {
   type PoseTransform,
   type ResolvedGeometry,
 } from './authority'
-import {
-  blendEyeOffset,
-  eyeOffset,
-  faceEyeCfgs,
-  type EyeOffset,
-} from './eyefit'
+import { blendEyeOffset, eyeOffset, type EyeOffset } from './eyefit'
 import { resolveExpression, type ExpressionId } from './expressions'
 import {
   blinkScale,
@@ -33,7 +28,7 @@ import {
 } from './morph'
 import { resolveColour, resolveShape, type ColorId, type ShapeId } from './skins'
 import { poseAt } from './pose'
-import { blendDots, isAnimationState, type AnimationState, type MorphDot } from './states'
+import { blendDots, isAnimationState, resolveVisage, type AnimationState, type MorphDot } from './states'
 
 export interface AvatarSpec {
   size?: number
@@ -137,7 +132,8 @@ function eyesFor(
   life: Liveliness | null = null,
 ): { eyes: AvatarEye[]; gaze: HeadGaze; expression: ExpressionId } {
   const expression = resolveExpression(expressionId)
-  const resolved = resolveGaze(expression.gaze, gaze)
+  const vis = resolveVisage(face, expression)
+  const resolved = resolveGaze(vis.gaze, gaze)
   if (life) {
     resolved.yaw += life.dYaw
     resolved.pitch += life.dPitch
@@ -147,8 +143,8 @@ function eyesFor(
     return { eyes: [], gaze: resolved, expression: expression.id }
   }
 
-  const cfgs = faceEyeCfgs(face, expression)
-  const poses = eyePoses(resolved, BODY_RADIUS, expression.split)
+  const cfgs = vis.eyes
+  const poses = eyePoses(resolved, BODY_RADIUS, vis.split)
   const shiftX = (offset.x + (life?.driftX ?? 0)) * BODY_RADIUS
   const shiftY = (offset.y + (life?.driftY ?? 0)) * BODY_RADIUS
   const lidOpen = life?.lid ?? 1
