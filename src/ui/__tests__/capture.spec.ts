@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   AvatarEngine,
   DEFAULT_MORPH_MS,
@@ -9,8 +9,9 @@ import {
   type AvatarFrame,
   type Block,
 } from '../../engine'
-import { exporte, ouvreCycle, svgAutonome, telecharge } from '../capture'
-import { viewBoxExport } from '../export'
+import { dessine, exporte, ouvreCycle, svgAutonome, telecharge } from '../capture'
+import { BLANC, viewBoxExport } from '../export'
+import { matteEstOpaque } from '../matte'
 
 function svgDeTest() {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -58,6 +59,102 @@ describe('svgAutonome', () => {
     expect(markup).toContain('id="grok-bot-mask"')
     expect(markup).toContain('url(#grok-bot-mask)')
     expect(markup).not.toContain('avatar-mask-live')
+  })
+
+  it('keeps still crop on the stage viewBox, not a tight cadre', () => {
+    const markup = svgAutonome(svgDeTest(), 1024)
+    expect(viewBoxExport()).toBe(viewBoxAttr())
+    expect(markup).toContain(`viewBox="${viewBoxAttr()}"`)
+    expect(markup).toContain('viewBox="-72.68 -72.68 145.36 145.36"')
+  })
+})
+
+describe('dessine', () => {
+  /**
+   * jsdom's canvas is a stub: fillRect does not write pixels. The mock below
+   * is a known transparent stage plus a working 2d context, so a missing
+   * matte fails on alpha rather than on a silent no-op.
+   */
+  function toileLogicielle() {
+    const store = { data: new Uint8ClampedArray(0) }
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (
+      this: HTMLCanvasElement,
+      type: string,
+    ) {
+      if (type !== '2d') return null
+      const cote = this.width
+      store.data = new Uint8ClampedArray(cote * cote * 4)
+      const data = store.data
+      return {
+        fillStyle: '#000000',
+        clearRect() {
+          data.fill(0)
+        },
+        fillRect() {
+          const fond = String(this.fillStyle)
+          const n = Number.parseInt(fond.slice(1), 16)
+          const r = (n >> 16) & 0xff
+          const v = (n >> 8) & 0xff
+          const b = n & 0xff
+          for (let i = 0; i < data.length; i += 4) {
+            data[i] = r
+            data[i + 1] = v
+            data[i + 2] = b
+            data[i + 3] = 255
+          }
+        },
+        drawImage() {},
+        getImageData() {
+          return { data, width: cote, height: cote }
+        },
+        putImageData(image: ImageData) {
+          data.set(image.data)
+        },
+      } as unknown as CanvasRenderingContext2D
+    })
+    return store
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('fails if a required GIF/MP4 matte stays fully transparent', async () => {
+    vi.stubGlobal(
+      'Image',
+      class {
+        src = ''
+        decode() {
+          return Promise.resolve()
+        }
+      },
+    )
+    const store = toileLogicielle()
+    const canvas = document.createElement('canvas')
+    const ctx = await dessine('<svg xmlns="http://www.w3.org/2000/svg"/>', 8, canvas, BLANC)
+    const px = ctx.getImageData(0, 0, 8, 8).data
+    expect(store.data).toBe(px)
+    expect(matteEstOpaque(px)).toBe(true)
+    expect(px[3]).toBe(255)
+    expect(px[0]).toBe(255)
+    expect(px[px.length - 1]).toBe(255)
+  })
+
+  it('leaves still rasterisation transparent when no fill is asked', async () => {
+    vi.stubGlobal(
+      'Image',
+      class {
+        src = ''
+        decode() {
+          return Promise.resolve()
+        }
+      },
+    )
+    toileLogicielle()
+    const canvas = document.createElement('canvas')
+    const ctx = await dessine('<svg xmlns="http://www.w3.org/2000/svg"/>', 8, canvas, null)
+    expect(ctx.getImageData(0, 0, 8, 8).data[3]).toBe(0)
   })
 })
 

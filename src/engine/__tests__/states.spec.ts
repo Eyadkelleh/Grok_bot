@@ -45,7 +45,7 @@ describe('ANIMATION_STATES', () => {
     }
   })
 
-  it.each(['Alert', 'Exclamation'] as const)('draws a period below the %s bar', (state) => {
+  it.each(['Alert', 'Exclamation', 'Notification'] as const)('draws a period or badge on %s', (state) => {
     expect(STATE_REGISTRY[state].dots.length).toBeGreaterThanOrEqual(1)
   })
 

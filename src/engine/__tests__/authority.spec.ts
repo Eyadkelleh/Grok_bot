@@ -121,12 +121,16 @@ describe('poseRadii', () => {
 })
 
 describe('sampleAvatar geometry', () => {
-  it('puts expression eyes on Idle, a wink on Wink, and none on Alert', () => {
+  it('puts expression eyes on Idle, a measured wink on Wink, and none on Alert', () => {
     expect(sampleAvatar({ state: 'Idle' }).eyes).toHaveLength(2)
     const wink = sampleAvatar({ state: 'Wink' })
     const idle = sampleAvatar({ state: 'Idle' })
     expect(wink.eyes).toHaveLength(2)
     expect(wink.eyes[1]!.ry).toBeLessThan(idle.eyes[1]!.ry)
+    expect(wink.eyes[1]!.rx).toBeGreaterThan(wink.eyes[0]!.rx)
+    expect(STATE_GEOMETRY.Wink.face).toBe('wink')
+    expect(STATE_GEOMETRY.WideEyes.face).toBe('wide')
+    expect(STATE_GEOMETRY.Notification.face).toBe('notify')
     expect(sampleAvatar({ state: 'Alert', expression: 'happy' }).eyes).toHaveLength(0)
   })
 
