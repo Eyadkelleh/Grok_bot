@@ -9,6 +9,7 @@ import en from '../i18n/locales/en'
 import fr from '../i18n/locales/fr'
 import zh from '../i18n/locales/zh'
 import { ecris } from '../i18n/stockage'
+import { Abandon } from '../ui/export'
 
 const { exporte, exporteMontage } = vi.hoisted(() => ({
   exporte: vi.fn<(svg: SVGSVGElement, id: string, etat: string) => Promise<void>>(),
@@ -18,6 +19,8 @@ const { exporte, exporteMontage } = vi.hoisted(() => ({
       cycle: Cycle,
       reglages: { shape: string; colour: string; expression: string },
       nom: string,
+      avance?: (fait: number, total: number) => void,
+      signal?: AbortSignal,
     ) => Promise<void>
   >(),
 }))
@@ -56,6 +59,21 @@ describe('App', () => {
     expect(path.attributes('d')?.startsWith('M')).toBe(true)
   })
 
+  it('presents a stacked create-video flow with timeline tucked away', () => {
+    const wrapper = mount(App)
+    const steps = wrapper.get('[data-create-steps]').text()
+    expect(steps).toContain(en.flow.look)
+    expect(steps).toContain(en.flow.motion)
+    expect(steps).toContain(en.flow.video)
+    expect(wrapper.get('[data-stage="look"]').text()).toContain(en.flow.lookTitle)
+    expect(wrapper.get('[data-stage="motion"]').text()).toContain(en.flow.motionTitle)
+    expect(wrapper.get('[data-stage="video"]').text()).toContain(en.flow.videoTitle)
+    expect(wrapper.get('[data-animations-palette]').attributes('data-layout')).toBe('strip')
+    expect(wrapper.get('[data-export-primary]').text()).toMatch(/GIF|MP4/)
+    expect(wrapper.get('[data-advanced-timeline]').attributes('open')).toBeUndefined()
+    expect(wrapper.find('[data-timeline]').exists()).toBe(true)
+  })
+
   it('wires the customise panel to the avatar and persists the choice', async () => {
     const wrapper = mount(App)
     const panel = wrapper.get('[data-customise-panel]')
@@ -86,9 +104,9 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('droplet')
     expect(svg.attributes('data-expression')).toBe('sleepy')
     expect(svg.attributes('data-colour')).toBe('cream')
-    expect(wrapper.get('[data-shape="droplet"]').attributes('aria-checked')).toBe('true')
-    expect(wrapper.get('[data-expression="sleepy"]').attributes('aria-checked')).toBe('true')
-    expect(wrapper.get('[data-colour="cream"]').attributes('aria-checked')).toBe('true')
+    expect(wrapper.get('[data-customise-panel] [data-shape="droplet"]').attributes('aria-checked')).toBe('true')
+    expect(wrapper.get('[data-customise-panel] [data-expression="sleepy"]').attributes('aria-checked')).toBe('true')
+    expect(wrapper.get('[data-customise-panel] [data-colour="cream"]').attributes('aria-checked')).toBe('true')
   })
 
   it('morphs Idle to Thinking from the animations palette', async () => {
@@ -103,7 +121,7 @@ describe('App', () => {
     expect(wrapper.get('[data-animations-palette] [data-state="Thinking"]').attributes('aria-checked')).toBe(
       'true',
     )
-    expect(location.hash).toBe('#etat=thinking&stop')
+    expect(location.hash).toBe('#etat=thinking')
   })
 
   it('drives the avatar morph to Comet from the palette', async () => {
@@ -113,6 +131,7 @@ describe('App', () => {
     expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
       'true',
     )
+    expect(location.hash).toBe('#etat=comet')
   })
 
   it('renders English nav and settings strings by default', () => {
@@ -171,6 +190,8 @@ describe('App', () => {
     expect(wrapper.find('[data-timeline]').exists()).toBe(true)
     expect(wrapper.get('[data-timeline] [data-block="0"]').attributes('data-state')).toBe('Idle')
 
+    await wrapper.get('[data-animations-palette] [data-state="Thinking"]').trigger('click')
+    await wrapper.get('[data-add]').trigger('click')
     await wrapper.get('[data-timeline] [data-block="1"] [data-carte]').trigger('click')
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Thinking')
 
@@ -184,7 +205,7 @@ describe('App', () => {
     expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
       'true',
     )
-    expect(location.hash).toBe('#etat=comet&stop')
+    expect(location.hash).toBe('#etat=comet')
   })
 
   it('shows about/credits for Grok_bot, bloub MIT, and no xAI affiliation', () => {
@@ -227,29 +248,66 @@ describe('App', () => {
     wrapper.unmount()
   })
 
-  it('exports the montage as GIF', async () => {
+  it('exports the selected pose as a short GIF by default', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
     await wrapper.get('[data-export="gif"]').trigger('click')
     await flushPromises()
     expect(exporteMontage).toHaveBeenCalledOnce()
     expect(exporte).not.toHaveBeenCalled()
     const [format, cycle, reglages, nom] = exporteMontage.mock.calls[0]!
     expect(format).toBe('gif')
-    expect(cycle.blocks.length).toBe(ANIMATION_STATES.length)
+    expect(cycle.blocks).toEqual([
+      { state: 'Idle', duration: 0.4 },
+      { state: 'Comet', duration: 1.2 },
+      { state: 'Idle', duration: 0.4 },
+    ])
     expect(reglages).toMatchObject({ shape: 'circle', colour: 'ink', expression: 'neutral' })
-    expect(nom).toBe(en.cycles.defaultName)
+    expect(nom).toBe('Comet')
     expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
     wrapper.unmount()
   })
 
-  it('exports the montage as MP4', async () => {
+  it('exports the timeline cycle when that video source is chosen', async () => {
     const wrapper = mount(App)
-    await wrapper.get('[data-export="mp4"]').trigger('click')
+    await wrapper.get('[data-export-source="cycle"]').trigger('click')
+    await wrapper.get('[data-export-more] [data-export="gif"]').trigger('click')
     await flushPromises()
     expect(exporteMontage).toHaveBeenCalledOnce()
-    expect(exporte).not.toHaveBeenCalled()
-    expect(exporteMontage.mock.calls[0]?.[0]).toBe('mp4')
-    expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
+    const [, cycle, , nom] = exporteMontage.mock.calls[0]!
+    expect(cycle.blocks).toEqual([{ state: 'Idle', duration: 2 }])
+    expect(nom).toBe(en.cycles.defaultName)
+    wrapper.unmount()
+  })
+
+  it('reports export progress and treats cancellation as neutral', async () => {
+    exporteMontage.mockImplementationOnce(
+      (_format, _cycle, _reglages, _nom, avance, signal) =>
+        new Promise<void>((_resolve, reject) => {
+          avance?.(1, 2)
+          signal?.addEventListener('abort', () => reject(new Abandon()), { once: true })
+        }),
+    )
+    const wrapper = mount(App)
+    await wrapper.get('[data-export="gif"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-export-status]').text()).toContain('50%')
+    await wrapper.get('[data-export-cancel]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[data-export-status]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('gates MP4 when the browser cannot encode video', async () => {
+    const { videoPossible } = await import('../ui/export')
+    const wrapper = mount(App)
+    await flushPromises()
+    const mp4 = wrapper.get('[data-export="mp4"]')
+    if (videoPossible()) {
+      expect(mp4.attributes('disabled')).toBeUndefined()
+    } else {
+      expect(mp4.attributes('disabled')).toBeDefined()
+    }
     wrapper.unmount()
   })
 

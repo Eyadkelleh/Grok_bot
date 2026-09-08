@@ -2,7 +2,7 @@ export default {
   app: {
     name: 'Grok_bot',
     title: "Grok_bot — studio d'avatar SVG",
-    tagline: 'Personnalisez, animez et exportez un avatar SVG.',
+    tagline: 'Trois étapes : le look, le mouvement, puis la vidéo.',
     botAria: 'Avatar Grok_bot',
   },
 
@@ -14,11 +14,24 @@ export default {
     about: 'À propos',
   },
 
+  flow: {
+    stepsLabel: 'Étapes pour créer une vidéo',
+    look: 'Look',
+    motion: 'Mouvement',
+    video: 'Vidéo',
+    lookTitle: '1. Choisissez le look',
+    motionTitle: '2. Choisissez le mouvement',
+    videoTitle: '3. Téléchargez la vidéo',
+    summary: 'Prêt : {pose}',
+    advancedTimeline: 'Avancé : monter une séquence',
+  },
+
   panel: {
     title: 'Personnaliser',
     shape: 'Forme',
     expression: 'Expression',
     colour: 'Couleur',
+    skinLimited: 'La forme et l’expression peuvent ne pas s’appliquer à cet état.',
   },
 
   shapes: {
@@ -89,6 +102,7 @@ export default {
     play: 'Lancer la lecture',
     pause: 'Arrêter la lecture',
     addAnimation: 'Ajouter une animation',
+    addAnimationNamed: 'Ajouter {state}',
     cycles: 'Montages',
     blockAria: '{state}, {duration}',
     blockDurationAria: 'Durée de {state}, {duration}',
@@ -124,10 +138,27 @@ export default {
 
   export: {
     title: 'Exporter',
+    stills: 'Image fixe',
+    video: 'Vidéo',
+    primaryVideo: 'Télécharger {format} · {name}',
+    moreOptions: 'Avancé : cycle de la timeline',
     png: 'Télécharger le PNG',
     svg: 'Télécharger le SVG',
     gif: 'Télécharger le GIF',
     mp4: 'Télécharger le MP4',
+    gifPose: 'GIF de {name}',
+    gifCycle: 'GIF du cycle',
+    mp4Pose: 'MP4 de {name}',
+    mp4Cycle: 'MP4 du cycle',
+    sourceLabel: 'Source de la vidéo',
+    sourcePose: 'Cette pose · {name}',
+    sourceCycle: 'Cycle · {name}',
+    metaPose: '{name} · {duration} · court clip de cette pose',
+    metaCycle: '{name} · {duration} · {count} animations',
+    busy: 'Export en cours…',
+    progress: 'Export en cours… {percent} %',
+    cancel: 'Annuler l’export',
+    mp4Unavailable: 'Ce navigateur ne peut pas encoder le MP4',
     done: 'Exporté',
     failed: "Échec de l'export",
   },

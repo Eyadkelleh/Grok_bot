@@ -294,6 +294,8 @@ export async function exporteMontage(
   cycle: Cycle,
   reglages: ReglagesBot,
   nom: string,
+  avance?: Avancement,
+  signal?: AbortSignal,
 ) {
   const duree = totalDuration(cycle.blocks)
   const images = cycleImages(duree, format)
@@ -301,7 +303,7 @@ export async function exporteMontage(
   const taille = CYCLE_TAILLE[format]
   const blob =
     format === 'mp4'
-      ? await cycleVersMp4(reglages, cycle.blocks, taille, images, pas, BLANC)
+      ? await cycleVersMp4(reglages, cycle.blocks, taille, images, pas, BLANC, avance, signal)
       : await cycleVersGif(
           reglages,
           cycle.blocks,
@@ -309,6 +311,8 @@ export async function exporteMontage(
           images,
           pas,
           couleurDeFond(FOND_GIF_DEFAUT),
+          avance,
+          signal,
         )
   telecharge(blob, nomFichier(nom, format))
 }

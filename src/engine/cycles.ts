@@ -1,4 +1,4 @@
-import { ANIMATION_STATES, DEFAULT_MORPH_MS, isAnimationState, type AnimationState } from './states'
+import { DEFAULT_MORPH_MS, isAnimationState, type AnimationState } from './states'
 
 /**
  * A cycle is a montage: a list of blocks, each a state held for a chosen duration.
@@ -32,6 +32,35 @@ export const STEP = 0.1
 export const DEFAULT_BLOCK_DURATION = 2
 export const DEFAULT_CYCLE_ID = 'defaut'
 
+/** Lead-in / return so a pose export morphs instead of freezing on block 0. */
+export const POSE_LEAD = MIN_BLOCK
+export const POSE_HOLD = 1.2
+export const POSE_CYCLE_ID = 'pose'
+
+/**
+ * Smallest cycle where `state` reads as motion under `rendAt`.
+ * Block 0 is always settled, so a lone pose block is a still frame.
+ * Idle alone stays one block. Anything else: Idle → pose → Idle (2s, seamless loop).
+ */
+export function poseCycle(state: AnimationState): Cycle {
+  if (state === 'Idle') {
+    return {
+      id: POSE_CYCLE_ID,
+      name: state,
+      blocks: [makeBlock('Idle', POSE_LEAD + POSE_HOLD + POSE_LEAD)],
+    }
+  }
+  return {
+    id: POSE_CYCLE_ID,
+    name: state,
+    blocks: [
+      makeBlock('Idle', POSE_LEAD),
+      makeBlock(state, POSE_HOLD),
+      makeBlock('Idle', POSE_LEAD),
+    ],
+  }
+}
+
 export function minDurationOf(_state: AnimationState): number {
   return MIN_BLOCK
 }
@@ -50,7 +79,7 @@ export function defaultCycle(): Cycle {
   return {
     name: '',
     id: DEFAULT_CYCLE_ID,
-    blocks: ANIMATION_STATES.map((state) => makeBlock(state)),
+    blocks: [makeBlock('Idle')],
   }
 }
 

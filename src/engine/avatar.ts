@@ -21,7 +21,7 @@ import {
 } from './states'
 
 const SHAPE_STATES = new Set<AnimationState>(['Idle', 'Wink', 'WideEyes', 'Notification'])
-const FACE_STATES = new Set<AnimationState>([
+export const FACE_STATES = new Set<AnimationState>([
   'Idle',
   'Wink',
   'WideEyes',
