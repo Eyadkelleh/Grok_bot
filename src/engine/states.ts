@@ -115,7 +115,7 @@ export function morphProgress(elapsed: number, durationMs: number): number {
   return clamp(elapsed / durationMs)
 }
 
-function blendDots(a: MorphDot[], b: MorphDot[], t: number): MorphDot[] {
+export function blendDots(a: MorphDot[], b: MorphDot[], t: number): MorphDot[] {
   const n = Math.max(a.length, b.length)
   const out: MorphDot[] = []
   for (let i = 0; i < n; i++) {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Avatar from '../components/Avatar.vue'
 import {
@@ -89,6 +89,35 @@ describe('Avatar', () => {
     expect(wrapper.get('svg').attributes('data-target')).toBe('Thinking')
     expect(wrapper.get('svg path').attributes('d')).not.toBe(idlePath)
     expect(wrapper.findAll('[data-dot]')).toHaveLength(2)
+  })
+
+  it('morphs between customiser shapes when the shape prop changes', async () => {
+    let nextFrame: FrameRequestCallback | undefined
+    const now = vi.spyOn(performance, 'now').mockReturnValue(0)
+    const requestFrame = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        nextFrame = callback
+        return 1
+      })
+    const wrapper = mount(Avatar, {
+      props: { durationMs: 400, state: 'Idle', shape: 'circle' },
+    })
+    const circle = sampleAvatar({ state: 'Idle', shape: 'circle' }).path
+    const hexagon = sampleAvatar({ state: 'Idle', shape: 'hexagon' }).path
+
+    await wrapper.setProps({ shape: 'hexagon' })
+    nextFrame?.(200)
+    await wrapper.vm.$nextTick()
+
+    const path = wrapper.get('svg path').attributes('d')
+    expect(path).not.toBe(circle)
+    expect(path).not.toBe(hexagon)
+    expect(wrapper.get('svg').attributes('data-shape')).toBe('hexagon')
+
+    wrapper.unmount()
+    requestFrame.mockRestore()
+    now.mockRestore()
   })
 
   it('morphs to Comet from a palette-driven state', async () => {

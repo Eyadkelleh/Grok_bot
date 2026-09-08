@@ -111,9 +111,10 @@ describe.each(VISUAL_CASES.filter(wantsPicture))('picture $id — $what', (visua
   it('matches the reviewed PictureFrame', async () => {
     const picture = samplePicture(visualCase)
     expect(picture.schema).toBe(1)
-    expect(picture.eyes).toHaveLength(visualCase.expect.eyes)
+    const expectedEyes =
+      visualCase.expect.face === 'morphing' ? 0 : visualCase.expect.eyes
+    expect(picture.eyes).toHaveLength(expectedEyes)
     expect(picture.dots).toHaveLength(visualCase.expect.dots)
-    if (visualCase.expect.face === 'morphing') expect(picture.eyes).toHaveLength(0)
     if (visualCase.expect.state === 'Alert') expect(picture.eyes).toHaveLength(0)
     await expectPictureGolden(picture, visualCase)
   })

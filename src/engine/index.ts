@@ -10,6 +10,7 @@ export {
   superellipse,
   profileFromPolygon,
   hullOfCircles,
+  radiusAtAngle,
   silhouetteFromRadii,
   eggProfile,
   regularPolygonProfile,
@@ -93,22 +94,17 @@ export {
 export {
   DEFAULT_SIZE,
   DEFAULT_PAPER,
+  usesCustomiserShape,
+  activeSilhouette,
   sampleAvatar,
+  sampleLiveMorph,
   gazeAttr,
   colourIdOf,
   type AvatarSpec,
   type AvatarEye,
   type AvatarFrame,
+  type LiveMorphSpec,
 } from './avatar'
-export {
-  FACE_STATES,
-  SHAPE_STATES,
-  STATE_CAPABILITIES,
-  honours,
-  type StateCapability,
-} from './gating'
-export { frameToSvg, type FrameToSvgOptions } from './frame'
-export { sampleAt, sampleSettled, type SampleSpec, type SampleResult } from './sample'
 export {
   MIN_BLOCK,
   MAX_BLOCK,
