@@ -2,7 +2,7 @@ import { silhouetteFromRadii, type Silhouette } from './morph'
 import { resolveShape } from './skins'
 import { STATE_REGISTRY, type AnimationState, type MorphDot } from './states'
 
-export type FacePolicy = 'expression' | 'wink' | 'wide' | 'none'
+export type FacePolicy = 'expression' | 'wink' | 'wide' | 'notify' | 'none'
 
 export type PoseTransform = Pick<Silhouette, 'rot' | 'cx' | 'cy' | 'sx' | 'sy'>
 
@@ -51,7 +51,8 @@ export const STATE_GEOMETRY = {
   WideEyes: wearable('WideEyes', 'wide'),
   // G5 accept-symbol-glyphs: measured bar glyphs cannot wear customiser squash.
   Alert: symbol('Alert'),
-  Notification: wearable('Notification', 'expression'),
+  // G3 measured-state-faces: wink / wide / notify keep their video poses.
+  Notification: wearable('Notification', 'notify'),
   Exclamation: symbol('Exclamation'),
   Sleep: wearable('Sleep', 'none'),
   Egg: symbol('Egg'),

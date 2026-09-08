@@ -18,7 +18,7 @@ import { EXPRESSIONS, resolveExpression, type BotExpression, type EyeCfg } from 
 import { eyePoses, type HeadGaze } from './face'
 import { BODY_RADIUS, radiusAtAngle, toPoints, type Point, type Silhouette } from './morph'
 import { SHAPE_BY_ID, SHAPES } from './skins'
-import { ANIMATION_STATES, STATE_REGISTRY, type AnimationState } from './states'
+import { ANIMATION_STATES, resolveVisage, STATE_REGISTRY, type AnimationState } from './states'
 
 const R = BODY_RADIUS
 
@@ -58,15 +58,8 @@ interface Trial {
 }
 
 export function faceEyeCfgs(face: FacePolicy, expression: BotExpression): [EyeCfg, EyeCfg] {
-  const cfgs: [EyeCfg, EyeCfg] = [{ ...expression.eyes[0] }, { ...expression.eyes[1] }]
-  if (face === 'wink') cfgs[1]!.open = 0.08
-  if (face === 'wide') {
-    for (const cfg of cfgs) {
-      cfg.w *= 1.35
-      cfg.h *= 1.2
-    }
-  }
-  return cfgs
+  const vis = resolveVisage(face, expression)
+  return [{ ...vis.eyes[0] }, { ...vis.eyes[1] }]
 }
 
 function capsules(
@@ -221,7 +214,8 @@ function solve(trials: Trial[]): EyeOffset {
 function offsetFor(state: AnimationState, sil: Silhouette, expression: BotExpression): EyeOffset {
   const face = STATE_GEOMETRY[state].face
   if (face === 'none') return ZERO_EYE_OFFSET
-  const cfgs = faceEyeCfgs(face, expression)
+  const vis = resolveVisage(face, expression)
+  const cfgs = vis.eyes
   const contour = toPoints(sil, R)
   const native = STATE_REGISTRY[state].silhouette.radii
   const circleContour = toPoints({ ...sil, radii: native }, R)
@@ -229,13 +223,13 @@ function offsetFor(state: AnimationState, sil: Silhouette, expression: BotExpres
   for (const dy of [-WANDER_YAW, WANDER_YAW]) {
     for (const dp of [-WANDER_PITCH, WANDER_PITCH]) {
       const gaze: HeadGaze = {
-        yaw: expression.gaze.yaw + dy,
-        pitch: expression.gaze.pitch + dp,
-        roll: expression.gaze.roll,
+        yaw: vis.gaze.yaw + dy,
+        pitch: vis.gaze.pitch + dp,
+        roll: vis.gaze.roll,
       }
       trials.push({
-        capsules: capsules(gaze, expression.split, cfgs, sil, sil.radii),
-        reference: capsules(gaze, expression.split, cfgs, sil, native),
+        capsules: capsules(gaze, vis.split, cfgs, sil, sil.radii),
+        reference: capsules(gaze, vis.split, cfgs, sil, native),
         contour,
         circleContour,
       })

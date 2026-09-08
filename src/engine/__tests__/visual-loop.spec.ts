@@ -99,6 +99,7 @@ describe('visual case registry', () => {
     expect(ids.has('idle-happy-hexagon')).toBe(true)
     expect(ids.has('wink')).toBe(true)
     expect(ids.has('wide-eyes')).toBe(true)
+    expect(ids.has('notification')).toBe(true)
   })
 
   it('seeks Idle→Alert at 0.25 through rendAt arithmetic', () => {

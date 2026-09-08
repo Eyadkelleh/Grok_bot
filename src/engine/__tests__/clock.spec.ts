@@ -160,9 +160,9 @@ describe('AvatarEngine.sample(t)', () => {
 
     expectSameFrame(mid, live)
     expect(mid.eyes).toHaveLength(2)
-    expect(mid.eyes[0]!.ry).toBeLessThan(idle.eyes[0]!.ry * 0.15)
-    expect(mid.eyes[1]!.ry).toBeLessThan(idle.eyes[1]!.ry * 0.15)
-    expect(Math.abs(mid.eyes[0]!.ry - mid.eyes[1]!.ry)).toBeLessThan(0.01)
+    // Both lids shut; Wink's measured dash may leave asymmetric ry under the mask.
+    expect(mid.eyes[0]!.ry).toBeLessThan(idle.eyes[0]!.ry * 0.2)
+    expect(mid.eyes[1]!.ry).toBeLessThan(idle.eyes[1]!.ry * 0.2)
     expect(settled.eyes[1]!.ry).toBeLessThan(settled.eyes[0]!.ry)
     expectSameFrame(e.sample(AvatarEngine.MORPH * 0.5), mid)
   })

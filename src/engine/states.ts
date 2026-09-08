@@ -1,3 +1,5 @@
+import { type EyeCfg } from './expressions'
+import { type HeadGaze } from './face'
 import {
   ALERT_BAR_CY,
   ALERT_DOT_ALONG,
@@ -56,6 +58,69 @@ export interface StateEntry {
   blinkIn?: boolean
 }
 
+/** Measured gaze, split, and eye sizes for G3 state faces. */
+export interface MeasuredFace {
+  gaze: HeadGaze
+  split: number
+  eyes: [EyeCfg, EyeCfg]
+}
+
+const eye = (w: number, h: number, open = 1): EyeCfg => ({ w, h, tilt: 0, open })
+const pair = (w: number, h: number): [EyeCfg, EyeCfg] => [eye(w, h), eye(w, h)]
+
+/** Closed wink is a wider horizontal dash, not the open eye crushed to open=0. */
+export const WINK_FACE: MeasuredFace = {
+  gaze: { yaw: -5.37, pitch: 4.55, roll: 6.7 },
+  split: 16.25,
+  eyes: [eye(0.236, 0.464), eye(0.447, 0.089)],
+}
+
+export const WIDE_FACE: MeasuredFace = {
+  gaze: { yaw: 6.92, pitch: -21.96, roll: 11.6 },
+  split: 18.43,
+  eyes: pair(0.356, 0.875),
+}
+
+export const NOTIFY_FACE: MeasuredFace = {
+  gaze: { yaw: -21.94, pitch: -5.82, roll: -12.2 },
+  split: 18.89,
+  eyes: pair(0.505, 0.498),
+}
+
+/** Badge sits on the circumference, opposite the gaze. */
+export const NOTIF_ANGLE = -42
+export const NOTIF_DIST = 1.003
+export const NOTIF_R = 0.15
+export const NOTIF_POP = 1.14
+
+export function measuredFace(face: string): MeasuredFace | null {
+  if (face === 'wink') return WINK_FACE
+  if (face === 'wide') return WIDE_FACE
+  if (face === 'notify') return NOTIFY_FACE
+  return null
+}
+
+export function resolveVisage(
+  face: string,
+  expression: { gaze: HeadGaze; split: number; eyes: [EyeCfg, EyeCfg] },
+): MeasuredFace {
+  return measuredFace(face) ?? { gaze: expression.gaze, split: expression.split, eyes: expression.eyes }
+}
+
+/** Badge radius pops then settles. pose(0) is the rest size. */
+export function notifyBadge(t: number): MorphDot {
+  const p = clamp(t / 0.45)
+  const pop = 1 + (NOTIF_POP - 1) * Math.sin(p * Math.PI) * (1 - p * 0.35)
+  const r = NOTIF_R * (p < 1 ? pop : 1)
+  const a = (NOTIF_ANGLE * Math.PI) / 180
+  return {
+    x: Math.cos(a) * NOTIF_DIST,
+    y: Math.sin(a) * NOTIF_DIST,
+    r,
+    opacity: 1,
+  }
+}
+
 export interface MorphFrame {
   path: string
   dots: MorphDot[]
@@ -96,7 +161,7 @@ export const STATE_REGISTRY: Record<AnimationState, StateEntry> = {
       opacity: 1,
     },
   ]),
-  Notification: entry(circle(1), [], true),
+  Notification: entry(circle(1), [notifyBadge(0)], true),
   Exclamation: entry(barUpright(), [{ x: -0.012, y: 0.526, r: 0.113, opacity: 1 }]),
   Sleep: entry(circle(0.16, { cy: 0.12 })),
   Egg: entry(fromRadii(PROFILES.egg), [], true),

@@ -2,15 +2,15 @@
  * Intra-state pose(t). Idle is identity so L0 settled Idle stays a still dump.
  *
  * Motion is in the spirit of bloub `states.ts` pose functions: Thinking pulse,
- * Sleep bounce, Orbit spin/relax, Burst collapse, Comet wobble. Glyph states
- * (Alert / Exclamation) stay on the static registry — K4 owns those paths.
+ * Sleep bounce, Orbit spin/relax, Burst collapse, Comet wobble, Notification
+ * badge pop. Glyph states (Alert / Exclamation) stay on the static registry.
  *
  * pose(0) matches STATE_REGISTRY so palette thumbnails and durationMs=0
  * snapshots stay the still frame.
  */
 import { clamp, easeInOutCubic, easeOutQuint, TAU } from './math'
 import { circle, regularPolygonProfile, type Silhouette } from './morph'
-import { STATE_REGISTRY, type AnimationState, type MorphDot, type StateEntry } from './states'
+import { notifyBadge, STATE_REGISTRY, type AnimationState, type MorphDot, type StateEntry } from './states'
 
 const THINK_R = 0.22
 const THINK_X = 0.62
@@ -129,6 +129,10 @@ function cometPose(t: number): StateEntry {
   )
 }
 
+function notifyPose(t: number): StateEntry {
+  return entry(circle(1), [notifyBadge(t)])
+}
+
 export function poseAt(state: AnimationState, t: number): StateEntry {
   switch (state) {
     case 'Thinking':
@@ -141,6 +145,8 @@ export function poseAt(state: AnimationState, t: number): StateEntry {
       return burstPose(t)
     case 'Comet':
       return cometPose(t)
+    case 'Notification':
+      return notifyPose(t)
     default:
       return STATE_REGISTRY[state]
   }

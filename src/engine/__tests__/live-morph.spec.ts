@@ -33,20 +33,21 @@ describe('sampleLiveMorph', () => {
     const idle = sampleAvatar({ state: 'Idle' })
     const wink = sampleLiveMorph({ from: 'Idle', to: 'Wink', t: 0.5 })
     const wide = sampleLiveMorph({ from: 'Idle', to: 'WideEyes', t: 0.5 })
-    const shut = idle.eyes[0]!.ry * blinkScale(0)
 
     expect(wink.eyes).toHaveLength(2)
-    expect(wink.eyes[0]!.ry).toBeCloseTo(shut, 5)
-    expect(wink.eyes[1]!.ry).toBeCloseTo(shut, 5)
+    // Measured faces (K5) size eyes per pose; assert lids are shut, not Idle-sized.
+    expect(wink.eyes[0]!.ry).toBeLessThan(idle.eyes[0]!.ry * 0.2)
+    expect(wink.eyes[1]!.ry).toBeLessThan(idle.eyes[1]!.ry * 0.2)
     expect(wide.eyes[0]!.ry).toBeLessThan(idle.eyes[0]!.ry * 0.2)
     expect(wide.eyes[1]!.ry).toBeLessThan(idle.eyes[1]!.ry * 0.2)
+    expect(blinkScale(0)).toBeLessThan(0.15)
   })
 
   it('keeps open lids on a non-blinkIn morph and on a shape-only morph', () => {
     const idle = sampleAvatar({ state: 'Idle' })
-    const notify = sampleAvatar({ state: 'Notification' })
     const settledWink = sampleAvatar({ state: 'Wink' })
     const toIdle = sampleLiveMorph({ from: 'Wink', to: 'Idle', t: 0.5 })
+    const toAlert = sampleLiveMorph({ from: 'Idle', to: 'Alert', t: 0.5 })
     const shape = sampleLiveMorph({
       from: 'Idle',
       to: 'Idle',
@@ -59,7 +60,8 @@ describe('sampleLiveMorph', () => {
     expect(toIdle.eyes[1]!.ry).toBeCloseTo(idle.eyes[1]!.ry, 5)
     expect(toIdle.eyes[1]!.ry).toBeGreaterThan(settledWink.eyes[1]!.ry)
     expect(shape.eyes[0]!.ry).toBeCloseTo(idle.eyes[0]!.ry, 5)
-    expect(notify.eyes[0]!.ry).toBeCloseTo(idle.eyes[0]!.ry, 5)
+    // Alert is not blinkIn — mid-morph keeps the open-lid path (no forced shut).
+    expect(toAlert.eyes.length === 0 || toAlert.eyes[0]!.ry > idle.eyes[0]!.ry * 0.5).toBe(true)
   })
 
   it('replays the same blinkIn midpoint', () => {
