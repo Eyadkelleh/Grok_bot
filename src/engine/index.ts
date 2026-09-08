@@ -114,6 +114,7 @@ export {
   type AvatarFrame,
   type LiveMorphSpec,
 } from './avatar'
+export { AvatarEngine, sampleAt, type ClockAppearance } from './clock'
 export {
   MIN_BLOCK,
   MAX_BLOCK,
