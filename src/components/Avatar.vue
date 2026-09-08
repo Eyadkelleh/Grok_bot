@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
+  AvatarEngine,
   BODY_RADIUS,
   DEFAULT_COLOR,
   DEFAULT_EXPRESSION,
@@ -10,12 +11,8 @@ import {
   DEFAULT_SIZE,
   VIEW_HALF,
   VIEW_SIZE,
-  blockAt,
   colourIdOf,
   gazeAttr,
-  morphProgress,
-  sampleAvatar,
-  sampleLiveMorph,
   type AnimationState,
   type Block,
   type GazeInput,
@@ -46,45 +43,70 @@ const props = withDefaults(
 )
 
 const uid = `avatar-mask-${Math.random().toString(36).slice(2, 10)}`
-const initialState = (props.state as AnimationState) ?? 'Idle'
-const fromState = ref<AnimationState>(initialState)
-const toState = ref<AnimationState>(initialState)
-const fromShape = ref(props.shape)
-const toShape = ref(props.shape)
-const startedAt = ref(0)
-const now = ref(0)
+const engine = new AvatarEngine(
+  {
+    state: (props.state as AnimationState) ?? 'Idle',
+    shape: props.shape,
+    expression: props.expression,
+    gaze: props.gaze,
+    colour: props.colour,
+    paper: props.paper,
+  },
+  props.durationMs,
+)
+const clockT = ref(0)
+const stamp = ref(0)
 let raf = 0
 
+function bump() {
+  stamp.value += 1
+}
+
+function appearance() {
+  return {
+    expression: props.expression,
+    gaze: props.gaze,
+    colour: props.colour,
+    paper: props.paper,
+  }
+}
+
 function tick(ts: number) {
-  now.value = ts
-  if (morphProgress(ts - startedAt.value, props.durationMs) < 1) {
+  clockT.value = ts / 1000
+  if (engine.morphingAt(clockT.value)) {
     raf = requestAnimationFrame(tick)
   }
 }
 
 function morphTo(nextState: AnimationState, nextShape: string) {
-  if (nextState === toState.value && nextShape === toShape.value) return
-  fromState.value = toState.value
-  fromShape.value = toShape.value
-  toState.value = nextState
-  toShape.value = nextShape
-  const t = performance.now()
-  startedAt.value = t
-  now.value = t
+  if (nextState === engine.state && nextShape === engine.shapeId) return
+  engine.morphMs = props.durationMs
+  const t = performance.now() / 1000
+  engine.setState(nextState, t)
+  engine.setShape(nextShape, t)
+  clockT.value = t
+  bump()
   cancelAnimationFrame(raf)
-  if (props.durationMs > 0) raf = requestAnimationFrame(tick)
+  if (props.durationMs > 0 && engine.morphingAt(t)) raf = requestAnimationFrame(tick)
 }
 
 watch(
   () => props.state,
   (next) => {
-    if (typeof next === 'string') morphTo(next as AnimationState, toShape.value)
+    if (typeof next === 'string') morphTo(next as AnimationState, engine.shapeId)
   },
 )
 
 watch(
   () => props.shape,
-  (next) => morphTo(toState.value, next),
+  (next) => morphTo(engine.state, next),
+)
+
+watch(
+  () => props.durationMs,
+  (ms) => {
+    engine.morphMs = ms
+  },
 )
 
 /**
@@ -95,22 +117,13 @@ watch(
 function rendAt(t: number, blocks: Block[]) {
   cancelAnimationFrame(raf)
   raf = 0
-  const hit = blockAt(blocks, t)
-  const current = blocks[hit.index]?.state ?? 'Idle'
-  const prev = hit.index > 0 ? (blocks[hit.index - 1]?.state ?? current) : current
-  const morphDone = hit.index === 0 || hit.elapsed * 1000 + 1e-6 >= props.durationMs
-  fromState.value = morphDone ? current : prev
-  toState.value = current
-  fromShape.value = props.shape
-  toShape.value = props.shape
-  startedAt.value = 0
-  now.value = morphDone ? props.durationMs : hit.elapsed * 1000
+  engine.morphMs = props.durationMs
+  clockT.value = engine.seek(t, blocks)
+  bump()
 }
 
 onMounted(() => {
-  const t = performance.now()
-  now.value = t
-  startedAt.value = t
+  clockT.value = performance.now() / 1000
 })
 
 onUnmounted(() => {
@@ -119,39 +132,21 @@ onUnmounted(() => {
 
 defineExpose({ rendAt })
 
-const progress = computed(() => {
-  if (fromState.value === toState.value && fromShape.value === toShape.value) return 1
-  return morphProgress(now.value - startedAt.value, props.durationMs)
+const frame = computed(() => {
+  void stamp.value
+  return engine.sample(clockT.value, appearance())
 })
 
-const rest = computed(() =>
-  sampleAvatar({
-    shape: toShape.value,
-    expression: props.expression,
-    gaze: props.gaze,
-    colour: props.colour,
-    state: toState.value,
-    paper: props.paper,
-  }),
-)
-
-const frame = computed(() => {
-  if (progress.value >= 1) return rest.value
-  return sampleLiveMorph({
-    from: fromState.value,
-    to: toState.value,
-    fromShape: fromShape.value,
-    toShape: toShape.value,
-    expression: props.expression,
-    gaze: props.gaze,
-    colour: props.colour,
-    paper: props.paper,
-    t: progress.value,
-  })
+const toState = computed(() => {
+  void stamp.value
+  return engine.state
 })
 
 const colourAttr = computed(() => colourIdOf(props.colour, frame.value.colour))
-const shownState = computed(() => (progress.value >= 1 ? toState.value : fromState.value))
+const shownState = computed(() => {
+  void stamp.value
+  return engine.shownState(clockT.value)
+})
 </script>
 
 <template>
