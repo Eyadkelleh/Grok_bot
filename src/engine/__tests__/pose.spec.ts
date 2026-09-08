@@ -13,7 +13,7 @@ function framesDiffer(a: { path: string; dots: Array<{ x: number; y: number; r: 
 
 describe('pose(t)', () => {
   it('keeps pose(0) on the still registry snapshot', () => {
-    for (const state of ['Thinking', 'Sleep', 'Orbit', 'Burst', 'Comet'] as const) {
+    for (const state of ['Thinking', 'Sleep', 'Orbit', 'Burst', 'Comet', 'Notification'] as const) {
       const posed = poseAt(state, 0)
       const rest = STATE_REGISTRY[state]
       expect(posed.silhouette.radii[0], state).toBeCloseTo(rest.silhouette.radii[0]!, 5)
@@ -42,8 +42,8 @@ describe('pose(t)', () => {
     expect(poseAt('Orbit', 0.3).silhouette.rot).not.toBeCloseTo(poseAt('Orbit', 1.2).silhouette.rot, 5)
   })
 
-  it('moves Thinking, Burst, and Comet between 0.3 s and 1.2 s', () => {
-    for (const state of ['Thinking', 'Burst', 'Comet'] as const) {
+  it('moves Thinking, Burst, Comet, and Notification between 0.3 s and 1.2 s', () => {
+    for (const state of ['Thinking', 'Burst', 'Comet', 'Notification'] as const) {
       const a = sampleAt(0.3, { state })
       const b = sampleAt(1.2, { state })
       expect(framesDiffer(a, b), state).toBe(true)
