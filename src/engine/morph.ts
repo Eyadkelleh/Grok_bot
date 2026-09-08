@@ -3,8 +3,9 @@
  * Every silhouette is r(θ) sampled at the same angles, so a morph is a lerp of radii.
  */
 import { TAU, lerp, r2 } from './math'
+import { PROFILE_SAMPLES } from './profiles'
 
-export const PROFILE_SAMPLES = 64
+export { PROFILE_SAMPLES }
 export const BODY_RADIUS = 46
 export const VIEW_SCALE = BODY_RADIUS
 export const VIEW_CX = 0
