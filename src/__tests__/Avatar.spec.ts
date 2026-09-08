@@ -10,6 +10,7 @@ import {
   REST_GAZE,
   pathForState,
   poseCycle,
+  sampleAt,
   sampleAvatar,
 } from '../engine'
 
@@ -128,7 +129,7 @@ describe('Avatar', () => {
     await wrapper.setProps({ state: 'Comet' })
     expect(wrapper.get('svg').attributes('data-state')).toBe('Comet')
     expect(wrapper.get('svg').attributes('data-shape-applied')).toBe('true')
-    expect(wrapper.get('svg path').attributes('d')).toBe(pathForState('Comet'))
+    expect(wrapper.get('svg path').attributes('d')).toBe(sampleAt(0, { state: 'Comet' }).path)
   })
 
   it('marks symbol poses as not applying the customiser shape', () => {
@@ -149,7 +150,7 @@ describe('Avatar', () => {
     await wrapper.vm.$nextTick()
     expect(wrapper.get('svg').attributes('data-state')).toBe('Comet')
     expect(wrapper.get('svg').attributes('data-target')).toBe('Comet')
-    expect(wrapper.get('svg path').attributes('d')).toBe(pathForState('Comet'))
+    expect(wrapper.get('svg path').attributes('d')).toBe(sampleAt(0, { state: 'Comet' }).path)
 
     wrapper.vm.rendAt(2.4, blocs)
     await wrapper.vm.$nextTick()
@@ -176,6 +177,6 @@ describe('Avatar', () => {
     wrapper.vm.rendAt(1.0, blocs)
     await wrapper.vm.$nextTick()
     expect(wrapper.get('svg').attributes('data-target')).toBe('Comet')
-    expect(wrapper.get('svg path').attributes('d')).toBe(pathForState('Comet'))
+    expect(wrapper.get('svg path').attributes('d')).toBe(sampleAt(0.6, { state: 'Comet' }).path)
   })
 })

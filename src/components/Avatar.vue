@@ -123,7 +123,9 @@ function rendAt(t: number, blocks: Block[]) {
 }
 
 onMounted(() => {
-  clockT.value = performance.now() / 1000
+  const now = performance.now() / 1000
+  engine.reset(engine.state, now)
+  clockT.value = now
 })
 
 onUnmounted(() => {
