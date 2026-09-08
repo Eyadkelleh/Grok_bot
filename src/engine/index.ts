@@ -1,6 +1,6 @@
 export { TAU, clamp, lerp, easeOutQuint, r2 } from './math'
+export { PROFILE_SAMPLES, PROFILES, type ProfileName } from './profiles'
 export {
-  PROFILE_SAMPLES,
   circle,
   blend,
   blendSilhouettes,

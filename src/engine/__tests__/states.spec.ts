@@ -64,4 +64,13 @@ describe('ANIMATION_STATES', () => {
       }
     }
   })
+
+  it('uses measured radii for Egg, Hexagon, and Play', () => {
+    expect(STATE_REGISTRY.Egg.silhouette.radii[0]).toBe(0.8369)
+    expect(STATE_REGISTRY.Hexagon.silhouette.radii[0]).toBe(0.921)
+    expect(STATE_REGISTRY.Play.silhouette.radii[0]).toBe(0.7819)
+    expect(pathForState('Egg')).toMatch(/^M38\.5 /)
+    expect(pathForState('Hexagon')).toMatch(/^M42\.37 /)
+    expect(pathForState('Play')).toMatch(/^M35\.97 /)
+  })
 })

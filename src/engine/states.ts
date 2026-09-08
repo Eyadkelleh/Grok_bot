@@ -3,11 +3,11 @@ import {
   BODY_RADIUS,
   blend,
   circle,
-  eggProfile,
   regularPolygonProfile,
   silhouettePath,
   type Silhouette,
 } from './morph'
+import { PROFILES } from './profiles'
 
 export const ANIMATION_STATES = [
   'Idle',
@@ -50,15 +50,13 @@ export interface MorphFrame {
   progress: number
 }
 
-const hexagonRadii = regularPolygonProfile(6, 1, 0.18, -90)
-const triangleRadii = regularPolygonProfile(3, 1, 0.18, -90)
-const eggRadii = eggProfile()
+const orbitTriangleRadii = regularPolygonProfile(3, 1, 0.18, -90)
 
 function entry(silhouette: Silhouette, dots: MorphDot[] = []): StateEntry {
   return { silhouette, dots }
 }
 
-function fromRadii(radii: number[], pose: Partial<Silhouette> = {}): Silhouette {
+function fromRadii(radii: readonly number[], pose: Partial<Silhouette> = {}): Silhouette {
   return { radii: [...radii], rot: 0, cx: 0, cy: 0, sx: 1, sy: 1, ...pose }
 }
 
@@ -78,10 +76,10 @@ export const STATE_REGISTRY: Record<AnimationState, StateEntry> = {
     { x: 0, y: 1.13, r: 0.18, opacity: 1 },
   ]),
   Sleep: entry(circle(0.16, { cy: 0.12 })),
-  Egg: entry(fromRadii(eggRadii)),
-  Hexagon: entry(fromRadii(hexagonRadii)),
-  Play: entry(fromRadii(triangleRadii)),
-  Orbit: entry(fromRadii(triangleRadii, { rot: 0.4 })),
+  Egg: entry(fromRadii(PROFILES.egg)),
+  Hexagon: entry(fromRadii(PROFILES.hexagon)),
+  Play: entry(fromRadii(PROFILES.triangle)),
+  Orbit: entry(fromRadii(orbitTriangleRadii, { rot: 0.4 })),
   Burst: entry(circle(0.18)),
   Comet: entry(circle(0.2, { cy: 0.04 })),
 }

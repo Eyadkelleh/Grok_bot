@@ -5,6 +5,7 @@ import {
   blend,
   circle,
   closedPath,
+  eggProfile,
   morphPath,
   regularPolygonProfile,
   toPoints,
@@ -64,5 +65,14 @@ describe('radial morph', () => {
     expect(triangle[up]!).toBeGreaterThan(triangle[right]!)
     expect(SHAPES.find((s) => s.id === 'triangle')!.radii[up]!).toBeCloseTo(triangle[up]!, 5)
     expect(SHAPES.find((s) => s.id === 'hexagon')!.radii).toEqual(hexagon)
+  })
+
+  it('does not use analytic egg or polygon profiles for Egg, Hexagon, or Play', () => {
+    const analyticEgg = closedPath(toPoints({ ...circle(1), radii: eggProfile() }, 46))
+    const analyticHex = closedPath(toPoints({ ...circle(1), radii: regularPolygonProfile(6, 1, 0.18, -90) }, 46))
+    const analyticPlay = closedPath(toPoints({ ...circle(1), radii: regularPolygonProfile(3, 1, 0.18, -90) }, 46))
+    expect(morphPath('Egg', 'Egg', 1)).not.toBe(analyticEgg)
+    expect(morphPath('Hexagon', 'Hexagon', 1)).not.toBe(analyticHex)
+    expect(morphPath('Play', 'Play', 1)).not.toBe(analyticPlay)
   })
 })
