@@ -73,14 +73,15 @@ describe('deterministic avatar visual loop', () => {
     }
   })
 
-  it('wears custom shape on Alert and ignores it on Play', () => {
+  it('wears custom shape on Sleep and ignores it on Alert and Play', () => {
+    const sleepHex = sampleAvatar({ state: 'Sleep', shape: 'hexagon' })
+    const sleepCircle = sampleAvatar({ state: 'Sleep', shape: 'circle' })
     const alertHex = sampleAvatar({ state: 'Alert', shape: 'hexagon' })
     const alertCircle = sampleAvatar({ state: 'Alert', shape: 'circle' })
-    const idleHex = sampleAvatar({ state: 'Idle', shape: 'hexagon' })
     const playHex = sampleAvatar({ state: 'Play', shape: 'hexagon' })
     const playCircle = sampleAvatar({ state: 'Play', shape: 'circle' })
-    expect(alertHex.path).not.toBe(alertCircle.path)
-    expect(alertHex.path).not.toBe(idleHex.path)
+    expect(sleepHex.path).not.toBe(sleepCircle.path)
+    expect(alertHex.path).toBe(alertCircle.path)
     expect(playHex.path).toBe(playCircle.path)
   })
 })

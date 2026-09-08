@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BODY_RADIUS, PROFILE_SAMPLES, toPoints, viewBoxAttr } from '../morph'
+import { BODY_RADIUS, PROFILE_SAMPLES, circle, silhouettePath, toPoints, viewBoxAttr } from '../morph'
 import {
   ANIMATION_STATES,
   STATE_REGISTRY,
@@ -47,6 +47,44 @@ describe('ANIMATION_STATES', () => {
 
   it.each(['Alert', 'Exclamation'] as const)('draws a period below the %s bar', (state) => {
     expect(STATE_REGISTRY[state].dots.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('does not use squashed-circle shortcuts for Alert or Exclamation', () => {
+    const alertShortcut = circle(1, { sx: 0.22, sy: 1.02, rot: 0.28, cy: -0.22 })
+    const exclaimShortcut = circle(1, { sx: 0.22, sy: 1.02, cy: -0.22 })
+    expect(pathForState('Alert')).not.toBe(silhouettePath(alertShortcut))
+    expect(pathForState('Exclamation')).not.toBe(silhouettePath(exclaimShortcut))
+    expect(new Set(STATE_REGISTRY.Alert.silhouette.radii).size).toBeGreaterThan(1)
+    expect(new Set(STATE_REGISTRY.Exclamation.silhouette.radii).size).toBeGreaterThan(1)
+  })
+
+  it('uses a tapered upright bar and a round period for Exclamation', () => {
+    const sil = STATE_REGISTRY.Exclamation.silhouette
+    const up = Math.round((3 / 4) * PROFILE_SAMPLES) % PROFILE_SAMPLES
+    const down = Math.round((1 / 4) * PROFILE_SAMPLES) % PROFILE_SAMPLES
+    expect(sil.radii[up]!).toBeGreaterThan(sil.radii[down]!)
+    expect(sil.sx).toBe(1)
+    expect(sil.sy).toBe(1)
+    const period = STATE_REGISTRY.Exclamation.dots[0]!
+    expect(period.d).toBeUndefined()
+    expect(period.r).toBeCloseTo(0.113)
+    expect(period.y).toBeGreaterThan(sil.cy)
+  })
+
+  it('uses a capsule bar and a teardrop italic period for Alert', () => {
+    const sil = STATE_REGISTRY.Alert.silhouette
+    const right = 0
+    const up = Math.round((3 / 4) * PROFILE_SAMPLES) % PROFILE_SAMPLES
+    const down = Math.round((1 / 4) * PROFILE_SAMPLES) % PROFILE_SAMPLES
+    expect(sil.radii[up]!).toBeGreaterThan(sil.radii[right]! * 2)
+    expect(Math.abs(sil.radii[up]! - sil.radii[down]!)).toBeLessThan(0.02)
+    expect(sil.rot).toBeCloseTo((17.7 * Math.PI) / 180)
+    const period = STATE_REGISTRY.Alert.dots[0]!
+    expect(period.d).toMatch(/^M/)
+    expect(period.d).toMatch(/Z$/)
+    expect(period.d).toContain('L')
+    expect(period.rot).toBeCloseTo(17.7)
+    expect(period.r).toBeCloseTo(0.118)
   })
 
   it('fits every state silhouette inside the render frame', () => {

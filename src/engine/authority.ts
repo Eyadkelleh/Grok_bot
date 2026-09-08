@@ -49,9 +49,10 @@ export const STATE_GEOMETRY = {
   Thinking: wearable('Thinking', 'none'),
   Wink: wearable('Wink', 'wink'),
   WideEyes: wearable('WideEyes', 'wide'),
-  Alert: wearable('Alert', 'none'),
+  // G5 accept-symbol-glyphs: measured bar glyphs cannot wear customiser squash.
+  Alert: symbol('Alert'),
   Notification: wearable('Notification', 'expression'),
-  Exclamation: wearable('Exclamation', 'none'),
+  Exclamation: symbol('Exclamation'),
   Sleep: wearable('Sleep', 'none'),
   Egg: symbol('Egg'),
   Hexagon: symbol('Hexagon'),
