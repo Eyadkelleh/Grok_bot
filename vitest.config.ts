@@ -10,6 +10,7 @@ export default mergeConfig(
       setupFiles: ['./vitest.setup.ts'],
       exclude: [...configDefaults.exclude, 'e2e/**'],
       root: fileURLToPath(new URL('./', import.meta.url)),
+      // Combinatorial matrix/loop specs exceed the 5s default under parallel jsdom load.
       testTimeout: 20_000,
     },
   }),

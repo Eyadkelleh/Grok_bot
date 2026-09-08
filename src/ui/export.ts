@@ -5,7 +5,7 @@
  * import — a static one from this file would pull mediabunny into the entry chunk.
  */
 
-import { VIEW_SIZE, viewBoxAttr } from '../engine'
+import { BODY_RADIUS, SHAPES, VIEW_HALF, VIEW_SIZE } from '../engine'
 
 /** One PNG size: 1024 covers Discord/X/GitHub/Slack avatars and downscales cleanly. */
 export const PNG_TAILLE = 1024
@@ -68,8 +68,45 @@ export const ACTION_BY_ID = new Map<string, ActionExport>(ACTIONS.map((a) => [a.
 
 export const ACTION_DEFAUT: ActionId = 'png'
 
-export function viewBoxExport(): string {
-  return viewBoxAttr()
+/**
+ * Margin around the widest customiser shape. Eight percent so a circular
+ * profile crop (Discord, Slack, GitHub) does not bite the silhouette.
+ */
+const MARGE = 1.08
+
+/**
+ * Radius of the most spread-out customiser shape, in body-radius units.
+ * Computed, not hardcoded: a wider shape moves the tight cadre instead of
+ * getting cropped.
+ */
+export const RAYON_MAX = Math.max(...SHAPES.map((forme) => Math.max(...forme.radii)))
+
+/**
+ * Half-side of the tight still cadre, in viewBox units.
+ *
+ * Tighter than the on-screen box on purpose: the stage margin houses décor
+ * rings of animated states, which do not exist at rest. G4 default is
+ * keep-stage-box, so stills do not use this cadre. It exists so cycle export
+ * can stay on the wider screen box without collapsing the two.
+ */
+export const DEMI_CADRE = Math.ceil(BODY_RADIUS * RAYON_MAX * MARGE)
+
+/**
+ * Half-side of the on-screen viewBox.
+ *
+ * Cycle GIF/MP4 must use this, not the tight cadre. Décor rings (Orbit, Burst,
+ * Comet) rise to 1.4 × body radius — past DEMI_CADRE, which would crop them.
+ */
+export const DEMI_ECRAN = VIEW_HALF
+
+/** Square viewBox centred on the ball. Stills default to the stage (G4). */
+export function viewBoxExport(demi = DEMI_ECRAN): string {
+  return `${-demi} ${-demi} ${demi * 2} ${demi * 2}`
+}
+
+/** Cycle/GIF/MP4 framing: the box the Avatar draws, not the tight still cadre. */
+export function viewBoxCycle(): string {
+  return viewBoxExport(DEMI_ECRAN)
 }
 
 export function sansCommentaires(markup: string): string {
