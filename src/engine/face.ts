@@ -89,6 +89,16 @@ export function blinkScale(lid: number): number {
 }
 
 /**
+ * Forced blink that masks a blinkIn morph. Same triangle as bloub (`elapsed / 0.2`):
+ * open at the ends, shut at mid-phase. Grok feeds morph progress so the lids
+ * cover the silhouette change at the morph midpoint.
+ */
+export function forcedBlinkLid(phase: number): number {
+  const k = clamp(phase)
+  return k < 1 ? Math.abs(k * 2 - 1) : 1
+}
+
+/**
  * Rest-face life: gaze drift, blinks, and a tiny body float.
  *
  * Pure in t — pause, resume, and seek to the same date yield the same frame.

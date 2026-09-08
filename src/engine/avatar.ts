@@ -11,8 +11,10 @@ import { resolveExpression, type ExpressionId } from './expressions'
 import {
   blinkScale,
   eyePoses,
+  forcedBlinkLid,
   liveliness,
   resolveGaze,
+  STILL_LIFE,
   type GazeInput,
   type HeadGaze,
   type Liveliness,
@@ -28,7 +30,14 @@ import {
 } from './morph'
 import { resolveColour, resolveShape, type ColorId, type ShapeId } from './skins'
 import { poseAt } from './pose'
-import { blendDots, isAnimationState, resolveVisage, type AnimationState, type MorphDot } from './states'
+import {
+  blendDots,
+  blinksIn,
+  isAnimationState,
+  resolveVisage,
+  type AnimationState,
+  type MorphDot,
+} from './states'
 
 export interface AvatarSpec {
   size?: number
@@ -259,7 +268,11 @@ export function sampleLiveMorph(spec: LiveMorphSpec): AvatarFrame {
     eyeOffset(toShape, spec.to, spec.expression),
     k,
   )
-  const eyeFrame = eyesFor(eyeFace, spec.expression, spec.gaze, silhouette, offset)
+  // blinkIn targets hide the arriving eye shapes behind a blink; others keep
+  // the prior open-lid morph (expression / wink / fade only).
+  const lidOpen = blinksIn(spec.to) ? forcedBlinkLid(spec.t) : 1
+  const blinkLife = lidOpen < 1 ? { ...STILL_LIFE, lid: lidOpen } : null
+  const eyeFrame = eyesFor(eyeFace, spec.expression, spec.gaze, silhouette, offset, blinkLife)
   const eyeOpacity = fromFace && toFace ? 1 : toFace ? k : fromFace ? 1 - k : 0
   const eyes = eyeFrame.eyes
     .map((eye) => ({ ...eye, opacity: eye.opacity * eyeOpacity }))
