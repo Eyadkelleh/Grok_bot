@@ -12,6 +12,8 @@
     "test:ui-avatar": "node scripts/ui-avatar-loop.mjs",
     "test:visual": "node scripts/ui-avatar-loop.mjs",
     "test:visual:regen": "node scripts/regen-visual-golden.mjs",
+    "test:parity": "vitest run src/testing/visual/parity",
+    "dump:parity": "node scripts/dump-bloub-idle-parity.mjs",
     "test:unit": "vitest",
     "test:friction": "vitest run src/__tests__/friction.spec.ts",
     "build-only": "vite build",
