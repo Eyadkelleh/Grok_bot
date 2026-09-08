@@ -178,6 +178,22 @@ describe('AvatarEngine.sample(t)', () => {
     expect(mid.eyes[1]!.ry).toBeCloseTo(idle.eyes[1]!.ry, 5)
   })
 
+  it('does not let wander move frozen eyes during a face-to-eyeless fade', () => {
+    const idle = sampleAvatar({ state: 'Idle' })
+    const still = new AvatarEngine({ state: 'Idle', wander: 0 })
+    still.setState('Orbit', 0)
+    const alive = new AvatarEngine({ state: 'Idle', wander: 1 })
+    alive.setState('Orbit', 0)
+    const t = morphSecondsOf('Orbit') * 0.5
+    const stillMid = still.sample(t)
+    const aliveMid = alive.sample(t)
+
+    expect(eyeCentres(aliveMid)).toEqual(eyeCentres(stillMid))
+    expect(stillMid.eyes[0]!.x).toBeCloseTo(idle.eyes[0]!.x, 5)
+    expect(stillMid.eyes[0]!.opacity).toBeLessThan(1)
+    expectSameFrame(stillMid, sampleLiveMorph({ from: 'Idle', to: 'Orbit', t: 0.5 }))
+  })
+
   it('completes a short arriving morph sooner than a long one', () => {
     const wink = new AvatarEngine({ state: 'Idle' })
     wink.setState('Wink', 0)

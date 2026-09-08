@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { blinkScale, sampleAvatar, sampleLiveMorph, sampleMorph } from '..'
+import {
+  blinkScale,
+  easeOutQuint,
+  eyeFadeOpacity,
+  sampleAvatar,
+  sampleLiveMorph,
+  sampleMorph,
+  type AvatarFrame,
+} from '..'
+
+function eyeGeom(frame: AvatarFrame) {
+  return frame.eyes.map((eye) => [eye.x, eye.y, eye.rx, eye.ry, eye.a, eye.b, eye.c, eye.d, eye.tilt])
+}
 
 describe('sampleLiveMorph', () => {
   it('uses the customiser silhouette during face-state morphs', () => {
@@ -69,5 +81,43 @@ describe('sampleLiveMorph', () => {
     const b = sampleLiveMorph({ from: 'Idle', to: 'Notification', t: 0.5 })
     expect(b.eyes.map((eye) => [eye.x, eye.y, eye.ry])).toEqual(a.eyes.map((eye) => [eye.x, eye.y, eye.ry]))
     expect(b.path).toBe(a.path)
+  })
+
+  it('freezes outgoing Idle eyes while fading into an eyeless glyph', () => {
+    const idle = sampleAvatar({ state: 'Idle' })
+    const still = sampleLiveMorph({ from: 'Idle', to: 'Orbit', t: 0.5, wander: 0 })
+    const alive = sampleLiveMorph({
+      from: 'Idle',
+      to: 'Orbit',
+      t: 0.5,
+      wander: 1,
+      blink: true,
+      float: true,
+    })
+    const fade = eyeFadeOpacity(true, false, easeOutQuint(0.5))
+
+    expect(still.eyes).toHaveLength(2)
+    expect(eyeGeom(alive)).toEqual(eyeGeom(still))
+    expect(still.eyes[0]!.opacity).toBeCloseTo(fade, 8)
+    expect(still.eyes[0]!.opacity).toBeLessThan(1)
+    expect(still.eyes[0]!.opacity).toBeGreaterThan(0.01)
+    expect(still.eyes[0]!.x).toBeCloseTo(idle.eyes[0]!.x, 5)
+    expect(still.eyes[0]!.y).toBeCloseTo(idle.eyes[0]!.y, 5)
+    expect(still.eyes[0]!.ry).toBeCloseTo(idle.eyes[0]!.ry, 5)
+    expect(still.eyes[1]!.x).toBeCloseTo(idle.eyes[1]!.x, 5)
+    expect(still.path).not.toBe(idle.path)
+    expect(still.gaze).toEqual(idle.gaze)
+  })
+
+  it('freezes arriving Idle eyes while fading out of an eyeless glyph', () => {
+    const idle = sampleAvatar({ state: 'Idle' })
+    const still = sampleLiveMorph({ from: 'Orbit', to: 'Idle', t: 0.5, wander: 0 })
+    const alive = sampleLiveMorph({ from: 'Orbit', to: 'Idle', t: 0.5, wander: 1 })
+
+    expect(eyeGeom(alive)).toEqual(eyeGeom(still))
+    expect(still.eyes[0]!.x).toBeCloseTo(idle.eyes[0]!.x, 5)
+    expect(still.eyes[0]!.ry).toBeCloseTo(idle.eyes[0]!.ry, 5)
+    expect(still.eyes[0]!.opacity).toBeCloseTo(eyeFadeOpacity(false, true, easeOutQuint(0.5)), 8)
+    expect(still.eyes[0]!.opacity).toBeLessThan(1)
   })
 })

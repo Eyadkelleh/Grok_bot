@@ -89,6 +89,7 @@ export {
   STILL_LIFE,
   blinkScale,
   eyeAxes,
+  eyeFadeOpacity,
   eyePoses,
   forcedBlinkLid,
   liveliness,
