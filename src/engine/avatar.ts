@@ -15,6 +15,7 @@ import {
 import { resolveExpression, type ExpressionId } from './expressions'
 import {
   blinkScale,
+  eyeAxes,
   eyePoses,
   liveliness,
   resolveGaze,
@@ -66,6 +67,7 @@ export interface AvatarEye {
   b: number
   c: number
   d: number
+  /** Always 0: inclination is baked into `a,b,c,d`. Kept so SVG `rotate(tilt)` stays a no-op. */
   tilt: number
   opacity: number
 }
@@ -156,16 +158,17 @@ function eyesFor(
     const cfg = cfgs[i]!
     const lid = blinkScale(Math.min(lidOpen, cfg.open))
     const fit = radiusAtAngle(silhouette.radii, Math.atan2(pose.y, pose.x) - silhouette.rot)
+    const axes = eyeAxes(pose, cfg.tilt)
     return {
       x: pose.x * fit + shiftX,
       y: pose.y * fit + shiftY,
       rx: cfg.w * BODY_RADIUS,
       ry: cfg.h * BODY_RADIUS * lid,
-      a: pose.a,
-      b: pose.b,
-      c: pose.c,
-      d: pose.d,
-      tilt: cfg.tilt,
+      a: axes.a,
+      b: axes.b,
+      c: axes.c,
+      d: axes.d,
+      tilt: 0,
       opacity: pose.depth > 0.04 ? 1 : 0,
     }
   })

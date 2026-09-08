@@ -15,7 +15,7 @@
  */
 import { STATE_GEOMETRY, resolveStateGeometry, type FacePolicy } from './authority'
 import { EXPRESSIONS, resolveExpression, type BotExpression, type EyeCfg } from './expressions'
-import { eyePoses, type HeadGaze } from './face'
+import { eyeAxes, eyePoses, type HeadGaze } from './face'
 import { BODY_RADIUS, radiusAtAngle, toPoints, type Point, type Silhouette } from './morph'
 import { SHAPE_BY_ID, SHAPES } from './skins'
 import { ANIMATION_STATES, STATE_REGISTRY, type AnimationState } from './states'
@@ -82,13 +82,7 @@ function capsules(
     const e = poses[i]!
     if (e.depth <= 0.02) continue
     const cfg = cfgs[i]!
-    const phi = (cfg.tilt * Math.PI) / 180
-    const cp = Math.cos(phi)
-    const sp = Math.sin(phi)
-    const ax = e.a * cp + e.c * sp
-    const ay = e.b * cp + e.d * sp
-    const cx = -e.a * sp + e.c * cp
-    const cy = -e.b * sp + e.d * cp
+    const { a: ax, b: ay, c: cx, d: cy } = eyeAxes(e, cfg.tilt)
     const hw = Math.max(cfg.w * R, 0.01) / 2
     const hh = Math.max(cfg.h * R, 0.01) / 2
     const r = Math.min(hw, hh)
@@ -305,13 +299,7 @@ export function eyeClearance(
   },
   contour: Point[],
 ): number {
-  const phi = (eye.tilt * Math.PI) / 180
-  const cp = Math.cos(phi)
-  const sp = Math.sin(phi)
-  const ax = eye.a * cp + eye.c * sp
-  const ay = eye.b * cp + eye.d * sp
-  const cx = -eye.a * sp + eye.c * cp
-  const cy = -eye.b * sp + eye.d * cp
+  const { a: ax, b: ay, c: cx, d: cy } = eyeAxes(eye, eye.tilt)
   const hw = Math.max(eye.rx, 0.01) / 2
   const hh = Math.max(eye.ry, 0.01) / 2
   const r = Math.min(hw, hh)

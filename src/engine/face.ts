@@ -30,6 +30,14 @@ export interface EyePose {
   depth: number
 }
 
+/** Projected 2×2: tangent frame, then per-eye tilt, then optional screen-Y lid squash. */
+export interface EyeAxes {
+  a: number
+  b: number
+  c: number
+  d: number
+}
+
 export type GazeInput = number | Partial<HeadGaze>
 
 function deg(d: number): number {
@@ -72,6 +80,38 @@ export function eyePoses(gaze: HeadGaze, scale: number, split = EYE_SPLIT): [Eye
   }
 
   return [build(-1), build(1)]
+}
+
+/**
+ * Capsule inclination: compose the sphere tangent with a rotation in the eye
+ * plane (Basis × Rot). Mirror tilts between the two eyes live here, not as a
+ * leftover SVG rotate after an axis-aligned ellipse.
+ */
+export function eyeAxes(frame: Pick<EyePose, 'a' | 'b' | 'c' | 'd'>, tiltDeg: number): EyeAxes {
+  const phi = deg(tiltDeg)
+  const cp = Math.cos(phi)
+  const sp = Math.sin(phi)
+  return {
+    a: frame.a * cp + frame.c * sp,
+    b: frame.b * cp + frame.d * sp,
+    c: -frame.a * sp + frame.c * cp,
+    d: -frame.b * sp + frame.d * cp,
+  }
+}
+
+/**
+ * Rendered eye matrix. Lid squash is vertical on screen after inclination,
+ * so a rolled gaze keeps bbox width and drops height — not a shrink along
+ * the capsule axis.
+ */
+export function projectEye(
+  frame: Pick<EyePose, 'a' | 'b' | 'c' | 'd'>,
+  tiltDeg: number,
+  lid = 1,
+): EyeAxes {
+  const axes = eyeAxes(frame, tiltDeg)
+  const k = blinkScale(lid)
+  return { a: axes.a, b: axes.b * k, c: axes.c, d: axes.d * k }
 }
 
 export function resolveGaze(base: HeadGaze, gaze?: GazeInput): HeadGaze {
