@@ -139,6 +139,15 @@ export function forcedBlinkLid(phase: number): number {
 }
 
 /**
+ * Eye opacity during a state morph. Faced↔eyeless fades only opacity;
+ * both-faced stays opaque; neither stays hidden.
+ */
+export function eyeFadeOpacity(fromFaced: boolean, toFaced: boolean, eased: number): number {
+  if (fromFaced === toFaced) return fromFaced ? 1 : 0
+  return toFaced ? eased : 1 - eased
+}
+
+/**
  * Rest-face life: gaze drift, blinks, and a tiny body float.
  *
  * Pure in t — pause, resume, and seek to the same date yield the same frame.

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   AvatarEngine,
   makeBlock,
+  morphSecondsOf,
   poseCycle,
   sampleAt,
   sampleAvatar,
@@ -96,7 +97,7 @@ describe('AvatarEngine.sample(t)', () => {
   it('matches sampleLiveMorph at a morph midpoint', () => {
     const e = new AvatarEngine({ state: 'Idle', shape: 'circle' })
     e.setState('Alert', 0)
-    const dated = e.sample(AvatarEngine.MORPH * 0.5)
+    const dated = e.sample(morphSecondsOf('Alert') * 0.5)
     const live = sampleLiveMorph({ from: 'Idle', to: 'Alert', t: 0.5 })
     expect(dated.path).toBe(live.path)
     expectSameFrame(dated, live)
@@ -153,7 +154,7 @@ describe('AvatarEngine.sample(t)', () => {
   it('masks a blinkIn target with shut lids at mid-morph', () => {
     const e = new AvatarEngine({ state: 'Idle' })
     e.setState('Wink', 0)
-    const mid = e.sample(AvatarEngine.MORPH * 0.5)
+    const mid = e.sample(morphSecondsOf('Wink') * 0.5)
     const live = sampleLiveMorph({ from: 'Idle', to: 'Wink', t: 0.5 })
     const idle = sampleAvatar({ state: 'Idle' })
     const settled = e.sample(1)
@@ -164,16 +165,64 @@ describe('AvatarEngine.sample(t)', () => {
     expect(mid.eyes[0]!.ry).toBeLessThan(idle.eyes[0]!.ry * 0.2)
     expect(mid.eyes[1]!.ry).toBeLessThan(idle.eyes[1]!.ry * 0.2)
     expect(settled.eyes[1]!.ry).toBeLessThan(settled.eyes[0]!.ry)
-    expectSameFrame(e.sample(AvatarEngine.MORPH * 0.5), mid)
+    expectSameFrame(e.sample(morphSecondsOf('Wink') * 0.5), mid)
   })
 
   it('leaves non-blinkIn morph eyes on the prior open-lid path', () => {
     const e = new AvatarEngine({ state: 'Wink' })
     e.setState('Idle', 0)
-    const mid = e.sample(AvatarEngine.MORPH * 0.5)
+    const mid = e.sample(morphSecondsOf('Idle') * 0.5)
     const idle = sampleAvatar({ state: 'Idle' })
-    expectSameFrame(mid, sampleLiveMorph({ from: 'Wink', to: 'Idle', t: 0.5 }))
+    expectSameFrame(e.sample(morphSecondsOf('Idle') * 0.5), sampleLiveMorph({ from: 'Wink', to: 'Idle', t: 0.5 }))
     expect(mid.eyes[0]!.ry).toBeCloseTo(idle.eyes[0]!.ry, 5)
     expect(mid.eyes[1]!.ry).toBeCloseTo(idle.eyes[1]!.ry, 5)
+  })
+
+  it('does not let wander move frozen eyes during a face-to-eyeless fade', () => {
+    const idle = sampleAvatar({ state: 'Idle' })
+    const still = new AvatarEngine({ state: 'Idle', wander: 0 })
+    still.setState('Orbit', 0)
+    const alive = new AvatarEngine({ state: 'Idle', wander: 1 })
+    alive.setState('Orbit', 0)
+    const t = morphSecondsOf('Orbit') * 0.5
+    const stillMid = still.sample(t)
+    const aliveMid = alive.sample(t)
+
+    expect(eyeCentres(aliveMid)).toEqual(eyeCentres(stillMid))
+    expect(stillMid.eyes[0]!.x).toBeCloseTo(idle.eyes[0]!.x, 5)
+    expect(stillMid.eyes[0]!.opacity).toBeLessThan(1)
+    expectSameFrame(stillMid, sampleLiveMorph({ from: 'Idle', to: 'Orbit', t: 0.5 }))
+  })
+
+  it('completes a short arriving morph sooner than a long one', () => {
+    const wink = new AvatarEngine({ state: 'Idle' })
+    wink.setState('Wink', 0)
+    const wide = new AvatarEngine({ state: 'Idle' })
+    wide.setState('WideEyes', 0)
+
+    const winkEnd = morphSecondsOf('Wink')
+    const wideEnd = morphSecondsOf('WideEyes')
+    expect(winkEnd).toBe(0.3)
+    expect(wideEnd).toBe(0.55)
+    expect(winkEnd).toBeLessThan(wideEnd)
+
+    expect(wink.morphingAt(winkEnd - 1e-4)).toBe(true)
+    expect(wink.morphingAt(winkEnd)).toBe(false)
+    expect(wide.morphingAt(winkEnd)).toBe(true)
+    expect(wide.morphingAt(wideEnd)).toBe(false)
+
+    expect(wink.shownState(winkEnd)).toBe('Wink')
+    expect(wide.shownState(winkEnd)).toBe('Idle')
+    expect(wide.shownState(wideEnd)).toBe('WideEyes')
+    expectSameFrame(wink.sample(winkEnd), sampleAvatar({ state: 'Wink' }))
+    expectSameFrame(wide.sample(wideEnd), sampleAvatar({ state: 'WideEyes' }))
+    expectSameFrame(
+      wide.sample(winkEnd),
+      sampleLiveMorph({ from: 'Idle', to: 'WideEyes', t: winkEnd / wideEnd }),
+    )
+
+    const midWink = wink.sample(winkEnd * 0.5)
+    wink.sample(2)
+    expectSameFrame(wink.sample(winkEnd * 0.5), midWink)
   })
 })

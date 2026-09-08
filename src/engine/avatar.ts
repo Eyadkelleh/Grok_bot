@@ -12,6 +12,7 @@ import { resolveExpression, type ExpressionId } from './expressions'
 import {
   blinkScale,
   eyeAxes,
+  eyeFadeOpacity,
   eyePoses,
   forcedBlinkLid,
   liveliness,
@@ -263,6 +264,45 @@ export function sampleAvatar(spec: AvatarSpec = {}): AvatarFrame {
   }
 }
 
+function frozenFadeEyes(
+  spec: LiveMorphSpec,
+  fromFace: boolean,
+  fromGeometry: ResolvedGeometry,
+  toGeometry: ResolvedGeometry,
+  fromShape: string | undefined,
+  toShape: string | undefined,
+): { eyes: AvatarEye[]; gaze: HeadGaze; expression: ExpressionId } {
+  const frozen = fromFace ? fromGeometry : toGeometry
+  const frozenShape = fromFace ? fromShape : toShape
+  const frozenState = fromFace ? spec.from : spec.to
+  return eyesFor(
+    frozen.face,
+    spec.expression,
+    spec.gaze,
+    frozen.silhouette,
+    eyeOffset(frozenShape, frozenState, spec.expression),
+    null,
+  )
+}
+
+function liveMorphEyes(
+  spec: LiveMorphSpec,
+  eyeFace: FacePolicy,
+  silhouette: Silhouette,
+  fromShape: string | undefined,
+  toShape: string | undefined,
+  k: number,
+): { eyes: AvatarEye[]; gaze: HeadGaze; expression: ExpressionId } {
+  const offset = blendEyeOffset(
+    eyeOffset(fromShape, spec.from, spec.expression),
+    eyeOffset(toShape, spec.to, spec.expression),
+    k,
+  )
+  const lidOpen = blinksIn(spec.to) ? forcedBlinkLid(spec.t) : 1
+  const blinkLife = lidOpen < 1 ? { ...STILL_LIFE, lid: lidOpen } : null
+  return eyesFor(eyeFace, spec.expression, spec.gaze, silhouette, offset, blinkLife)
+}
+
 export function sampleLiveMorph(spec: LiveMorphSpec): AvatarFrame {
   const shape = resolveShape(spec.toShape ?? spec.shape)
   const fill = resolveColour(spec.colour)
@@ -272,20 +312,16 @@ export function sampleLiveMorph(spec: LiveMorphSpec): AvatarFrame {
   const silhouette = blend(fromGeometry.silhouette, toGeometry.silhouette, k)
   const fromFace = showsFace(fromGeometry.face)
   const toFace = showsFace(toGeometry.face)
-  const eyeFace = toFace ? toGeometry.face : fromGeometry.face
+  const fading = fromFace !== toFace
   const fromShape = spec.fromShape ?? spec.shape
   const toShape = spec.toShape ?? spec.shape
-  const offset = blendEyeOffset(
-    eyeOffset(fromShape, spec.from, spec.expression),
-    eyeOffset(toShape, spec.to, spec.expression),
-    k,
-  )
-  // blinkIn targets hide the arriving eye shapes behind a blink; others keep
-  // the prior open-lid morph (expression / wink / fade only).
-  const lidOpen = blinksIn(spec.to) ? forcedBlinkLid(spec.t) : 1
-  const blinkLife = lidOpen < 1 ? { ...STILL_LIFE, lid: lidOpen } : null
-  const eyeFrame = eyesFor(eyeFace, spec.expression, spec.gaze, silhouette, offset, blinkLife)
-  const eyeOpacity = fromFace && toFace ? 1 : toFace ? k : fromFace ? 1 - k : 0
+  // Faced↔eyeless: hold the outgoing (or arriving) eye frame on its own
+  // silhouette. Wander, calendar blinks, and the arriving pose do not run
+  // under the fade — only opacity moves. Face→face keeps the blinkIn mask.
+  const eyeFrame = fading
+    ? frozenFadeEyes(spec, fromFace, fromGeometry, toGeometry, fromShape, toShape)
+    : liveMorphEyes(spec, toFace ? toGeometry.face : fromGeometry.face, silhouette, fromShape, toShape, k)
+  const eyeOpacity = eyeFadeOpacity(fromFace, toFace, k)
   const eyes = eyeFrame.eyes
     .map((eye) => ({ ...eye, opacity: eye.opacity * eyeOpacity }))
     .filter((eye) => eye.opacity > 0.01)

@@ -13,7 +13,13 @@ import { blockAt, type Block } from './cycles'
 import type { GazeInput } from './face'
 import { clamp } from './math'
 import { DEFAULT_SHAPE } from './skins'
-import { DEFAULT_MORPH_MS, isAnimationState, type AnimationState } from './states'
+import {
+  DEFAULT_MORPH_MS,
+  isAnimationState,
+  morphMsOf,
+  morphSecondsOf,
+  type AnimationState,
+} from './states'
 
 export type ClockAppearance = Pick<
   AvatarSpec,
@@ -26,7 +32,10 @@ function resolveState(value: string | undefined): AnimationState {
 }
 
 export class AvatarEngine {
-  /** Morph duration in seconds. Same floor as `DEFAULT_MORPH_MS`. */
+  /**
+   * Documented floor in seconds (`DEFAULT_MORPH_MS`).
+   * State arrivals use `morphSecondsOf(arriving)`; customiser shapes use `morphMs`.
+   */
   static readonly MORPH = DEFAULT_MORPH_MS / 1000
 
   morphMs: number
@@ -105,15 +114,13 @@ export class AvatarEngine {
   }
 
   morphingAt(t: number): boolean {
-    const morphSec = this.morphSeconds()
-    const stateMorphing = this.prev !== null && t - this.tCur < morphSec
-    const shapeMorphing = this.shapePrev !== null && t - this.shapeAt < morphSec
+    const stateMorphing = this.prev !== null && t - this.tCur < this.stateMorphSeconds()
+    const shapeMorphing = this.shapePrev !== null && t - this.shapeAt < this.shapeMorphSeconds()
     return stateMorphing || shapeMorphing
   }
 
   shownState(t: number): AnimationState {
-    const morphSec = this.morphSeconds()
-    if (this.prev !== null && t - this.tCur < morphSec) return this.prev
+    if (this.prev !== null && t - this.tCur < this.stateMorphSeconds()) return this.prev
     return this.cur
   }
 
@@ -128,7 +135,7 @@ export class AvatarEngine {
     const hit = blockAt(blocks, t)
     const current = blocks[hit.index]?.state ?? 'Idle'
     const prev = hit.index > 0 ? (blocks[hit.index - 1]?.state ?? current) : current
-    const morphDone = hit.index === 0 || hit.elapsed * 1000 + 1e-6 >= this.morphMs
+    const morphDone = hit.index === 0 || hit.elapsed * 1000 + 1e-6 >= this.morphMsFor(current)
     if (morphDone) {
       this.reset(current, 0)
       return hit.elapsed
@@ -140,19 +147,20 @@ export class AvatarEngine {
 
   sample(t: number, appearance: ClockAppearance = {}): AvatarFrame {
     const spec = this.specAt(appearance)
-    const morphSec = this.morphSeconds()
+    const stateMorphSec = this.stateMorphSeconds()
+    const shapeMorphSec = this.shapeMorphSeconds()
     const sinceState = t - this.tCur
     const sinceShape = t - this.shapeAt
-    const stateMorphing = this.prev !== null && sinceState < morphSec
-    const shapeMorphing = this.shapePrev !== null && sinceShape < morphSec
+    const stateMorphing = this.prev !== null && sinceState < stateMorphSec
+    const shapeMorphing = this.shapePrev !== null && sinceShape < shapeMorphSec
 
     if (!stateMorphing && !shapeMorphing) {
       return sampleAvatar({ ...spec, state: this.cur, shape: this.shape, t: Math.max(0, sinceState) })
     }
 
     const linear = stateMorphing
-      ? clamp(sinceState / Math.max(morphSec, 1e-12))
-      : clamp(sinceShape / Math.max(morphSec, 1e-12))
+      ? clamp(sinceState / Math.max(stateMorphSec, 1e-12))
+      : clamp(sinceShape / Math.max(shapeMorphSec, 1e-12))
 
     return sampleLiveMorph({
       ...spec,
@@ -164,8 +172,19 @@ export class AvatarEngine {
     })
   }
 
-  private morphSeconds(): number {
+  /** Instant when `morphMs` is 0; otherwise the arriving state's catalogue length. */
+  private stateMorphSeconds(): number {
+    if (this.morphMs <= 0) return 0
+    return morphSecondsOf(this.cur)
+  }
+
+  private shapeMorphSeconds(): number {
     return this.morphMs <= 0 ? 0 : this.morphMs / 1000
+  }
+
+  private morphMsFor(state: AnimationState): number {
+    if (this.morphMs <= 0) return 0
+    return morphMsOf(state)
   }
 
   private specAt(appearance: ClockAppearance): AvatarSpec {

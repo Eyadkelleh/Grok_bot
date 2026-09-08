@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ANIMATION_STATES,
   BODY_RADIUS,
-  DEFAULT_MORPH_MS,
+  morphMsOf,
   VIEW_HALF,
   sampleAvatar,
   sampleMorph,
@@ -105,7 +105,7 @@ describe('visual case registry', () => {
   it('seeks Idle→Alert at 0.25 through rendAt arithmetic', () => {
     const visualCase = VISUAL_CASES.find((row) => row.id === 'idle-to-alert-p25')
     expect(visualCase?.seek).toBeDefined()
-    expect(progressOf(visualCase!.seek!, DEFAULT_MORPH_MS)).toBeCloseTo(0.25, 10)
+    expect(progressOf(visualCase!.seek!, morphMsOf('Alert'))).toBeCloseTo(0.25, 10)
   })
 
   it('tokenizes silhouette paths and rejects unknown commands', () => {

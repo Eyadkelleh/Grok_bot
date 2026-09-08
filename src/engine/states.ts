@@ -39,6 +39,10 @@ export const ANIMATION_STATES = [
 
 export type AnimationState = (typeof ANIMATION_STATES)[number]
 
+/**
+ * Documented floor/default for unknown states and customiser-shape morphs.
+ * Catalogue arrivals use `STATE_REGISTRY[id].morph` (seconds) instead.
+ */
 export const DEFAULT_MORPH_MS = 400
 
 export interface MorphDot {
@@ -59,6 +63,8 @@ export interface StateEntry {
   dots: MorphDot[]
   /** True: the arriving morph is masked by a blink, as in the reference video. */
   blinkIn?: boolean
+  /** Entrance morph length in seconds, from the bloub catalogue. */
+  morph: number
   arcs: ArcSpec[]
   /** True: specks are painted before the body so the silhouette occludes them. */
   dotsBehind: boolean
@@ -139,6 +145,7 @@ const orbitTriangleRadii = regularPolygonProfile(3, 1, 0.18, -90)
 
 function entry(
   silhouette: Silhouette,
+  morph: number,
   dots: MorphDot[] = [],
   blinkIn = false,
   decor: { arcs?: ArcSpec[]; dotsBehind?: boolean } = {},
@@ -147,6 +154,7 @@ function entry(
     silhouette,
     dots,
     blinkIn,
+    morph,
     arcs: decor.arcs ?? [],
     dotsBehind: decor.dotsBehind ?? false,
   }
@@ -157,18 +165,19 @@ function fromRadii(radii: readonly number[], pose: Partial<Silhouette> = {}): Si
 }
 
 export const STATE_REGISTRY: Record<AnimationState, StateEntry> = {
-  Idle: entry(circle(1)),
+  Idle: entry(circle(1), 0.45),
   Thinking: entry(
     circle(0.22),
+    0.4,
     [
       { x: -0.62, y: 0, r: 0.22, opacity: 1 },
       { x: 0.62, y: 0, r: 0.22, opacity: 1 },
     ],
     true,
   ),
-  Wink: entry(circle(1), [], true),
-  WideEyes: entry(circle(1), [], true),
-  Alert: entry(barItalic({ rot: ALERT_TILT, cy: ALERT_BAR_CY }), [
+  Wink: entry(circle(1), 0.3, [], true),
+  WideEyes: entry(circle(1), 0.55, [], true),
+  Alert: entry(barItalic({ rot: ALERT_TILT, cy: ALERT_BAR_CY }), 0.45, [
     {
       x: -Math.sin(ALERT_TILT) * ALERT_DOT_ALONG,
       y: ALERT_BAR_CY + Math.cos(ALERT_TILT) * ALERT_DOT_ALONG,
@@ -178,20 +187,31 @@ export const STATE_REGISTRY: Record<AnimationState, StateEntry> = {
       opacity: 1,
     },
   ]),
-  Notification: entry(circle(1), [notifyBadge(0)], true),
-  Exclamation: entry(barUpright(), [{ x: -0.012, y: 0.526, r: 0.113, opacity: 1 }]),
-  Sleep: entry(circle(0.16, { cy: 0.12 })),
-  Egg: entry(fromRadii(PROFILES.egg), [], true),
-  Hexagon: entry(fromRadii(PROFILES.hexagon), [], true),
-  Play: entry(fromRadii(PROFILES.triangle), [], true),
-  Orbit: entry(fromRadii(orbitTriangleRadii, { rot: 0.4 })),
-  Burst: entry(circle(0.18), burstParticles(0), false, { dotsBehind: true }),
-  Comet: entry(circle(0.2, { cy: 0.04 }), [], false, { arcs: cometArcSpecs(0) }),
+  Notification: entry(circle(1), 0.5, [notifyBadge(0)], true),
+  Exclamation: entry(barUpright(), 0.45, [{ x: -0.012, y: 0.526, r: 0.113, opacity: 1 }]),
+  Sleep: entry(circle(0.16, { cy: 0.12 }), 0.5),
+  Egg: entry(fromRadii(PROFILES.egg), 0.4, [], true),
+  Hexagon: entry(fromRadii(PROFILES.hexagon), 0.4, [], true),
+  Play: entry(fromRadii(PROFILES.triangle), 0.5, [], true),
+  Orbit: entry(fromRadii(orbitTriangleRadii, { rot: 0.4 }), 0.6),
+  Burst: entry(circle(0.18), 0.4, burstParticles(0), false, { dotsBehind: true }),
+  Comet: entry(circle(0.2, { cy: 0.04 }), 0.45, [], false, { arcs: cometArcSpecs(0) }),
 }
 
 /** True when the arriving state's shape morph should be hidden by a blink. */
 export function blinksIn(state: AnimationState): boolean {
   return STATE_REGISTRY[state].blinkIn === true
+}
+
+/** Arriving-state morph length in seconds. Falls back to `DEFAULT_MORPH_MS`. */
+export function morphSecondsOf(state: AnimationState): number {
+  const s = STATE_REGISTRY[state]?.morph
+  return s != null && s > 0 ? s : DEFAULT_MORPH_MS / 1000
+}
+
+/** Arriving-state morph length in milliseconds. Falls back to `DEFAULT_MORPH_MS`. */
+export function morphMsOf(state: AnimationState): number {
+  return morphSecondsOf(state) * 1000
 }
 
 export const STATE_SILHOUETTES = Object.fromEntries(

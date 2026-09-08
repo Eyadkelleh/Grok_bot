@@ -2,6 +2,7 @@ import {
   blockAt,
   BODY_RADIUS,
   DEFAULT_MORPH_MS,
+  morphMsOf,
   pathForState,
   sampleAvatar,
   sampleMorph,
@@ -56,7 +57,9 @@ function settledSeekT(visualCase: VisualCase): number | undefined {
   if (!seek) return undefined
   const hit = blockAt([...seek.blocks], seek.at)
   if (hit.index === 0) return hit.elapsed
-  if (hit.elapsed * 1000 + 1e-6 < DEFAULT_MORPH_MS) return undefined
+  const arriving = seek.blocks[hit.index]?.state
+  const morphMs = arriving ? morphMsOf(arriving) : DEFAULT_MORPH_MS
+  if (hit.elapsed * 1000 + 1e-6 < morphMs) return undefined
   return hit.elapsed
 }
 
