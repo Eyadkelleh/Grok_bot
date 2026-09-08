@@ -137,4 +137,16 @@ describe('AvatarEngine.sample(t)', () => {
     expect(e.shownState(at)).toBe('Comet')
     expect(e.state).toBe('Comet')
   })
+
+  it('drifts Idle rest when wander is on, and stays still when it is not', () => {
+    const still = new AvatarEngine({ state: 'Idle' })
+    expectSameFrame(still.sample(0.4), still.sample(3.6))
+
+    const alive = new AvatarEngine({ state: 'Idle', wander: 1 })
+    const early = alive.sample(0.4)
+    const later = alive.sample(3.6)
+    expect(later.gaze.yaw).not.toBe(early.gaze.yaw)
+    expect(eyeCentres(later)).not.toEqual(eyeCentres(early))
+    expectSameFrame(alive.sample(0.4), early)
+  })
 })

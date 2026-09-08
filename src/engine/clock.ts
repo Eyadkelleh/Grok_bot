@@ -14,7 +14,10 @@ import { clamp } from './math'
 import { DEFAULT_SHAPE } from './skins'
 import { DEFAULT_MORPH_MS, isAnimationState, type AnimationState } from './states'
 
-export type ClockAppearance = Pick<AvatarSpec, 'expression' | 'gaze' | 'colour' | 'paper'>
+export type ClockAppearance = Pick<
+  AvatarSpec,
+  'expression' | 'gaze' | 'colour' | 'paper' | 'wander' | 'blink' | 'float'
+>
 
 function resolveState(value: string | undefined): AnimationState {
   if (value && isAnimationState(value)) return value
@@ -38,6 +41,9 @@ export class AvatarEngine {
   private gaze: GazeInput | undefined
   private colour: string | undefined
   private paper: string | undefined
+  private wander: number | undefined
+  private blink: boolean | undefined
+  private float: boolean | undefined
 
   constructor(spec: AvatarSpec = {}, morphMs = DEFAULT_MORPH_MS) {
     this.cur = resolveState(spec.state)
@@ -46,6 +52,9 @@ export class AvatarEngine {
     this.gaze = spec.gaze
     this.colour = spec.colour
     this.paper = spec.paper
+    this.wander = spec.wander
+    this.blink = spec.blink
+    this.float = spec.float
     this.morphMs = morphMs
   }
 
@@ -62,6 +71,9 @@ export class AvatarEngine {
     if (appearance.gaze !== undefined) this.gaze = appearance.gaze
     if (appearance.colour !== undefined) this.colour = appearance.colour
     if (appearance.paper !== undefined) this.paper = appearance.paper
+    if (appearance.wander !== undefined) this.wander = appearance.wander
+    if (appearance.blink !== undefined) this.blink = appearance.blink
+    if (appearance.float !== undefined) this.float = appearance.float
   }
 
   setState(id: AnimationState, now: number) {
@@ -161,6 +173,9 @@ export class AvatarEngine {
       gaze: appearance.gaze ?? this.gaze,
       colour: appearance.colour ?? this.colour,
       paper: appearance.paper ?? this.paper,
+      wander: appearance.wander ?? this.wander,
+      blink: appearance.blink ?? this.blink,
+      float: appearance.float ?? this.float,
     }
   }
 }
