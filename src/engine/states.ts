@@ -52,6 +52,8 @@ export interface MorphDot {
 export interface StateEntry {
   silhouette: Silhouette
   dots: MorphDot[]
+  /** True: the arriving morph is masked by a blink, as in the reference video. */
+  blinkIn?: boolean
 }
 
 export interface MorphFrame {
@@ -64,8 +66,8 @@ export interface MorphFrame {
 
 const orbitTriangleRadii = regularPolygonProfile(3, 1, 0.18, -90)
 
-function entry(silhouette: Silhouette, dots: MorphDot[] = []): StateEntry {
-  return { silhouette, dots }
+function entry(silhouette: Silhouette, dots: MorphDot[] = [], blinkIn = false): StateEntry {
+  return { silhouette, dots, blinkIn }
 }
 
 function fromRadii(radii: readonly number[], pose: Partial<Silhouette> = {}): Silhouette {
@@ -74,12 +76,16 @@ function fromRadii(radii: readonly number[], pose: Partial<Silhouette> = {}): Si
 
 export const STATE_REGISTRY: Record<AnimationState, StateEntry> = {
   Idle: entry(circle(1)),
-  Thinking: entry(circle(0.22), [
-    { x: -0.62, y: 0, r: 0.22, opacity: 1 },
-    { x: 0.62, y: 0, r: 0.22, opacity: 1 },
-  ]),
-  Wink: entry(circle(1)),
-  WideEyes: entry(circle(1)),
+  Thinking: entry(
+    circle(0.22),
+    [
+      { x: -0.62, y: 0, r: 0.22, opacity: 1 },
+      { x: 0.62, y: 0, r: 0.22, opacity: 1 },
+    ],
+    true,
+  ),
+  Wink: entry(circle(1), [], true),
+  WideEyes: entry(circle(1), [], true),
   Alert: entry(barItalic({ rot: ALERT_TILT, cy: ALERT_BAR_CY }), [
     {
       x: -Math.sin(ALERT_TILT) * ALERT_DOT_ALONG,
@@ -90,15 +96,20 @@ export const STATE_REGISTRY: Record<AnimationState, StateEntry> = {
       opacity: 1,
     },
   ]),
-  Notification: entry(circle(1)),
+  Notification: entry(circle(1), [], true),
   Exclamation: entry(barUpright(), [{ x: -0.012, y: 0.526, r: 0.113, opacity: 1 }]),
   Sleep: entry(circle(0.16, { cy: 0.12 })),
-  Egg: entry(fromRadii(PROFILES.egg)),
-  Hexagon: entry(fromRadii(PROFILES.hexagon)),
-  Play: entry(fromRadii(PROFILES.triangle)),
+  Egg: entry(fromRadii(PROFILES.egg), [], true),
+  Hexagon: entry(fromRadii(PROFILES.hexagon), [], true),
+  Play: entry(fromRadii(PROFILES.triangle), [], true),
   Orbit: entry(fromRadii(orbitTriangleRadii, { rot: 0.4 })),
   Burst: entry(circle(0.18)),
   Comet: entry(circle(0.2, { cy: 0.04 })),
+}
+
+/** True when the arriving state's shape morph should be hidden by a blink. */
+export function blinksIn(state: AnimationState): boolean {
+  return STATE_REGISTRY[state].blinkIn === true
 }
 
 export const STATE_SILHOUETTES = Object.fromEntries(
