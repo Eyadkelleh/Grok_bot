@@ -1,3 +1,4 @@
+import { type ArcSpec } from './decor'
 import { silhouetteFromRadii, type Silhouette } from './morph'
 import { resolveShape } from './skins'
 import { STATE_REGISTRY, type AnimationState, type MorphDot } from './states'
@@ -7,8 +8,23 @@ export type FacePolicy = 'expression' | 'wink' | 'wide' | 'notify' | 'none'
 export type PoseTransform = Pick<Silhouette, 'rot' | 'cx' | 'cy' | 'sx' | 'sy'>
 
 export type StateGeometry =
-  | { kind: 'wearable'; scale: number; pose: PoseTransform; face: FacePolicy; dots: MorphDot[] }
-  | { kind: 'symbol'; silhouette: Silhouette; face: FacePolicy; dots: MorphDot[] }
+  | {
+      kind: 'wearable'
+      scale: number
+      pose: PoseTransform
+      face: FacePolicy
+      dots: MorphDot[]
+      arcs: ArcSpec[]
+      dotsBehind: boolean
+    }
+  | {
+      kind: 'symbol'
+      silhouette: Silhouette
+      face: FacePolicy
+      dots: MorphDot[]
+      arcs: ArcSpec[]
+      dotsBehind: boolean
+    }
 
 export interface ResolvedGeometry {
   silhouette: Silhouette
@@ -16,6 +32,8 @@ export interface ResolvedGeometry {
   kind: StateGeometry['kind']
   face: FacePolicy
   dots: MorphDot[]
+  arcs: ArcSpec[]
+  dotsBehind: boolean
 }
 
 function poseOf(silhouette: Silhouette): PoseTransform {
@@ -29,19 +47,21 @@ function poseOf(silhouette: Silhouette): PoseTransform {
 }
 
 function wearable(state: AnimationState, face: FacePolicy): Extract<StateGeometry, { kind: 'wearable' }> {
-  const { silhouette, dots } = STATE_REGISTRY[state]
+  const { silhouette, dots, arcs, dotsBehind } = STATE_REGISTRY[state]
   return {
     kind: 'wearable',
     scale: silhouette.radii[0] ?? 1,
     pose: poseOf(silhouette),
     face,
     dots,
+    arcs,
+    dotsBehind,
   }
 }
 
 function symbol(state: AnimationState, face: FacePolicy = 'none'): Extract<StateGeometry, { kind: 'symbol' }> {
-  const { silhouette, dots } = STATE_REGISTRY[state]
-  return { kind: 'symbol', silhouette, face, dots }
+  const { silhouette, dots, arcs, dotsBehind } = STATE_REGISTRY[state]
+  return { kind: 'symbol', silhouette, face, dots, arcs, dotsBehind }
 }
 
 export const STATE_GEOMETRY = {
@@ -83,6 +103,8 @@ export function resolveStateGeometry(state: AnimationState, shapeId?: string): R
       kind: 'symbol',
       face: recipe.face,
       dots: recipe.dots,
+      arcs: recipe.arcs,
+      dotsBehind: recipe.dotsBehind,
     }
   }
   return {
@@ -91,6 +113,8 @@ export function resolveStateGeometry(state: AnimationState, shapeId?: string): R
     kind: 'wearable',
     face: recipe.face,
     dots: recipe.dots,
+    arcs: recipe.arcs,
+    dotsBehind: recipe.dotsBehind,
   }
 }
 
