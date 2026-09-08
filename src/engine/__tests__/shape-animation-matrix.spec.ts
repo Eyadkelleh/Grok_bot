@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest'
+import { resolveStateGeometry } from '../authority'
 import { sampleAvatar } from '../avatar'
+import { eyeClearance } from '../eyefit'
 import {
   BODY_RADIUS,
   PROFILE_SAMPLES,
   VIEW_HALF,
   blend,
   circle,
-  radiusAtAngle,
   silhouetteFromRadii,
+  toPoints,
 } from '../morph'
 import { SHAPES, type BotShape } from '../skins'
-import { resolveStateGeometry } from '../authority'
 import {
   ANIMATION_STATES,
   STATE_REGISTRY,
@@ -22,7 +23,7 @@ const FACE_STATES = ['Idle', 'Wink', 'WideEyes', 'Notification'] as const
 const FACE_STATE_IDS = new Set<AnimationState>(FACE_STATES)
 const EXPRESSIONS = ['neutral', 'surprised', 'laughing'] as const
 const EPSILON = 0.01
-const EYE_MARGIN = 1
+const CLEARANCE_EPS = 0.05
 
 function activeRadii(shape: BotShape, state: AnimationState): number[] {
   return resolveStateGeometry(state, shape.id).silhouette.radii
@@ -68,19 +69,14 @@ describe('shape × animation integrity matrix', () => {
           const label = `${shape.id}/${state}/${expression}`
           const frame = sampleAvatar({ shape: shape.id, state, expression })
           expect(frame.eyes.length, `${label}: face eye count`).toBe(2)
+          const circle = sampleAvatar({ shape: 'circle', state, expression })
           for (const [index, eye] of frame.eyes.entries()) {
-            const distance = Math.hypot(eye.x, eye.y)
-            const edge = radiusAtAngle(shape.radii, Math.atan2(eye.y, eye.x)) * BODY_RADIUS
-            const effectiveRadius = Math.max(eye.rx, eye.ry) * 0.6
-            if (distance >= edge - EYE_MARGIN) {
-              violations.push(
-                `${label}: eye ${index} centre margin ${edge - distance} < ${EYE_MARGIN}`,
-              )
-            }
-            if (distance + effectiveRadius >= edge) {
-              violations.push(
-                `${label}: eye ${index} capsule ${distance + effectiveRadius} >= edge ${edge}`,
-              )
+            expect(eye.rx, `${label}: eye ${index} rx`).toBe(circle.eyes[index]!.rx)
+            expect(eye.ry, `${label}: eye ${index} ry`).toBe(circle.eyes[index]!.ry)
+            const contour = toPoints(resolveStateGeometry(state, shape.id).silhouette, BODY_RADIUS)
+            const clearance = eyeClearance(eye, contour)
+            if (clearance < -CLEARANCE_EPS) {
+              violations.push(`${label}: eye ${index} clearance ${clearance.toFixed(3)}`)
             }
           }
         }

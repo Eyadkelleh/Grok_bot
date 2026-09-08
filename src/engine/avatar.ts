@@ -1,5 +1,12 @@
-import { blinkScale, eyePoses, resolveGaze, type GazeInput, type HeadGaze } from './face'
+import { resolveStateGeometry, type FacePolicy } from './authority'
+import {
+  blendEyeOffset,
+  eyeOffset,
+  faceEyeCfgs,
+  type EyeOffset,
+} from './eyefit'
 import { resolveExpression, type ExpressionId } from './expressions'
+import { blinkScale, eyePoses, resolveGaze, type GazeInput, type HeadGaze } from './face'
 import { clamp, easeOutQuint } from './math'
 import {
   BODY_RADIUS,
@@ -10,7 +17,6 @@ import {
   viewBoxAttr,
 } from './morph'
 import { resolveColour, resolveShape, type ColorId, type ShapeId } from './skins'
-import { resolveStateGeometry, type FacePolicy } from './authority'
 import { blendDots, isAnimationState, type AnimationState, type MorphDot } from './states'
 
 export interface AvatarSpec {
@@ -76,7 +82,8 @@ function eyesFor(
   face: FacePolicy,
   expressionId: string | undefined,
   gaze: GazeInput | undefined,
-  radii: number[],
+  silhouette: Silhouette,
+  offset: EyeOffset,
 ): { eyes: AvatarEye[]; gaze: HeadGaze; expression: ExpressionId } {
   const expression = resolveExpression(expressionId)
   const resolved = resolveGaze(expression.gaze, gaze)
@@ -84,24 +91,17 @@ function eyesFor(
     return { eyes: [], gaze: resolved, expression: expression.id }
   }
 
-  const cfgs = [
-    { ...expression.eyes[0] },
-    { ...expression.eyes[1] },
-  ]
-  if (face === 'wink') cfgs[1]!.open = 0.08
-  if (face === 'wide') {
-    for (const cfg of cfgs) {
-      cfg.w *= 1.35
-      cfg.h *= 1.2
-    }
-  }
+  const cfgs = faceEyeCfgs(face, expression)
   const poses = eyePoses(resolved, BODY_RADIUS, expression.split)
+  const shiftX = offset.x * BODY_RADIUS
+  const shiftY = offset.y * BODY_RADIUS
   const eyes: AvatarEye[] = poses.map((pose, i) => {
     const cfg = cfgs[i]!
     const lid = blinkScale(cfg.open)
+    const fit = radiusAtAngle(silhouette.radii, Math.atan2(pose.y, pose.x) - silhouette.rot)
     return {
-      x: pose.x,
-      y: pose.y,
+      x: pose.x * fit + shiftX,
+      y: pose.y * fit + shiftY,
       rx: cfg.w * BODY_RADIUS,
       ry: cfg.h * BODY_RADIUS * lid,
       a: pose.a,
@@ -112,42 +112,6 @@ function eyesFor(
       opacity: pose.depth > 0.04 ? 1 : 0,
     }
   })
-
-  const margin = 1
-  for (const eye of eyes) {
-    const factor = radiusAtAngle(radii, Math.atan2(eye.y, eye.x))
-    eye.x *= factor
-    eye.y *= factor
-  }
-
-  let commonEyeScale = 1
-  for (const eye of eyes) {
-    const edge = radiusAtAngle(radii, Math.atan2(eye.y, eye.x)) * BODY_RADIUS
-    const effectiveRadius = Math.max(eye.rx, eye.ry) * 0.6
-    if (effectiveRadius > 0) {
-      commonEyeScale = Math.min(commonEyeScale, Math.max(0, (edge - margin) / effectiveRadius))
-    }
-  }
-  for (const eye of eyes) {
-    eye.rx *= commonEyeScale
-    eye.ry *= commonEyeScale
-  }
-
-  let commonOffset = 0
-  for (const eye of eyes) {
-    const distance = Math.hypot(eye.x, eye.y)
-    const edge = radiusAtAngle(radii, Math.atan2(eye.y, eye.x)) * BODY_RADIUS
-    const effectiveRadius = Math.max(eye.rx, eye.ry) * 0.6
-    commonOffset = Math.max(commonOffset, distance + effectiveRadius + margin - edge)
-  }
-  if (commonOffset > 0) {
-    for (const eye of eyes) {
-      const distance = Math.hypot(eye.x, eye.y)
-      const scale = distance > 0 ? Math.max(0, distance - commonOffset) / distance : 0
-      eye.x *= scale
-      eye.y *= scale
-    }
-  }
 
   return { eyes, gaze: resolved, expression: expression.id }
 }
@@ -166,7 +130,8 @@ export function sampleAvatar(spec: AvatarSpec = {}): AvatarFrame {
     geometry.face,
     spec.expression,
     spec.gaze,
-    geometry.silhouette.radii,
+    geometry.silhouette,
+    eyeOffset(shape.id, state, spec.expression),
   )
 
   return {
@@ -196,7 +161,14 @@ export function sampleLiveMorph(spec: LiveMorphSpec): AvatarFrame {
   const fromFace = showsFace(fromGeometry.face)
   const toFace = showsFace(toGeometry.face)
   const eyeFace = toFace ? toGeometry.face : fromGeometry.face
-  const eyeFrame = eyesFor(eyeFace, spec.expression, spec.gaze, silhouette.radii)
+  const fromShape = spec.fromShape ?? spec.shape
+  const toShape = spec.toShape ?? spec.shape
+  const offset = blendEyeOffset(
+    eyeOffset(fromShape, spec.from, spec.expression),
+    eyeOffset(toShape, spec.to, spec.expression),
+    k,
+  )
+  const eyeFrame = eyesFor(eyeFace, spec.expression, spec.gaze, silhouette, offset)
   const eyeOpacity = fromFace && toFace ? 1 : toFace ? k : fromFace ? 1 - k : 0
   const eyes = eyeFrame.eyes
     .map((eye) => ({ ...eye, opacity: eye.opacity * eyeOpacity }))

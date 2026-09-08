@@ -114,6 +114,14 @@ export {
   type AvatarFrame,
   type LiveMorphSpec,
 } from './avatar'
+export {
+  ZERO_EYE_OFFSET,
+  blendEyeOffset,
+  eyeClearance,
+  eyeOffset,
+  faceEyeCfgs,
+  type EyeOffset,
+} from './eyefit'
 export { AvatarEngine, sampleAt, type ClockAppearance } from './clock'
 export {
   MIN_BLOCK,

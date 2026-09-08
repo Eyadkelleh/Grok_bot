@@ -22,16 +22,16 @@ import { sampleGrokIdleGrid } from './sample-grok'
  * Grok coords are pixels / BODY_RADIUS (~46). Bloub coords are pixels / RAYON
  * (100). A centre MAE of 0.02 is two hundredths of the rest ball.
  *
- * Measured against the committed dump on 8 Sep 2026:
- * aggregate centre 0.0398, radius 0, worst cell cloud/shy 0.3756.
+ * Measured against the committed dump on 8 Sep 2026 after K1 eyefit:
+ * aggregate centre 0.0028, radius 0, worst cell 0.0029.
  *
- * These ceilings are the L0 harness lock, not the K1 eyefit target.
- * They fail loudly if Idle eyes drift further from the bloub dump.
- * Do not raise them to silence a regression; tighten after K1.
+ * These ceilings are the L0 harness lock. Do not raise them to silence a
+ * regression. The cell centre budget tightened once tabulated eyefit cut
+ * wearable outliers such as cloud/shy.
  */
 export const IDLE_EYE_CENTRE_MAE_MAX = 0.05
 export const IDLE_EYE_RADIUS_MAE_MAX = 0.01
-export const IDLE_EYE_CENTRE_CELL_MAE_MAX = 0.4
+export const IDLE_EYE_CENTRE_CELL_MAE_MAX = 0.01
 export const IDLE_EYE_RADIUS_CELL_MAE_MAX = 0.01
 
 describe('bloub ID map', () => {
