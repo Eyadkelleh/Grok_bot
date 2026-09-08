@@ -41,8 +41,21 @@ const zh: typeof fr = {
     shape: '外形',
     face: '表情',
     aura: '光晕',
+    fond: '背景',
     motion: '动作',
     shapeLocked: '该姿势保留自己的轮廓。',
+  },
+
+  fond: {
+    title: '背景',
+    none: '无',
+    banner01: '浅色横幅',
+    banner2: '蓝色横幅',
+    banner3: '深色横幅',
+    welcome: '欢迎',
+    event1: '活动名称',
+    event2: '第二行',
+    eventPlaceholder: '活动名称',
   },
 
   shapes: {
@@ -172,6 +185,9 @@ const zh: typeof fr = {
     mp4Unavailable: '此浏览器无法编码 MP4',
     done: '已导出',
     failed: '导出失败',
+    banner: '2×6 横幅',
+    bannerPng: '横幅 PNG',
+    bannerMp4: '横幅 MP4',
   },
 
   settings: {
