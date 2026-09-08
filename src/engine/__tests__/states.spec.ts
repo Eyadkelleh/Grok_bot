@@ -6,6 +6,8 @@ import {
   STATE_SILHOUETTES,
   blinksIn,
   isAnimationState,
+  morphMsOf,
+  morphSecondsOf,
   pathForState,
   type AnimationState,
 } from '../states'
@@ -126,5 +128,30 @@ describe('ANIMATION_STATES', () => {
     const open: AnimationState[] = ['Idle', 'Alert', 'Exclamation', 'Sleep', 'Orbit', 'Burst', 'Comet']
     for (const state of masked) expect(blinksIn(state), state).toBe(true)
     for (const state of open) expect(blinksIn(state), state).toBe(false)
+  })
+
+  it('uses per-state catalogue morph lengths, with a documented default', () => {
+    const catalogue: Record<AnimationState, number> = {
+      Idle: 0.45,
+      Thinking: 0.4,
+      Wink: 0.3,
+      WideEyes: 0.55,
+      Alert: 0.45,
+      Notification: 0.5,
+      Exclamation: 0.45,
+      Sleep: 0.5,
+      Egg: 0.4,
+      Hexagon: 0.4,
+      Play: 0.5,
+      Orbit: 0.6,
+      Burst: 0.4,
+      Comet: 0.45,
+    }
+    for (const state of ANIMATION_STATES) {
+      expect(STATE_REGISTRY[state].morph, state).toBe(catalogue[state])
+      expect(morphSecondsOf(state)).toBe(catalogue[state])
+      expect(morphMsOf(state)).toBe(catalogue[state] * 1000)
+    }
+    expect(morphSecondsOf('Wink')).toBeLessThan(morphSecondsOf('WideEyes'))
   })
 })
