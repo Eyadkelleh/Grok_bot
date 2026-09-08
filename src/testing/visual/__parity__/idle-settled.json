@@ -1,0 +1,2570 @@
+{
+  "schema": 1,
+  "kind": "idle-settled",
+  "source": "bloub BotEngine.sample",
+  "t": 1,
+  "bodyRadius": 100,
+  "wander": 0,
+  "cells": [
+    {
+      "shape": "circle",
+      "expression": "neutral",
+      "bloubShape": "cercle",
+      "bloubExpression": "neutre",
+      "eyes": [
+        {
+          "x": 0.19,
+          "y": -0.4064,
+          "rx": 0.186,
+          "ry": 0.412
+        },
+        {
+          "x": 0.6192,
+          "y": -0.5117,
+          "rx": 0.186,
+          "ry": 0.412
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "attentive",
+      "bloubShape": "cercle",
+      "bloubExpression": "attentif",
+      "eyes": [
+        {
+          "x": -0.2064,
+          "y": -0.062,
+          "rx": 0.21,
+          "ry": 0.44
+        },
+        {
+          "x": 0.342,
+          "y": -0.1003,
+          "rx": 0.21,
+          "ry": 0.44
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "surprised",
+      "bloubShape": "cercle",
+      "bloubExpression": "surpris",
+      "eyes": [
+        {
+          "x": -0.2747,
+          "y": 0.0521,
+          "rx": 0.45,
+          "ry": 0.47
+        },
+        {
+          "x": 0.3756,
+          "y": 0.0521,
+          "rx": 0.45,
+          "ry": 0.47
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "excited",
+      "bloubShape": "cercle",
+      "bloubExpression": "excite",
+      "eyes": [
+        {
+          "x": -0.2353,
+          "y": 0.2307,
+          "rx": 0.4,
+          "ry": 0.56
+        },
+        {
+          "x": 0.4286,
+          "y": 0.2307,
+          "rx": 0.4,
+          "ry": 0.56
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "happy",
+      "bloubShape": "cercle",
+      "bloubExpression": "heureux",
+      "eyes": [
+        {
+          "x": -0.2079,
+          "y": -0.147,
+          "rx": 0.27,
+          "ry": 0.17
+        },
+        {
+          "x": 0.3746,
+          "y": -0.147,
+          "rx": 0.27,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "laughing",
+      "bloubShape": "cercle",
+      "bloubExpression": "hilare",
+      "eyes": [
+        {
+          "x": -0.2429,
+          "y": -0.2274,
+          "rx": 0.34,
+          "ry": 0.13
+        },
+        {
+          "x": 0.3737,
+          "y": -0.2274,
+          "rx": 0.34,
+          "ry": 0.13
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "angry",
+      "bloubShape": "cercle",
+      "bloubExpression": "colere",
+      "eyes": [
+        {
+          "x": -0.2413,
+          "y": -0.1139,
+          "rx": 0.34,
+          "ry": 0.15
+        },
+        {
+          "x": 0.3427,
+          "y": -0.1139,
+          "rx": 0.34,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "sad",
+      "bloubShape": "cercle",
+      "bloubExpression": "triste",
+      "eyes": [
+        {
+          "x": -0.2252,
+          "y": 0.2189,
+          "rx": 0.22,
+          "ry": 0.4
+        },
+        {
+          "x": 0.3253,
+          "y": 0.2189,
+          "rx": 0.22,
+          "ry": 0.4
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "scared",
+      "bloubShape": "cercle",
+      "bloubExpression": "effraye",
+      "eyes": [
+        {
+          "x": -0.3183,
+          "y": 0.323,
+          "rx": 0.4,
+          "ry": 0.6
+        },
+        {
+          "x": 0.3817,
+          "y": 0.323,
+          "rx": 0.4,
+          "ry": 0.6
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "wary",
+      "bloubShape": "cercle",
+      "bloubExpression": "mefiant",
+      "eyes": [
+        {
+          "x": -0.0677,
+          "y": -0.0692,
+          "rx": 0.21,
+          "ry": 0.4
+        },
+        {
+          "x": 0.4673,
+          "y": -0.1265,
+          "rx": 0.22,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "confused",
+      "bloubShape": "cercle",
+      "bloubExpression": "confus",
+      "eyes": [
+        {
+          "x": -0.503,
+          "y": -0.087,
+          "rx": 0.2,
+          "ry": 0.44
+        },
+        {
+          "x": 0.0418,
+          "y": -0.0081,
+          "rx": 0.28,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "curious",
+      "bloubShape": "cercle",
+      "bloubExpression": "curieux",
+      "eyes": [
+        {
+          "x": -0.0048,
+          "y": 0.2252,
+          "rx": 0.24,
+          "ry": 0.46
+        },
+        {
+          "x": 0.5289,
+          "y": 0.08,
+          "rx": 0.2,
+          "ry": 0.38
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "proud",
+      "bloubShape": "cercle",
+      "bloubExpression": "fier",
+      "eyes": [
+        {
+          "x": -0.2105,
+          "y": -0.277,
+          "rx": 0.3,
+          "ry": 0.15
+        },
+        {
+          "x": 0.372,
+          "y": -0.277,
+          "rx": 0.3,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "shy",
+      "bloubShape": "cercle",
+      "bloubExpression": "timide",
+      "eyes": [
+        {
+          "x": -0.5302,
+          "y": 0.266,
+          "rx": 0.17,
+          "ry": 0.3
+        },
+        {
+          "x": -0.0808,
+          "y": 0.2088,
+          "rx": 0.17,
+          "ry": 0.3
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "bored",
+      "bloubShape": "cercle",
+      "bloubExpression": "blase",
+      "eyes": [
+        {
+          "x": -0.6144,
+          "y": -0.0309,
+          "rx": 0.3,
+          "ry": 0.12
+        },
+        {
+          "x": -0.1033,
+          "y": -0.0309,
+          "rx": 0.3,
+          "ry": 0.12
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "expression": "sleepy",
+      "bloubShape": "cercle",
+      "bloubExpression": "somnolent",
+      "eyes": [
+        {
+          "x": -0.1737,
+          "y": 0.1673,
+          "rx": 0.2,
+          "ry": 0.191016
+        },
+        {
+          "x": 0.3743,
+          "y": 0.1388,
+          "rx": 0.2,
+          "ry": 0.191016
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "neutral",
+      "bloubShape": "galet",
+      "bloubExpression": "neutre",
+      "eyes": [
+        {
+          "x": 0.1641,
+          "y": -0.3555,
+          "rx": 0.186,
+          "ry": 0.412
+        },
+        {
+          "x": 0.6124,
+          "y": -0.4954,
+          "rx": 0.186,
+          "ry": 0.412
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "attentive",
+      "bloubShape": "galet",
+      "bloubExpression": "attentif",
+      "eyes": [
+        {
+          "x": -0.2054,
+          "y": -0.0617,
+          "rx": 0.21,
+          "ry": 0.44
+        },
+        {
+          "x": 0.3463,
+          "y": -0.1016,
+          "rx": 0.21,
+          "ry": 0.44
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "surprised",
+      "bloubShape": "galet",
+      "bloubExpression": "surpris",
+      "eyes": [
+        {
+          "x": -0.2748,
+          "y": 0.0522,
+          "rx": 0.45,
+          "ry": 0.47
+        },
+        {
+          "x": 0.3592,
+          "y": 0.05,
+          "rx": 0.45,
+          "ry": 0.47
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "excited",
+      "bloubShape": "galet",
+      "bloubExpression": "excite",
+      "eyes": [
+        {
+          "x": -0.2201,
+          "y": 0.1455,
+          "rx": 0.4,
+          "ry": 0.56
+        },
+        {
+          "x": 0.3894,
+          "y": 0.1393,
+          "rx": 0.4,
+          "ry": 0.56
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "happy",
+      "bloubShape": "galet",
+      "bloubExpression": "heureux",
+      "eyes": [
+        {
+          "x": -0.1957,
+          "y": -0.1382,
+          "rx": 0.27,
+          "ry": 0.17
+        },
+        {
+          "x": 0.3812,
+          "y": -0.1496,
+          "rx": 0.27,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "laughing",
+      "bloubShape": "galet",
+      "bloubExpression": "hilare",
+      "eyes": [
+        {
+          "x": -0.2216,
+          "y": -0.2074,
+          "rx": 0.34,
+          "ry": 0.13
+        },
+        {
+          "x": 0.3804,
+          "y": -0.2316,
+          "rx": 0.34,
+          "ry": 0.13
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "angry",
+      "bloubShape": "galet",
+      "bloubExpression": "colere",
+      "eyes": [
+        {
+          "x": -0.2351,
+          "y": -0.1109,
+          "rx": 0.34,
+          "ry": 0.15
+        },
+        {
+          "x": 0.3477,
+          "y": -0.1156,
+          "rx": 0.34,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "sad",
+      "bloubShape": "galet",
+      "bloubExpression": "triste",
+      "eyes": [
+        {
+          "x": -0.2107,
+          "y": -0.0098,
+          "rx": 0.22,
+          "ry": 0.4
+        },
+        {
+          "x": 0.2928,
+          "y": -0.0177,
+          "rx": 0.22,
+          "ry": 0.4
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "scared",
+      "bloubShape": "galet",
+      "bloubExpression": "effraye",
+      "eyes": [
+        {
+          "x": -0.297,
+          "y": 0.2375,
+          "rx": 0.4,
+          "ry": 0.6
+        },
+        {
+          "x": 0.3411,
+          "y": 0.2246,
+          "rx": 0.4,
+          "ry": 0.6
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "wary",
+      "bloubShape": "galet",
+      "bloubExpression": "mefiant",
+      "eyes": [
+        {
+          "x": -0.061,
+          "y": -0.0621,
+          "rx": 0.21,
+          "ry": 0.4
+        },
+        {
+          "x": 0.4721,
+          "y": -0.1278,
+          "rx": 0.22,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "confused",
+      "bloubShape": "galet",
+      "bloubExpression": "confus",
+      "eyes": [
+        {
+          "x": -0.2455,
+          "y": -0.0875,
+          "rx": 0.2,
+          "ry": 0.44
+        },
+        {
+          "x": 0.3025,
+          "y": -0.0082,
+          "rx": 0.28,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "curious",
+      "bloubShape": "galet",
+      "bloubExpression": "curieux",
+      "eyes": [
+        {
+          "x": -0.0398,
+          "y": 0.1822,
+          "rx": 0.24,
+          "ry": 0.46
+        },
+        {
+          "x": 0.4692,
+          "y": 0.056,
+          "rx": 0.2,
+          "ry": 0.38
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "proud",
+      "bloubShape": "galet",
+      "bloubExpression": "fier",
+      "eyes": [
+        {
+          "x": -0.1847,
+          "y": -0.2428,
+          "rx": 0.3,
+          "ry": 0.15
+        },
+        {
+          "x": 0.3766,
+          "y": -0.2804,
+          "rx": 0.3,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "shy",
+      "bloubShape": "galet",
+      "bloubExpression": "timide",
+      "eyes": [
+        {
+          "x": -0.5004,
+          "y": 0.2335,
+          "rx": 0.17,
+          "ry": 0.3
+        },
+        {
+          "x": -0.0588,
+          "y": 0.1648,
+          "rx": 0.17,
+          "ry": 0.3
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "bored",
+      "bloubShape": "galet",
+      "bloubExpression": "blase",
+      "eyes": [
+        {
+          "x": -0.6202,
+          "y": -0.0312,
+          "rx": 0.3,
+          "ry": 0.12
+        },
+        {
+          "x": -0.1027,
+          "y": -0.0307,
+          "rx": 0.3,
+          "ry": 0.12
+        }
+      ]
+    },
+    {
+      "shape": "pebble",
+      "expression": "sleepy",
+      "bloubShape": "galet",
+      "bloubExpression": "somnolent",
+      "eyes": [
+        {
+          "x": -0.1627,
+          "y": -0.0531,
+          "rx": 0.2,
+          "ry": 0.191016
+        },
+        {
+          "x": 0.3461,
+          "y": -0.0815,
+          "rx": 0.2,
+          "ry": 0.191016
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "neutral",
+      "bloubShape": "squircle",
+      "bloubExpression": "neutre",
+      "eyes": [
+        {
+          "x": 0.199,
+          "y": -0.4258,
+          "rx": 0.186,
+          "ry": 0.412
+        },
+        {
+          "x": 0.7052,
+          "y": -0.5832,
+          "rx": 0.186,
+          "ry": 0.412
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "attentive",
+      "bloubShape": "squircle",
+      "bloubExpression": "attentif",
+      "eyes": [
+        {
+          "x": -0.207,
+          "y": -0.0622,
+          "rx": 0.21,
+          "ry": 0.44
+        },
+        {
+          "x": 0.3421,
+          "y": -0.1003,
+          "rx": 0.21,
+          "ry": 0.44
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "surprised",
+      "bloubShape": "squircle",
+      "bloubExpression": "surpris",
+      "eyes": [
+        {
+          "x": -0.2678,
+          "y": 0.0509,
+          "rx": 0.45,
+          "ry": 0.47
+        },
+        {
+          "x": 0.3637,
+          "y": 0.0506,
+          "rx": 0.45,
+          "ry": 0.47
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "excited",
+      "bloubShape": "squircle",
+      "bloubExpression": "excite",
+      "eyes": [
+        {
+          "x": -0.2703,
+          "y": 0.2644,
+          "rx": 0.4,
+          "ry": 0.56
+        },
+        {
+          "x": 0.4582,
+          "y": 0.2465,
+          "rx": 0.4,
+          "ry": 0.56
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "happy",
+      "bloubShape": "squircle",
+      "bloubExpression": "heureux",
+      "eyes": [
+        {
+          "x": -0.2326,
+          "y": -0.1646,
+          "rx": 0.27,
+          "ry": 0.17
+        },
+        {
+          "x": 0.3852,
+          "y": -0.1512,
+          "rx": 0.27,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "laughing",
+      "bloubShape": "squircle",
+      "bloubExpression": "hilare",
+      "eyes": [
+        {
+          "x": -0.2786,
+          "y": -0.2611,
+          "rx": 0.34,
+          "ry": 0.13
+        },
+        {
+          "x": 0.4087,
+          "y": -0.2491,
+          "rx": 0.34,
+          "ry": 0.13
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "angry",
+      "bloubShape": "squircle",
+      "bloubExpression": "colere",
+      "eyes": [
+        {
+          "x": -0.2542,
+          "y": -0.1201,
+          "rx": 0.34,
+          "ry": 0.15
+        },
+        {
+          "x": 0.3466,
+          "y": -0.1153,
+          "rx": 0.34,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "sad",
+      "bloubShape": "squircle",
+      "bloubExpression": "triste",
+      "eyes": [
+        {
+          "x": -0.2585,
+          "y": 0.2507,
+          "rx": 0.22,
+          "ry": 0.4
+        },
+        {
+          "x": 0.3602,
+          "y": 0.2422,
+          "rx": 0.22,
+          "ry": 0.4
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "scared",
+      "bloubShape": "squircle",
+      "bloubExpression": "effraye",
+      "eyes": [
+        {
+          "x": -0.3661,
+          "y": 0.371,
+          "rx": 0.4,
+          "ry": 0.6
+        },
+        {
+          "x": 0.4349,
+          "y": 0.3678,
+          "rx": 0.4,
+          "ry": 0.6
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "wary",
+      "bloubShape": "squircle",
+      "bloubExpression": "mefiant",
+      "eyes": [
+        {
+          "x": -0.0944,
+          "y": -0.0893,
+          "rx": 0.21,
+          "ry": 0.4
+        },
+        {
+          "x": 0.4484,
+          "y": -0.1354,
+          "rx": 0.22,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "confused",
+      "bloubShape": "squircle",
+      "bloubExpression": "confus",
+      "eyes": [
+        {
+          "x": -0.4903,
+          "y": -0.0847,
+          "rx": 0.2,
+          "ry": 0.44
+        },
+        {
+          "x": 0.0414,
+          "y": -0.008,
+          "rx": 0.28,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "curious",
+      "bloubShape": "squircle",
+      "bloubExpression": "curieux",
+      "eyes": [
+        {
+          "x": -0.0046,
+          "y": 0.2164,
+          "rx": 0.24,
+          "ry": 0.46
+        },
+        {
+          "x": 0.5133,
+          "y": 0.0777,
+          "rx": 0.2,
+          "ry": 0.38
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "proud",
+      "bloubShape": "squircle",
+      "bloubExpression": "fier",
+      "eyes": [
+        {
+          "x": -0.2372,
+          "y": -0.3122,
+          "rx": 0.3,
+          "ry": 0.15
+        },
+        {
+          "x": 0.4186,
+          "y": -0.3121,
+          "rx": 0.3,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "shy",
+      "bloubShape": "squircle",
+      "bloubExpression": "timide",
+      "eyes": [
+        {
+          "x": -0.5555,
+          "y": 0.2717,
+          "rx": 0.17,
+          "ry": 0.3
+        },
+        {
+          "x": -0.0775,
+          "y": 0.2049,
+          "rx": 0.17,
+          "ry": 0.3
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "bored",
+      "bloubShape": "squircle",
+      "bloubExpression": "blase",
+      "eyes": [
+        {
+          "x": -0.573,
+          "y": -0.0296,
+          "rx": 0.3,
+          "ry": 0.12
+        },
+        {
+          "x": -0.0861,
+          "y": -0.0311,
+          "rx": 0.3,
+          "ry": 0.12
+        }
+      ]
+    },
+    {
+      "shape": "squircle",
+      "expression": "sleepy",
+      "bloubShape": "squircle",
+      "bloubExpression": "somnolent",
+      "eyes": [
+        {
+          "x": -0.1993,
+          "y": 0.1914,
+          "rx": 0.2,
+          "ry": 0.191016
+        },
+        {
+          "x": 0.3811,
+          "y": 0.1413,
+          "rx": 0.2,
+          "ry": 0.191016
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "neutral",
+      "bloubShape": "capsule",
+      "bloubExpression": "neutre",
+      "eyes": [
+        {
+          "x": 0.0856,
+          "y": -0.1996,
+          "rx": 0.186,
+          "ry": 0.412
+        },
+        {
+          "x": 0.501,
+          "y": -0.373,
+          "rx": 0.186,
+          "ry": 0.412
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "attentive",
+      "bloubShape": "capsule",
+      "bloubExpression": "attentif",
+      "eyes": [
+        {
+          "x": -0.208,
+          "y": -0.0625,
+          "rx": 0.21,
+          "ry": 0.44
+        },
+        {
+          "x": 0.3453,
+          "y": -0.1013,
+          "rx": 0.21,
+          "ry": 0.44
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "surprised",
+      "bloubShape": "capsule",
+      "bloubExpression": "surpris",
+      "eyes": [
+        {
+          "x": -0.2825,
+          "y": 0.0535,
+          "rx": 0.45,
+          "ry": 0.47
+        },
+        {
+          "x": 0.3879,
+          "y": 0.0538,
+          "rx": 0.45,
+          "ry": 0.47
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "excited",
+      "bloubShape": "capsule",
+      "bloubExpression": "excite",
+      "eyes": [
+        {
+          "x": -0.3046,
+          "y": 0.0143,
+          "rx": 0.4,
+          "ry": 0.56
+        },
+        {
+          "x": 0.3056,
+          "y": 0.0392,
+          "rx": 0.4,
+          "ry": 0.56
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "happy",
+      "bloubShape": "capsule",
+      "bloubExpression": "heureux",
+      "eyes": [
+        {
+          "x": -0.2942,
+          "y": 0.0483,
+          "rx": 0.27,
+          "ry": 0.17
+        },
+        {
+          "x": 0.2657,
+          "y": 0.0365,
+          "rx": 0.27,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "laughing",
+      "bloubShape": "capsule",
+      "bloubExpression": "hilare",
+      "eyes": [
+        {
+          "x": -0.2407,
+          "y": -0.1358,
+          "rx": 0.34,
+          "ry": 0.13
+        },
+        {
+          "x": 0.3163,
+          "y": -0.1547,
+          "rx": 0.34,
+          "ry": 0.13
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "angry",
+      "bloubShape": "capsule",
+      "bloubExpression": "colere",
+      "eyes": [
+        {
+          "x": -0.2341,
+          "y": -0.1104,
+          "rx": 0.34,
+          "ry": 0.15
+        },
+        {
+          "x": 0.3432,
+          "y": -0.1141,
+          "rx": 0.34,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "sad",
+      "bloubShape": "capsule",
+      "bloubExpression": "triste",
+      "eyes": [
+        {
+          "x": -0.2965,
+          "y": 0.0048,
+          "rx": 0.22,
+          "ry": 0.4
+        },
+        {
+          "x": 0.1956,
+          "y": 0.0205,
+          "rx": 0.22,
+          "ry": 0.4
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "scared",
+      "bloubShape": "capsule",
+      "bloubExpression": "effraye",
+      "eyes": [
+        {
+          "x": -0.2672,
+          "y": 0.0227,
+          "rx": 0.4,
+          "ry": 0.6
+        },
+        {
+          "x": 0.3356,
+          "y": 0.0351,
+          "rx": 0.4,
+          "ry": 0.6
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "wary",
+      "bloubShape": "capsule",
+      "bloubExpression": "mefiant",
+      "eyes": [
+        {
+          "x": -0.147,
+          "y": -0.0045,
+          "rx": 0.21,
+          "ry": 0.4
+        },
+        {
+          "x": 0.3827,
+          "y": -0.0758,
+          "rx": 0.22,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "confused",
+      "bloubShape": "capsule",
+      "bloubExpression": "confus",
+      "eyes": [
+        {
+          "x": -0.4864,
+          "y": -0.0896,
+          "rx": 0.2,
+          "ry": 0.44
+        },
+        {
+          "x": 0.0734,
+          "y": -0.0082,
+          "rx": 0.28,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "curious",
+      "bloubShape": "capsule",
+      "bloubExpression": "curieux",
+      "eyes": [
+        {
+          "x": -0.0606,
+          "y": 0.1073,
+          "rx": 0.24,
+          "ry": 0.46
+        },
+        {
+          "x": 0.4876,
+          "y": 0.049,
+          "rx": 0.2,
+          "ry": 0.38
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "proud",
+      "bloubShape": "capsule",
+      "bloubExpression": "fier",
+      "eyes": [
+        {
+          "x": -0.1629,
+          "y": -0.1333,
+          "rx": 0.3,
+          "ry": 0.15
+        },
+        {
+          "x": 0.3352,
+          "y": -0.1685,
+          "rx": 0.3,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "shy",
+      "bloubShape": "capsule",
+      "bloubExpression": "timide",
+      "eyes": [
+        {
+          "x": -0.3991,
+          "y": 0.1917,
+          "rx": 0.17,
+          "ry": 0.3
+        },
+        {
+          "x": 0.0598,
+          "y": 0.0748,
+          "rx": 0.17,
+          "ry": 0.3
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "bored",
+      "bloubShape": "capsule",
+      "bloubExpression": "blase",
+      "eyes": [
+        {
+          "x": -0.6378,
+          "y": -0.0322,
+          "rx": 0.3,
+          "ry": 0.12
+        },
+        {
+          "x": -0.1039,
+          "y": -0.0311,
+          "rx": 0.3,
+          "ry": 0.12
+        }
+      ]
+    },
+    {
+      "shape": "capsule",
+      "expression": "sleepy",
+      "bloubShape": "capsule",
+      "bloubExpression": "somnolent",
+      "eyes": [
+        {
+          "x": -0.2098,
+          "y": 0.1077,
+          "rx": 0.2,
+          "ry": 0.191016
+        },
+        {
+          "x": 0.3115,
+          "y": 0.1028,
+          "rx": 0.2,
+          "ry": 0.191016
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "neutral",
+      "bloubShape": "triangle",
+      "bloubExpression": "neutre",
+      "eyes": [
+        {
+          "x": 0.1672,
+          "y": -0.3584,
+          "rx": 0.186,
+          "ry": 0.412
+        },
+        {
+          "x": 0.4561,
+          "y": -0.3732,
+          "rx": 0.186,
+          "ry": 0.412
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "attentive",
+      "bloubShape": "triangle",
+      "bloubExpression": "attentif",
+      "eyes": [
+        {
+          "x": -0.1542,
+          "y": -0.0457,
+          "rx": 0.21,
+          "ry": 0.44
+        },
+        {
+          "x": 0.2567,
+          "y": -0.0745,
+          "rx": 0.21,
+          "ry": 0.44
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "surprised",
+      "bloubShape": "triangle",
+      "bloubExpression": "surpris",
+      "eyes": [
+        {
+          "x": -0.2628,
+          "y": 0.05,
+          "rx": 0.45,
+          "ry": 0.47
+        },
+        {
+          "x": 0.3466,
+          "y": 0.0483,
+          "rx": 0.45,
+          "ry": 0.47
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "excited",
+      "bloubShape": "triangle",
+      "bloubExpression": "excite",
+      "eyes": [
+        {
+          "x": -0.2438,
+          "y": 0.2388,
+          "rx": 0.4,
+          "ry": 0.56
+        },
+        {
+          "x": 0.4785,
+          "y": 0.2573,
+          "rx": 0.4,
+          "ry": 0.56
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "happy",
+      "bloubShape": "triangle",
+      "bloubExpression": "heureux",
+      "eyes": [
+        {
+          "x": -0.1524,
+          "y": -0.1072,
+          "rx": 0.27,
+          "ry": 0.17
+        },
+        {
+          "x": 0.2767,
+          "y": -0.1077,
+          "rx": 0.27,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "laughing",
+      "bloubShape": "triangle",
+      "bloubExpression": "hilare",
+      "eyes": [
+        {
+          "x": -0.1924,
+          "y": -0.1524,
+          "rx": 0.34,
+          "ry": 0.13
+        },
+        {
+          "x": 0.2632,
+          "y": -0.1478,
+          "rx": 0.34,
+          "ry": 0.13
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "angry",
+      "bloubShape": "triangle",
+      "bloubExpression": "colere",
+      "eyes": [
+        {
+          "x": -0.1766,
+          "y": -0.0828,
+          "rx": 0.34,
+          "ry": 0.15
+        },
+        {
+          "x": 0.2555,
+          "y": -0.0842,
+          "rx": 0.34,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "sad",
+      "bloubShape": "triangle",
+      "bloubExpression": "triste",
+      "eyes": [
+        {
+          "x": -0.2339,
+          "y": 0.2272,
+          "rx": 0.22,
+          "ry": 0.4
+        },
+        {
+          "x": 0.3624,
+          "y": 0.2436,
+          "rx": 0.22,
+          "ry": 0.4
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "scared",
+      "bloubShape": "triangle",
+      "bloubExpression": "effraye",
+      "eyes": [
+        {
+          "x": -0.3258,
+          "y": 0.3306,
+          "rx": 0.4,
+          "ry": 0.6
+        },
+        {
+          "x": 0.4106,
+          "y": 0.3473,
+          "rx": 0.4,
+          "ry": 0.6
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "wary",
+      "bloubShape": "triangle",
+      "bloubExpression": "mefiant",
+      "eyes": [
+        {
+          "x": -0.1563,
+          "y": 0.1298,
+          "rx": 0.21,
+          "ry": 0.4
+        },
+        {
+          "x": 0.248,
+          "y": 0.087,
+          "rx": 0.22,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "confused",
+      "bloubShape": "triangle",
+      "bloubExpression": "confus",
+      "eyes": [
+        {
+          "x": -0.3346,
+          "y": -0.0346,
+          "rx": 0.2,
+          "ry": 0.44
+        },
+        {
+          "x": 0.0881,
+          "y": 0.027,
+          "rx": 0.28,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "curious",
+      "bloubShape": "triangle",
+      "bloubExpression": "curieux",
+      "eyes": [
+        {
+          "x": -0.2132,
+          "y": 0.1654,
+          "rx": 0.24,
+          "ry": 0.46
+        },
+        {
+          "x": 0.2837,
+          "y": 0.0749,
+          "rx": 0.2,
+          "ry": 0.38
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "proud",
+      "bloubShape": "triangle",
+      "bloubExpression": "fier",
+      "eyes": [
+        {
+          "x": -0.1942,
+          "y": -0.1719,
+          "rx": 0.3,
+          "ry": 0.15
+        },
+        {
+          "x": 0.2469,
+          "y": -0.1559,
+          "rx": 0.3,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "shy",
+      "bloubShape": "triangle",
+      "bloubExpression": "timide",
+      "eyes": [
+        {
+          "x": -0.589,
+          "y": 0.2951,
+          "rx": 0.17,
+          "ry": 0.3
+        },
+        {
+          "x": -0.0633,
+          "y": 0.1647,
+          "rx": 0.17,
+          "ry": 0.3
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "bored",
+      "bloubShape": "triangle",
+      "bloubExpression": "blase",
+      "eyes": [
+        {
+          "x": -0.5036,
+          "y": -0.0249,
+          "rx": 0.3,
+          "ry": 0.12
+        },
+        {
+          "x": -0.0769,
+          "y": -0.0224,
+          "rx": 0.3,
+          "ry": 0.12
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "expression": "sleepy",
+      "bloubShape": "triangle",
+      "bloubExpression": "somnolent",
+      "eyes": [
+        {
+          "x": -0.1812,
+          "y": 0.1743,
+          "rx": 0.2,
+          "ry": 0.191016
+        },
+        {
+          "x": 0.4025,
+          "y": 0.1491,
+          "rx": 0.2,
+          "ry": 0.191016
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "neutral",
+      "bloubShape": "hexagone",
+      "bloubExpression": "neutre",
+      "eyes": [
+        {
+          "x": 0.1944,
+          "y": -0.4158,
+          "rx": 0.186,
+          "ry": 0.412
+        },
+        {
+          "x": 0.588,
+          "y": -0.4857,
+          "rx": 0.186,
+          "ry": 0.412
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "attentive",
+      "bloubShape": "hexagone",
+      "bloubExpression": "attentif",
+      "eyes": [
+        {
+          "x": -0.1979,
+          "y": -0.0593,
+          "rx": 0.21,
+          "ry": 0.44
+        },
+        {
+          "x": 0.3287,
+          "y": -0.0963,
+          "rx": 0.21,
+          "ry": 0.44
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "surprised",
+      "bloubShape": "hexagone",
+      "bloubExpression": "surpris",
+      "eyes": [
+        {
+          "x": -0.2733,
+          "y": 0.0519,
+          "rx": 0.45,
+          "ry": 0.47
+        },
+        {
+          "x": 0.3801,
+          "y": 0.0527,
+          "rx": 0.45,
+          "ry": 0.47
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "excited",
+      "bloubShape": "hexagone",
+      "bloubExpression": "excite",
+      "eyes": [
+        {
+          "x": -0.227,
+          "y": 0.2227,
+          "rx": 0.4,
+          "ry": 0.56
+        },
+        {
+          "x": 0.4013,
+          "y": 0.2161,
+          "rx": 0.4,
+          "ry": 0.56
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "happy",
+      "bloubShape": "hexagone",
+      "bloubExpression": "heureux",
+      "eyes": [
+        {
+          "x": -0.1956,
+          "y": -0.1381,
+          "rx": 0.27,
+          "ry": 0.17
+        },
+        {
+          "x": 0.3543,
+          "y": -0.1388,
+          "rx": 0.27,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "laughing",
+      "bloubShape": "hexagone",
+      "bloubExpression": "hilare",
+      "eyes": [
+        {
+          "x": -0.2337,
+          "y": -0.1709,
+          "rx": 0.34,
+          "ry": 0.13
+        },
+        {
+          "x": 0.3502,
+          "y": -0.1651,
+          "rx": 0.34,
+          "ry": 0.13
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "angry",
+      "bloubShape": "hexagone",
+      "bloubExpression": "colere",
+      "eyes": [
+        {
+          "x": -0.2266,
+          "y": -0.1068,
+          "rx": 0.34,
+          "ry": 0.15
+        },
+        {
+          "x": 0.3272,
+          "y": -0.1086,
+          "rx": 0.34,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "sad",
+      "bloubShape": "hexagone",
+      "bloubExpression": "triste",
+      "eyes": [
+        {
+          "x": -0.217,
+          "y": 0.2111,
+          "rx": 0.22,
+          "ry": 0.4
+        },
+        {
+          "x": 0.305,
+          "y": 0.2054,
+          "rx": 0.22,
+          "ry": 0.4
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "scared",
+      "bloubShape": "hexagone",
+      "bloubExpression": "effraye",
+      "eyes": [
+        {
+          "x": -0.3084,
+          "y": 0.3131,
+          "rx": 0.4,
+          "ry": 0.6
+        },
+        {
+          "x": 0.363,
+          "y": 0.3072,
+          "rx": 0.4,
+          "ry": 0.6
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "wary",
+      "bloubShape": "hexagone",
+      "bloubExpression": "mefiant",
+      "eyes": [
+        {
+          "x": -0.0811,
+          "y": -0.0414,
+          "rx": 0.21,
+          "ry": 0.4
+        },
+        {
+          "x": 0.437,
+          "y": -0.0962,
+          "rx": 0.22,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "confused",
+      "bloubShape": "hexagone",
+      "bloubExpression": "confus",
+      "eyes": [
+        {
+          "x": -0.2324,
+          "y": -0.0866,
+          "rx": 0.2,
+          "ry": 0.44
+        },
+        {
+          "x": 0.309,
+          "y": -0.0078,
+          "rx": 0.28,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "curious",
+      "bloubShape": "hexagone",
+      "bloubExpression": "curieux",
+      "eyes": [
+        {
+          "x": -0.0364,
+          "y": 0.1927,
+          "rx": 0.24,
+          "ry": 0.46
+        },
+        {
+          "x": 0.5006,
+          "y": 0.0621,
+          "rx": 0.2,
+          "ry": 0.38
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "proud",
+      "bloubShape": "hexagone",
+      "bloubExpression": "fier",
+      "eyes": [
+        {
+          "x": -0.2304,
+          "y": -0.251,
+          "rx": 0.3,
+          "ry": 0.15
+        },
+        {
+          "x": 0.334,
+          "y": -0.2316,
+          "rx": 0.3,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "shy",
+      "bloubShape": "hexagone",
+      "bloubExpression": "timide",
+      "eyes": [
+        {
+          "x": -0.4805,
+          "y": 0.24,
+          "rx": 0.17,
+          "ry": 0.3
+        },
+        {
+          "x": -0.0645,
+          "y": 0.2005,
+          "rx": 0.17,
+          "ry": 0.3
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "bored",
+      "bloubShape": "hexagone",
+      "bloubExpression": "blase",
+      "eyes": [
+        {
+          "x": -0.6244,
+          "y": -0.032,
+          "rx": 0.3,
+          "ry": 0.12
+        },
+        {
+          "x": -0.0896,
+          "y": -0.0295,
+          "rx": 0.3,
+          "ry": 0.12
+        }
+      ]
+    },
+    {
+      "shape": "hexagon",
+      "expression": "sleepy",
+      "bloubShape": "hexagone",
+      "bloubExpression": "somnolent",
+      "eyes": [
+        {
+          "x": -0.1671,
+          "y": 0.1611,
+          "rx": 0.2,
+          "ry": 0.191016
+        },
+        {
+          "x": 0.356,
+          "y": 0.1321,
+          "rx": 0.2,
+          "ry": 0.191016
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "neutral",
+      "bloubShape": "nuage",
+      "bloubExpression": "neutre",
+      "eyes": [
+        {
+          "x": 0.125,
+          "y": -0.2729,
+          "rx": 0.186,
+          "ry": 0.412
+        },
+        {
+          "x": 0.4918,
+          "y": -0.3903,
+          "rx": 0.186,
+          "ry": 0.412
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "attentive",
+      "bloubShape": "nuage",
+      "bloubExpression": "attentif",
+      "eyes": [
+        {
+          "x": -0.1638,
+          "y": -0.0487,
+          "rx": 0.21,
+          "ry": 0.44
+        },
+        {
+          "x": 0.2641,
+          "y": -0.0768,
+          "rx": 0.21,
+          "ry": 0.44
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "surprised",
+      "bloubShape": "nuage",
+      "bloubExpression": "surpris",
+      "eyes": [
+        {
+          "x": -0.2724,
+          "y": 0.0517,
+          "rx": 0.45,
+          "ry": 0.47
+        },
+        {
+          "x": 0.3603,
+          "y": 0.0501,
+          "rx": 0.45,
+          "ry": 0.47
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "excited",
+      "bloubShape": "nuage",
+      "bloubExpression": "excite",
+      "eyes": [
+        {
+          "x": -0.2277,
+          "y": 0.2233,
+          "rx": 0.4,
+          "ry": 0.56
+        },
+        {
+          "x": 0.4267,
+          "y": 0.2297,
+          "rx": 0.4,
+          "ry": 0.56
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "happy",
+      "bloubShape": "nuage",
+      "bloubExpression": "heureux",
+      "eyes": [
+        {
+          "x": -0.1735,
+          "y": -0.1223,
+          "rx": 0.27,
+          "ry": 0.17
+        },
+        {
+          "x": 0.2965,
+          "y": -0.1157,
+          "rx": 0.27,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "laughing",
+      "bloubShape": "nuage",
+      "bloubExpression": "hilare",
+      "eyes": [
+        {
+          "x": -0.2074,
+          "y": -0.1939,
+          "rx": 0.34,
+          "ry": 0.13
+        },
+        {
+          "x": 0.305,
+          "y": -0.1851,
+          "rx": 0.34,
+          "ry": 0.13
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "angry",
+      "bloubShape": "nuage",
+      "bloubExpression": "colere",
+      "eyes": [
+        {
+          "x": -0.1913,
+          "y": -0.0899,
+          "rx": 0.34,
+          "ry": 0.15
+        },
+        {
+          "x": 0.2671,
+          "y": -0.0881,
+          "rx": 0.34,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "sad",
+      "bloubShape": "nuage",
+      "bloubExpression": "triste",
+      "eyes": [
+        {
+          "x": -0.2182,
+          "y": 0.2121,
+          "rx": 0.22,
+          "ry": 0.4
+        },
+        {
+          "x": 0.3198,
+          "y": 0.2152,
+          "rx": 0.22,
+          "ry": 0.4
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "scared",
+      "bloubShape": "nuage",
+      "bloubExpression": "effraye",
+      "eyes": [
+        {
+          "x": -0.3061,
+          "y": 0.3108,
+          "rx": 0.4,
+          "ry": 0.6
+        },
+        {
+          "x": 0.3652,
+          "y": 0.3091,
+          "rx": 0.4,
+          "ry": 0.6
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "wary",
+      "bloubShape": "nuage",
+      "bloubExpression": "mefiant",
+      "eyes": [
+        {
+          "x": -0.163,
+          "y": 0.1228,
+          "rx": 0.21,
+          "ry": 0.4
+        },
+        {
+          "x": 0.2612,
+          "y": 0.0834,
+          "rx": 0.22,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "confused",
+      "bloubShape": "nuage",
+      "bloubExpression": "confus",
+      "eyes": [
+        {
+          "x": -0.387,
+          "y": -0.0481,
+          "rx": 0.2,
+          "ry": 0.44
+        },
+        {
+          "x": 0.0789,
+          "y": 0.0206,
+          "rx": 0.28,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "curious",
+      "bloubShape": "nuage",
+      "bloubExpression": "curieux",
+      "eyes": [
+        {
+          "x": -0.0849,
+          "y": 0.2021,
+          "rx": 0.24,
+          "ry": 0.46
+        },
+        {
+          "x": 0.4286,
+          "y": 0.0772,
+          "rx": 0.2,
+          "ry": 0.38
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "proud",
+      "bloubShape": "nuage",
+      "bloubExpression": "fier",
+      "eyes": [
+        {
+          "x": -0.1811,
+          "y": -0.238,
+          "rx": 0.3,
+          "ry": 0.15
+        },
+        {
+          "x": 0.3055,
+          "y": -0.2268,
+          "rx": 0.3,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "shy",
+      "bloubShape": "nuage",
+      "bloubExpression": "timide",
+      "eyes": [
+        {
+          "x": -0.2147,
+          "y": 0.083,
+          "rx": 0.17,
+          "ry": 0.3
+        },
+        {
+          "x": 0.2568,
+          "y": -0.0092,
+          "rx": 0.17,
+          "ry": 0.3
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "bored",
+      "bloubShape": "nuage",
+      "bloubExpression": "blase",
+      "eyes": [
+        {
+          "x": -0.532,
+          "y": -0.0102,
+          "rx": 0.3,
+          "ry": 0.12
+        },
+        {
+          "x": -0.0506,
+          "y": -0.006,
+          "rx": 0.3,
+          "ry": 0.12
+        }
+      ]
+    },
+    {
+      "shape": "cloud",
+      "expression": "sleepy",
+      "bloubShape": "nuage",
+      "bloubExpression": "somnolent",
+      "eyes": [
+        {
+          "x": -0.1686,
+          "y": 0.1625,
+          "rx": 0.2,
+          "ry": 0.191016
+        },
+        {
+          "x": 0.3727,
+          "y": 0.1382,
+          "rx": 0.2,
+          "ry": 0.191016
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "neutral",
+      "bloubShape": "goutte",
+      "bloubExpression": "neutre",
+      "eyes": [
+        {
+          "x": 0.1094,
+          "y": -0.2394,
+          "rx": 0.186,
+          "ry": 0.412
+        },
+        {
+          "x": 0.3219,
+          "y": -0.2489,
+          "rx": 0.186,
+          "ry": 0.412
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "attentive",
+      "bloubShape": "goutte",
+      "bloubExpression": "attentif",
+      "eyes": [
+        {
+          "x": -0.1131,
+          "y": -0.0329,
+          "rx": 0.21,
+          "ry": 0.44
+        },
+        {
+          "x": 0.189,
+          "y": -0.0541,
+          "rx": 0.21,
+          "ry": 0.44
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "surprised",
+      "bloubShape": "goutte",
+      "bloubExpression": "surpris",
+      "eyes": [
+        {
+          "x": -0.1832,
+          "y": 0.0357,
+          "rx": 0.45,
+          "ry": 0.47
+        },
+        {
+          "x": 0.246,
+          "y": 0.035,
+          "rx": 0.45,
+          "ry": 0.47
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "excited",
+      "bloubShape": "goutte",
+      "bloubExpression": "excite",
+      "eyes": [
+        {
+          "x": -0.1991,
+          "y": 0.1957,
+          "rx": 0.4,
+          "ry": 0.56
+        },
+        {
+          "x": 0.3283,
+          "y": 0.1772,
+          "rx": 0.4,
+          "ry": 0.56
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "happy",
+      "bloubShape": "goutte",
+      "bloubExpression": "heureux",
+      "eyes": [
+        {
+          "x": -0.1121,
+          "y": -0.0784,
+          "rx": 0.27,
+          "ry": 0.17
+        },
+        {
+          "x": 0.2038,
+          "y": -0.0786,
+          "rx": 0.27,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "laughing",
+      "bloubShape": "goutte",
+      "bloubExpression": "hilare",
+      "eyes": [
+        {
+          "x": -0.1424,
+          "y": -0.1107,
+          "rx": 0.34,
+          "ry": 0.13
+        },
+        {
+          "x": 0.1936,
+          "y": -0.1071,
+          "rx": 0.34,
+          "ry": 0.13
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "angry",
+      "bloubShape": "goutte",
+      "bloubExpression": "colere",
+      "eyes": [
+        {
+          "x": -0.1297,
+          "y": -0.0602,
+          "rx": 0.34,
+          "ry": 0.15
+        },
+        {
+          "x": 0.1882,
+          "y": -0.0612,
+          "rx": 0.34,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "sad",
+      "bloubShape": "goutte",
+      "bloubExpression": "triste",
+      "eyes": [
+        {
+          "x": -0.1902,
+          "y": 0.1854,
+          "rx": 0.22,
+          "ry": 0.4
+        },
+        {
+          "x": 0.2589,
+          "y": 0.1746,
+          "rx": 0.22,
+          "ry": 0.4
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "scared",
+      "bloubShape": "goutte",
+      "bloubExpression": "effraye",
+      "eyes": [
+        {
+          "x": -0.271,
+          "y": 0.2756,
+          "rx": 0.4,
+          "ry": 0.6
+        },
+        {
+          "x": 0.3163,
+          "y": 0.268,
+          "rx": 0.4,
+          "ry": 0.6
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "wary",
+      "bloubShape": "goutte",
+      "bloubExpression": "mefiant",
+      "eyes": [
+        {
+          "x": -0.0616,
+          "y": 0.0037,
+          "rx": 0.21,
+          "ry": 0.4
+        },
+        {
+          "x": 0.2358,
+          "y": -0.0276,
+          "rx": 0.22,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "confused",
+      "bloubShape": "goutte",
+      "bloubExpression": "confus",
+      "eyes": [
+        {
+          "x": -0.2404,
+          "y": -0.0219,
+          "rx": 0.2,
+          "ry": 0.44
+        },
+        {
+          "x": 0.0699,
+          "y": 0.0233,
+          "rx": 0.28,
+          "ry": 0.17
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "curious",
+      "bloubShape": "goutte",
+      "bloubExpression": "curieux",
+      "eyes": [
+        {
+          "x": -0.0046,
+          "y": 0.2179,
+          "rx": 0.24,
+          "ry": 0.46
+        },
+        {
+          "x": 0.3486,
+          "y": 0.0536,
+          "rx": 0.2,
+          "ry": 0.38
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "proud",
+      "bloubShape": "goutte",
+      "bloubExpression": "fier",
+      "eyes": [
+        {
+          "x": -0.1437,
+          "y": -0.126,
+          "rx": 0.3,
+          "ry": 0.15
+        },
+        {
+          "x": 0.182,
+          "y": -0.1137,
+          "rx": 0.3,
+          "ry": 0.15
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "shy",
+      "bloubShape": "goutte",
+      "bloubExpression": "timide",
+      "eyes": [
+        {
+          "x": -0.4007,
+          "y": 0.2018,
+          "rx": 0.17,
+          "ry": 0.3
+        },
+        {
+          "x": -0.0757,
+          "y": 0.1961,
+          "rx": 0.17,
+          "ry": 0.3
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "bored",
+      "bloubShape": "goutte",
+      "bloubExpression": "blase",
+      "eyes": [
+        {
+          "x": -0.3683,
+          "y": -0.0175,
+          "rx": 0.3,
+          "ry": 0.12
+        },
+        {
+          "x": -0.0563,
+          "y": -0.0158,
+          "rx": 0.3,
+          "ry": 0.12
+        }
+      ]
+    },
+    {
+      "shape": "droplet",
+      "expression": "sleepy",
+      "bloubShape": "goutte",
+      "bloubExpression": "somnolent",
+      "eyes": [
+        {
+          "x": -0.1464,
+          "y": 0.1415,
+          "rx": 0.2,
+          "ry": 0.191016
+        },
+        {
+          "x": 0.2703,
+          "y": 0.1009,
+          "rx": 0.2,
+          "ry": 0.191016
+        }
+      ]
+    }
+  ]
+}
