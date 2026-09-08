@@ -10,6 +10,7 @@ export {
   superellipse,
   profileFromPolygon,
   hullOfCircles,
+  polyPath,
   radiusAtAngle,
   silhouetteFromRadii,
   eggProfile,
@@ -25,6 +26,17 @@ export {
   type Point,
   type Silhouette,
 } from './morph'
+export {
+  ALERT_BAR_CY,
+  ALERT_DOT_ALONG,
+  ALERT_TILT,
+  BAR_ITALIC_RADII,
+  BAR_UPRIGHT_CY,
+  BAR_UPRIGHT_RADII,
+  TEAR_PATH,
+  barItalic,
+  barUpright,
+} from './glyphs'
 export {
   ANIMATION_STATES,
   STATE_REGISTRY,

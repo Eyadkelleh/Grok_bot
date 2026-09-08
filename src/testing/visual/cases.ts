@@ -134,7 +134,7 @@ const curated: VisualCase[] = [
   },
   {
     id: 'alert-happy-hexagon',
-    what: 'Alert wears the hexagon body and ignores expression',
+    what: 'Alert keeps the italic glyph and ignores hexagon and expression',
     props: { state: 'Alert', shape: 'hexagon', expression: 'happy', durationMs: 0 },
     expect: settledExpect('Alert', 'hexagon'),
     golden: 'picture',

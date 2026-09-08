@@ -224,6 +224,17 @@ export function closedPath(pts: Point[], tension = 1 / 6): string {
   return `${d}Z`
 }
 
+/** Closed polyline with straight segments. The italic "!" period is a teardrop, not a disc. */
+export function polyPath(pts: Point[], scale = 1): string {
+  if (pts.length < 3) return ''
+  let d = ''
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i]!
+    d += `${i === 0 ? 'M' : 'L'}${r2(p.x * scale)} ${r2(p.y * scale)}`
+  }
+  return `${d}Z`
+}
+
 export function viewBoxAttr(): string {
   return `${-VIEW_HALF} ${-VIEW_HALF} ${VIEW_SIZE} ${VIEW_SIZE}`
 }

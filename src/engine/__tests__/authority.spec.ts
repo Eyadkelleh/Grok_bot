@@ -15,21 +15,19 @@ const WEARABLE: AnimationState[] = [
   'Thinking',
   'Wink',
   'WideEyes',
-  'Alert',
   'Notification',
-  'Exclamation',
   'Sleep',
   'Burst',
   'Comet',
 ]
 
-const SYMBOL: AnimationState[] = ['Egg', 'Hexagon', 'Play', 'Orbit']
+const SYMBOL: AnimationState[] = ['Alert', 'Exclamation', 'Egg', 'Hexagon', 'Play', 'Orbit']
 
 describe('STATE_GEOMETRY', () => {
   it('classifies every catalogue state as wearable or symbol', () => {
     expect(ANIMATION_STATES).toHaveLength(14)
-    expect(WEARABLE).toHaveLength(10)
-    expect(SYMBOL).toHaveLength(4)
+    expect(WEARABLE).toHaveLength(8)
+    expect(SYMBOL).toHaveLength(6)
     for (const state of WEARABLE) {
       expect(STATE_GEOMETRY[state].kind, state).toBe('wearable')
       expect(usesCustomiserShape(state), state).toBe(true)
@@ -41,40 +39,48 @@ describe('STATE_GEOMETRY', () => {
   })
 
   it('extracts wearable scale and pose from the registry circle silhouette', () => {
-    const alert = STATE_GEOMETRY.Alert
-    if (alert.kind !== 'wearable') throw new Error('Alert must be wearable')
-    const sil = STATE_REGISTRY.Alert.silhouette
-    expect(alert.scale).toBe(sil.radii[0])
-    expect(alert.pose).toEqual({
+    const sleep = STATE_GEOMETRY.Sleep
+    if (sleep.kind !== 'wearable') throw new Error('Sleep must be wearable')
+    const sil = STATE_REGISTRY.Sleep.silhouette
+    expect(sleep.scale).toBe(sil.radii[0])
+    expect(sleep.pose).toEqual({
       rot: sil.rot,
       cx: sil.cx,
       cy: sil.cy,
       sx: sil.sx,
       sy: sil.sy,
     })
-    expect(alert.dots).toEqual(STATE_REGISTRY.Alert.dots)
-    expect(alert.face).toBe('none')
+    expect(sleep.dots).toEqual(STATE_REGISTRY.Sleep.dots)
+    expect(sleep.face).toBe('none')
+  })
+
+  it('keeps Alert and Exclamation as eyeless glyph symbols', () => {
+    expect(STATE_GEOMETRY.Alert.kind).toBe('symbol')
+    expect(STATE_GEOMETRY.Exclamation.kind).toBe('symbol')
+    expect(STATE_GEOMETRY.Alert.face).toBe('none')
+    expect(STATE_GEOMETRY.Exclamation.face).toBe('none')
+    expect(STATE_GEOMETRY.Alert.dots).toEqual(STATE_REGISTRY.Alert.dots)
+    expect(STATE_GEOMETRY.Exclamation.dots).toEqual(STATE_REGISTRY.Exclamation.dots)
   })
 })
 
 describe('resolveStateGeometry', () => {
-  it('wears custom radii on Alert and keeps Play as a symbol', () => {
+  it('wears custom radii on Sleep and keeps Alert as a glyph', () => {
+    const sleepHex = resolveStateGeometry('Sleep', 'hexagon')
+    const sleepCircle = resolveStateGeometry('Sleep', 'circle')
     const alertHex = resolveStateGeometry('Alert', 'hexagon')
     const alertCircle = resolveStateGeometry('Alert', 'circle')
-    const playHex = resolveStateGeometry('Play', 'hexagon')
-    const playCircle = resolveStateGeometry('Play', 'circle')
 
-    expect(alertHex.kind).toBe('wearable')
-    expect(alertHex.shapeApplied).toBe(true)
-    expect(alertHex.face).toBe('none')
-    expect(alertHex.silhouette.radii).not.toEqual(alertCircle.silhouette.radii)
-    expect(alertHex.silhouette.sx).toBe(STATE_REGISTRY.Alert.silhouette.sx)
-    expect(alertHex.silhouette.rot).toBe(STATE_REGISTRY.Alert.silhouette.rot)
+    expect(sleepHex.kind).toBe('wearable')
+    expect(sleepHex.shapeApplied).toBe(true)
+    expect(sleepHex.face).toBe('none')
+    expect(sleepHex.silhouette.radii).not.toEqual(sleepCircle.silhouette.radii)
+    expect(sleepHex.silhouette.sx).toBe(STATE_REGISTRY.Sleep.silhouette.sx)
 
-    expect(playHex.kind).toBe('symbol')
-    expect(playHex.shapeApplied).toBe(false)
-    expect(playHex.silhouette).toEqual(STATE_REGISTRY.Play.silhouette)
-    expect(playHex.silhouette).toEqual(playCircle.silhouette)
+    expect(alertHex.kind).toBe('symbol')
+    expect(alertHex.shapeApplied).toBe(false)
+    expect(alertHex.silhouette).toEqual(STATE_REGISTRY.Alert.silhouette)
+    expect(alertHex.silhouette).toEqual(alertCircle.silhouette)
   })
 
   it('matches the registry silhouette when the customiser shape is a circle', () => {
@@ -107,17 +113,15 @@ describe('sampleAvatar geometry', () => {
     expect(sampleAvatar({ state: 'Alert', expression: 'happy' }).eyes).toHaveLength(0)
   })
 
-  it('changes Alert with hexagon and leaves Play unchanged', () => {
+  it('leaves Alert and Play unchanged when the customiser shape is hexagon', () => {
     const alertHex = sampleAvatar({ state: 'Alert', shape: 'hexagon' })
     const alertCircle = sampleAvatar({ state: 'Alert', shape: 'circle' })
-    const idleHex = sampleAvatar({ state: 'Idle', shape: 'hexagon' })
     const playHex = sampleAvatar({ state: 'Play', shape: 'hexagon' })
     const playCircle = sampleAvatar({ state: 'Play', shape: 'circle' })
 
-    expect(alertHex.path).not.toBe(alertCircle.path)
-    expect(alertHex.path).not.toBe(idleHex.path)
-    expect(alertHex.shapeApplied).toBe(true)
-    expect(alertHex.geometryKind).toBe('wearable')
+    expect(alertHex.path).toBe(alertCircle.path)
+    expect(alertHex.shapeApplied).toBe(false)
+    expect(alertHex.geometryKind).toBe('symbol')
     expect(playHex.path).toBe(playCircle.path)
     expect(playHex.shapeApplied).toBe(false)
     expect(playHex.geometryKind).toBe('symbol')

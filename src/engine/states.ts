@@ -1,3 +1,11 @@
+import {
+  ALERT_BAR_CY,
+  ALERT_DOT_ALONG,
+  ALERT_TILT,
+  TEAR_PATH,
+  barItalic,
+  barUpright,
+} from './glyphs'
 import { clamp, easeOutQuint, lerp } from './math'
 import {
   BODY_RADIUS,
@@ -35,6 +43,10 @@ export interface MorphDot {
   y: number
   r: number
   opacity: number
+  /** Non-circular mark in body-radius units, centred on the origin. When set, `r` is the round-end radius. */
+  d?: string
+  /** Rotation of `d`, in degrees. */
+  rot?: number
 }
 
 export interface StateEntry {
@@ -68,13 +80,18 @@ export const STATE_REGISTRY: Record<AnimationState, StateEntry> = {
   ]),
   Wink: entry(circle(1)),
   WideEyes: entry(circle(1)),
-  Alert: entry(circle(1, { sx: 0.22, sy: 1.02, rot: 0.28, cy: -0.22 }), [
-    { x: 0.19, y: 1.13, r: 0.18, opacity: 1 },
+  Alert: entry(barItalic({ rot: ALERT_TILT, cy: ALERT_BAR_CY }), [
+    {
+      x: -Math.sin(ALERT_TILT) * ALERT_DOT_ALONG,
+      y: ALERT_BAR_CY + Math.cos(ALERT_TILT) * ALERT_DOT_ALONG,
+      r: 0.118,
+      d: TEAR_PATH,
+      rot: (ALERT_TILT * 180) / Math.PI,
+      opacity: 1,
+    },
   ]),
   Notification: entry(circle(1)),
-  Exclamation: entry(circle(1, { sx: 0.22, sy: 1.02, cy: -0.22 }), [
-    { x: 0, y: 1.13, r: 0.18, opacity: 1 },
-  ]),
+  Exclamation: entry(barUpright(), [{ x: -0.012, y: 0.526, r: 0.113, opacity: 1 }]),
   Sleep: entry(circle(0.16, { cy: 0.12 })),
   Egg: entry(fromRadii(PROFILES.egg)),
   Hexagon: entry(fromRadii(PROFILES.hexagon)),
@@ -120,12 +137,16 @@ export function blendDots(a: MorphDot[], b: MorphDot[], t: number): MorphDot[] {
     const da = a[i]
     const db = b[i]
     if (da && db) {
-      out.push({
+      const blended: MorphDot = {
         x: lerp(da.x, db.x, t),
         y: lerp(da.y, db.y, t),
         r: lerp(da.r, db.r, t),
         opacity: lerp(da.opacity, db.opacity, t),
-      })
+      }
+      const path = t >= 0.5 ? db.d ?? da.d : da.d ?? db.d
+      if (path) blended.d = path
+      if (da.rot != null || db.rot != null) blended.rot = lerp(da.rot ?? 0, db.rot ?? 0, t)
+      out.push(blended)
     } else if (db) {
       out.push({ ...db, r: db.r * Math.max(t, 0.001), opacity: db.opacity * t })
     } else if (da) {
