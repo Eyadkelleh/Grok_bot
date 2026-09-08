@@ -36,6 +36,15 @@ const zh: typeof fr = {
     skinLimited: '外形和表情可能不适用于此状态。',
   },
 
+  studio: {
+    modes: '工作室模式',
+    shape: '外形',
+    face: '表情',
+    aura: '光晕',
+    motion: '动作',
+    shapeLocked: '该姿势保留自己的轮廓。',
+  },
+
   shapes: {
     circle: '圆形',
     pebble: '卵石',

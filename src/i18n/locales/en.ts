@@ -36,6 +36,15 @@ const en: typeof fr = {
     skinLimited: 'Shape and expression may not apply to this state.',
   },
 
+  studio: {
+    modes: 'Studio modes',
+    shape: 'Shape',
+    face: 'Face',
+    aura: 'Aura',
+    motion: 'Motion',
+    shapeLocked: 'This pose keeps its own outline.',
+  },
+
   shapes: {
     circle: 'Circle',
     pebble: 'Pebble',

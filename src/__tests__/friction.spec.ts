@@ -28,6 +28,7 @@ describe('video friction harness (issue #33)', () => {
 
     const flags = probeFriction(wrapper)
     flags.newCycleFromPose = await probeNewCycleFromPose(wrapper, async () => {
+      await wrapper.get('[data-mode="state"]').trigger('click')
       await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
       await flushPromises()
       await wrapper.get('[data-cycle-new]').trigger('click')
@@ -36,6 +37,9 @@ describe('video friction harness (issue #33)', () => {
       await flushPromises()
     })
     flags.skinHonesty = await probeSkinHonesty(wrapper, async () => {
+      if (!wrapper.find('[data-animations-palette]').exists()) {
+        await wrapper.get('[data-mode="state"]').trigger('click')
+      }
       await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
       await flushPromises()
     })

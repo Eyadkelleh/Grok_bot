@@ -23,6 +23,8 @@ describe('Avatar', () => {
     expect(svg.attributes('data-expression')).toBe(DEFAULT_EXPRESSION)
     expect(svg.attributes('data-colour')).toBe(DEFAULT_COLOR)
     expect(svg.attributes('data-state')).toBe('Idle')
+    expect(svg.attributes('data-shape-applied')).toBe('true')
+    expect(svg.attributes('data-geometry-kind')).toBe('wearable')
     expect(svg.attributes('data-gaze')).toBe(`${REST_GAZE.yaw},${REST_GAZE.pitch},${REST_GAZE.roll}`)
     expect(wrapper.get('[data-body]').attributes('fill')).toBe(COLOR_BY_ID.get('ink')?.hex)
     expect(wrapper.findAll('[data-eye]')).toHaveLength(2)
@@ -125,7 +127,16 @@ describe('Avatar', () => {
     const wrapper = mount(Avatar, { props: { durationMs: 0, state: 'Idle' } })
     await wrapper.setProps({ state: 'Comet' })
     expect(wrapper.get('svg').attributes('data-state')).toBe('Comet')
+    expect(wrapper.get('svg').attributes('data-shape-applied')).toBe('true')
     expect(wrapper.get('svg path').attributes('d')).toBe(pathForState('Comet'))
+  })
+
+  it('marks symbol poses as not applying the customiser shape', () => {
+    const wrapper = mount(Avatar, { props: { state: 'Play', shape: 'hexagon', durationMs: 0 } })
+    expect(wrapper.get('svg').attributes('data-shape')).toBe('hexagon')
+    expect(wrapper.get('svg').attributes('data-shape-applied')).toBe('false')
+    expect(wrapper.get('svg').attributes('data-geometry-kind')).toBe('symbol')
+    expect(wrapper.get('svg path').attributes('d')).toBe(pathForState('Play'))
   })
 
   it('seeks a montage date without morphing in from a state that was never shown', async () => {

@@ -92,11 +92,19 @@ export {
   type BotExpression,
 } from './expressions'
 export {
+  STATE_GEOMETRY,
+  poseRadii,
+  resolveStateGeometry,
+  usesCustomiserShape,
+  type FacePolicy,
+  type PoseTransform,
+  type ResolvedGeometry,
+  type StateGeometry,
+} from './authority'
+export {
   DEFAULT_SIZE,
   DEFAULT_PAPER,
-  usesCustomiserShape,
   activeSilhouette,
-  FACE_STATES,
   sampleAvatar,
   sampleLiveMorph,
   gazeAttr,
@@ -119,9 +127,6 @@ export {
   defaultCycle,
   defaultMontage,
   poseCycle,
-  POSE_LEAD,
-  POSE_HOLD,
-  POSE_CYCLE_ID,
   totalDuration,
   offsetOf,
   blockAt,

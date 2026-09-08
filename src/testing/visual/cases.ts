@@ -4,6 +4,7 @@ import {
   DEFAULT_MORPH_MS,
   makeBlock,
   morphProgress,
+  resolveStateGeometry,
   sampleAvatar,
   sampleLiveMorph,
   type AnimationState,
@@ -51,13 +52,16 @@ function stopId(progress: number): string {
 
 function settledExpect(state: AnimationState, shape?: string): VisualExpectation {
   const frame = sampleAvatar({ state, shape })
-  const isFace = frame.eyes.length > 0
+  const geometry = resolveStateGeometry(state, shape)
+  const isFace = geometry.face !== 'none'
   return {
     face: isFace ? 'pictures' : 'glyph',
     state,
     eyes: frame.eyes.length,
     dots: frame.dots.length,
-    silhouette: isFace ? { kind: 'shape', shape: frame.shape } : { kind: 'state', state },
+    silhouette: geometry.shapeApplied
+      ? { kind: 'shape', shape: frame.shape }
+      : { kind: 'state', state },
   }
 }
 
@@ -130,7 +134,7 @@ const curated: VisualCase[] = [
   },
   {
     id: 'alert-happy-hexagon',
-    what: 'Alert ignores customiser shape and expression',
+    what: 'Alert wears the hexagon body and ignores expression',
     props: { state: 'Alert', shape: 'hexagon', expression: 'happy', durationMs: 0 },
     expect: settledExpect('Alert', 'hexagon'),
     golden: 'picture',

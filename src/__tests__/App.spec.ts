@@ -54,36 +54,80 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('circle')
     expect(svg.attributes('data-expression')).toBe('neutral')
     expect(svg.attributes('data-colour')).toBe('ink')
+    expect(wrapper.findAll('#studio svg[role="img"]')).toHaveLength(1)
     expect(svg.findAll('[data-eye]')).toHaveLength(2)
     const path = svg.get('path')
     expect(path.attributes('d')?.startsWith('M')).toBe(true)
   })
 
-  it('presents a stacked create-video flow with timeline tucked away', () => {
+  it('grows the studio avatar from the stage box', async () => {
+    const seen: ResizeObserverCallback[] = []
+    class FakeObserver implements ResizeObserver {
+      constructor(cb: ResizeObserverCallback) {
+        seen.push(cb)
+      }
+      disconnect() {}
+      observe() {}
+      unobserve() {}
+      takeRecords(): ResizeObserverEntry[] {
+        return []
+      }
+    }
+    vi.stubGlobal('ResizeObserver', FakeObserver)
     const wrapper = mount(App)
-    const steps = wrapper.get('[data-create-steps]').text()
-    expect(steps).toContain(en.flow.look)
-    expect(steps).toContain(en.flow.motion)
-    expect(steps).toContain(en.flow.video)
-    expect(wrapper.get('[data-stage="look"]').text()).toContain(en.flow.lookTitle)
-    expect(wrapper.get('[data-stage="motion"]').text()).toContain(en.flow.motionTitle)
-    expect(wrapper.get('[data-stage="video"]').text()).toContain(en.flow.videoTitle)
-    expect(wrapper.get('[data-animations-palette]').attributes('data-layout')).toBe('strip')
-    expect(wrapper.get('[data-export-primary]').text()).toMatch(/GIF|MP4/)
-    expect(wrapper.get('[data-advanced-timeline]').attributes('open')).toBeUndefined()
-    expect(wrapper.find('[data-timeline]').exists()).toBe(true)
+    expect(wrapper.get('#studio svg[role="img"]').attributes('width')).toBe('220')
+
+    const entry = { contentRect: { width: 800, height: 600 } } as ResizeObserverEntry
+    seen[0]!([entry], {} as ResizeObserver)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('#studio svg[role="img"]').attributes('width')).toBe('432')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('height')).toBe('432')
+    expect(wrapper.findAll('#studio svg[role="img"]')).toHaveLength(1)
+    wrapper.unmount()
+    vi.unstubAllGlobals()
+  })
+
+  it('previews a shape on pointer hover without writing storage', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-mode="shape"]').trigger('click')
+    const tile = wrapper.get('[data-customise-panel] [data-shape="hexagon"]')
+    await tile.trigger('pointerover')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-shape')).toBe('hexagon')
+    expect(window.localStorage.getItem(cle('forme'))).not.toBe('hexagon')
+
+    await tile.trigger('click')
+    expect(window.localStorage.getItem(cle('forme'))).toBe('hexagon')
+  })
+
+  it('draws a cavity outline on symbol poses without a second image role', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    await wrapper.get('[data-animations-palette] [data-state="Play"]').trigger('click')
+    const figure = wrapper.get('#studio svg[role="img"]')
+    expect(figure.attributes('data-shape-applied')).toBe('false')
+    expect(figure.attributes('data-geometry-kind')).toBe('symbol')
+    expect(wrapper.get('[data-cavity-shape]').attributes('data-cavity-shape')).toBe('circle')
+    expect(wrapper.get('[data-cavity-shape]').attributes('data-shape-applied')).toBe('false')
+    expect(wrapper.get('[data-cavity-shape]').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.findAll('#studio svg[role="img"]')).toHaveLength(1)
   })
 
   it('wires the customise panel to the avatar and persists the choice', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-mode="shape"]').trigger('click')
     const panel = wrapper.get('[data-customise-panel]')
     expect(panel.findAll('[data-shape]')).toHaveLength(SHAPES.length)
-    expect(panel.findAll('[data-expression]')).toHaveLength(EXPRESSIONS.length)
-    expect(panel.findAll('[data-colour]')).toHaveLength(COLORS.length)
 
     await panel.get('[data-shape="hexagon"]').trigger('click')
-    await panel.get('[data-expression="happy"]').trigger('click')
-    await panel.get('[data-colour="blue"]').trigger('click')
+    await wrapper.get('[data-mode="expression"]').trigger('click')
+    expect(wrapper.get('[data-customise-panel]').findAll('[data-expression]')).toHaveLength(
+      EXPRESSIONS.length,
+    )
+    await wrapper.get('[data-expression="happy"]').trigger('click')
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    expect(wrapper.get('[data-customise-panel]').findAll('[data-colour]')).toHaveLength(COLORS.length)
+    await wrapper.get('[data-colour="blue"]').trigger('click')
 
     const svg = wrapper.get('#studio svg[role="img"]')
     expect(svg.attributes('data-shape')).toBe('hexagon')
@@ -94,7 +138,7 @@ describe('App', () => {
     expect(window.localStorage.getItem(cle('couleur'))).toBe('blue')
   })
 
-  it('restores stored shape, expression, and colour on load', () => {
+  it('restores stored shape, expression, and colour on load', async () => {
     ecris('forme', 'droplet')
     ecris('expression', 'sleepy')
     ecris('couleur', 'cream')
@@ -104,13 +148,23 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('droplet')
     expect(svg.attributes('data-expression')).toBe('sleepy')
     expect(svg.attributes('data-colour')).toBe('cream')
-    expect(wrapper.get('[data-customise-panel] [data-shape="droplet"]').attributes('aria-checked')).toBe('true')
-    expect(wrapper.get('[data-customise-panel] [data-expression="sleepy"]').attributes('aria-checked')).toBe('true')
-    expect(wrapper.get('[data-customise-panel] [data-colour="cream"]').attributes('aria-checked')).toBe('true')
+    await wrapper.get('[data-mode="shape"]').trigger('click')
+    expect(wrapper.get('[data-customise-panel] [data-shape="droplet"]').attributes('aria-checked')).toBe(
+      'true',
+    )
+    await wrapper.get('[data-mode="expression"]').trigger('click')
+    expect(
+      wrapper.get('[data-customise-panel] [data-expression="sleepy"]').attributes('aria-checked'),
+    ).toBe('true')
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    expect(wrapper.get('[data-customise-panel] [data-colour="cream"]').attributes('aria-checked')).toBe(
+      'true',
+    )
   })
 
   it('morphs Idle to Thinking from the animations palette', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
     const palette = wrapper.get('[data-animations-palette]')
     expect(palette.findAll('[data-state]')).toHaveLength(ANIMATION_STATES.length)
     expect(palette.get('[data-state="Idle"]').attributes('aria-checked')).toBe('true')
@@ -121,17 +175,17 @@ describe('App', () => {
     expect(wrapper.get('[data-animations-palette] [data-state="Thinking"]').attributes('aria-checked')).toBe(
       'true',
     )
-    expect(location.hash).toBe('#etat=thinking')
+    expect(location.hash).toBe('#etat=thinking&stop')
   })
 
   it('drives the avatar morph to Comet from the palette', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
     await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Comet')
     expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
       'true',
     )
-    expect(location.hash).toBe('#etat=comet')
   })
 
   it('renders English nav and settings strings by default', () => {
@@ -190,6 +244,7 @@ describe('App', () => {
     expect(wrapper.find('[data-timeline]').exists()).toBe(true)
     expect(wrapper.get('[data-timeline] [data-block="0"]').attributes('data-state')).toBe('Idle')
 
+    await wrapper.get('[data-mode="state"]').trigger('click')
     await wrapper.get('[data-animations-palette] [data-state="Thinking"]').trigger('click')
     await wrapper.get('[data-add]').trigger('click')
     await wrapper.get('[data-timeline] [data-block="1"] [data-carte]').trigger('click')
@@ -205,7 +260,7 @@ describe('App', () => {
     expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
       'true',
     )
-    expect(location.hash).toBe('#etat=comet')
+    expect(location.hash).toBe('#etat=comet&stop')
   })
 
   it('shows about/credits for Grok_bot, bloub MIT, and no xAI affiliation', () => {
@@ -241,6 +296,7 @@ describe('App', () => {
 
   it('names the download after the selected animation state', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
     await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
     await wrapper.get('[data-export="svg"]').trigger('click')
     await flushPromises()
@@ -250,6 +306,7 @@ describe('App', () => {
 
   it('exports the selected pose as a short GIF by default', async () => {
     const wrapper = mount(App)
+    await wrapper.get('[data-mode="state"]').trigger('click')
     await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
     await wrapper.get('[data-export="gif"]').trigger('click')
     await flushPromises()

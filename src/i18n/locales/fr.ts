@@ -34,6 +34,15 @@ export default {
     skinLimited: 'La forme et l’expression peuvent ne pas s’appliquer à cet état.',
   },
 
+  studio: {
+    modes: 'Modes du studio',
+    shape: 'Forme',
+    face: 'Visage',
+    aura: 'Aura',
+    motion: 'Mouvement',
+    shapeLocked: 'Cette pose garde son propre contour.',
+  },
+
   shapes: {
     circle: 'Cercle',
     pebble: 'Galet',
