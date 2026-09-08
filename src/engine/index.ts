@@ -1,4 +1,4 @@
-export { TAU, clamp, lerp, easeOutQuint, r2 } from './math'
+export { TAU, clamp, lerp, easeOutCubic, easeInOutCubic, easeOutQuint, r2 } from './math'
 export { PROFILE_SAMPLES, PROFILES, type ProfileName } from './profiles'
 export {
   circle,
@@ -42,6 +42,7 @@ export {
   type MorphFrame,
   type StateEntry,
 } from './states'
+export { poseAt } from './pose'
 export {
   STATE_SLUGS,
   slugOf,

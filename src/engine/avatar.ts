@@ -1,4 +1,11 @@
-import { resolveStateGeometry, type FacePolicy } from './authority'
+import {
+  poseRadii,
+  resolveStateGeometry,
+  STATE_GEOMETRY,
+  type FacePolicy,
+  type PoseTransform,
+  type ResolvedGeometry,
+} from './authority'
 import {
   blendEyeOffset,
   eyeOffset,
@@ -17,6 +24,7 @@ import {
   viewBoxAttr,
 } from './morph'
 import { resolveColour, resolveShape, type ColorId, type ShapeId } from './skins'
+import { poseAt } from './pose'
 import { blendDots, isAnimationState, type AnimationState, type MorphDot } from './states'
 
 export interface AvatarSpec {
@@ -27,6 +35,8 @@ export interface AvatarSpec {
   colour?: string
   state?: string
   paper?: string
+  /** Local time within the current state, in seconds. Omit for the still registry pose. */
+  t?: number
 }
 
 export interface AvatarEye {
@@ -64,6 +74,10 @@ export interface LiveMorphSpec extends Omit<AvatarSpec, 'state'> {
   fromShape?: string
   toShape?: string
   t: number
+  /** Local time of the outgoing state while morphing. */
+  fromT?: number
+  /** Local time of the incoming state while morphing. */
+  toT?: number
 }
 
 export const DEFAULT_SIZE = 220
@@ -116,6 +130,38 @@ function eyesFor(
   return { eyes, gaze: resolved, expression: expression.id }
 }
 
+function poseOf(silhouette: { rot: number; cx: number; cy: number; sx: number; sy: number }): PoseTransform {
+  return {
+    rot: silhouette.rot,
+    cx: silhouette.cx,
+    cy: silhouette.cy,
+    sx: silhouette.sx,
+    sy: silhouette.sy,
+  }
+}
+
+function geometryAt(state: AnimationState, shapeId?: string, localT?: number): ResolvedGeometry {
+  if (localT === undefined) return resolveStateGeometry(state, shapeId)
+  const posed = poseAt(state, localT)
+  const recipe = STATE_GEOMETRY[state]
+  if (recipe.kind === 'symbol') {
+    return {
+      silhouette: posed.silhouette,
+      shapeApplied: false,
+      kind: 'symbol',
+      face: recipe.face,
+      dots: posed.dots,
+    }
+  }
+  return {
+    silhouette: poseRadii(resolveShape(shapeId).radii, posed.silhouette.radii[0] ?? 1, poseOf(posed.silhouette)),
+    shapeApplied: true,
+    kind: 'wearable',
+    face: recipe.face,
+    dots: posed.dots,
+  }
+}
+
 export function activeSilhouette(state: AnimationState, shapeId?: string): Silhouette {
   return resolveStateGeometry(state, shapeId).silhouette
 }
@@ -125,7 +171,7 @@ export function sampleAvatar(spec: AvatarSpec = {}): AvatarFrame {
   const shape = resolveShape(spec.shape)
   const fill = resolveColour(spec.colour)
   const paper = spec.paper ?? DEFAULT_PAPER
-  const geometry = resolveStateGeometry(state, shape.id)
+  const geometry = geometryAt(state, shape.id, spec.t)
   const { eyes, gaze, expression } = eyesFor(
     geometry.face,
     spec.expression,
@@ -155,8 +201,8 @@ export function sampleLiveMorph(spec: LiveMorphSpec): AvatarFrame {
   const shape = resolveShape(spec.toShape ?? spec.shape)
   const fill = resolveColour(spec.colour)
   const k = easeOutQuint(clamp(spec.t))
-  const fromGeometry = resolveStateGeometry(spec.from, spec.fromShape ?? spec.shape)
-  const toGeometry = resolveStateGeometry(spec.to, spec.toShape ?? spec.shape)
+  const fromGeometry = geometryAt(spec.from, spec.fromShape ?? spec.shape, spec.fromT)
+  const toGeometry = geometryAt(spec.to, spec.toShape ?? spec.shape, spec.toT)
   const silhouette = blend(fromGeometry.silhouette, toGeometry.silhouette, k)
   const fromFace = showsFace(fromGeometry.face)
   const toFace = showsFace(toGeometry.face)

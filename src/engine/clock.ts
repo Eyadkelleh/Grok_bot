@@ -4,8 +4,8 @@
  * Pause, resume, and seek are different `t` inputs. Previous state and shape
  * are never purged, so replaying a date during a morph still finds it.
  *
- * M1 samples settled poses and morph-between-states only. Thinking / Orbit /
- * Burst pose(t) liveliness is M2.
+ * After the morph, `sample(t)` evaluates pose(t) at local time in the current
+ * state. Idle is identity. Thinking / Sleep / Orbit / Burst / Comet move.
  */
 import { sampleAvatar, sampleLiveMorph, type AvatarFrame, type AvatarSpec } from './avatar'
 import { blockAt, type Block } from './cycles'
@@ -30,6 +30,7 @@ export class AvatarEngine {
   private cur: AnimationState
   private prev: AnimationState | null = null
   private tCur = 0
+  private tPrev = 0
   private shape: string
   private shapePrev: string | null = null
   private shapeAt = Number.NEGATIVE_INFINITY
@@ -66,6 +67,7 @@ export class AvatarEngine {
   setState(id: AnimationState, now: number) {
     if (id === this.cur) return
     this.prev = this.cur
+    this.tPrev = this.tCur
     this.cur = id
     this.tCur = now
   }
@@ -86,6 +88,7 @@ export class AvatarEngine {
     this.cur = id
     this.prev = null
     this.tCur = now
+    this.tPrev = now
   }
 
   morphingAt(t: number): boolean {
@@ -115,7 +118,7 @@ export class AvatarEngine {
     const morphDone = hit.index === 0 || hit.elapsed * 1000 + 1e-6 >= this.morphMs
     if (morphDone) {
       this.reset(current, 0)
-      return this.morphMs > 0 ? this.morphMs / 1000 : 1
+      return hit.elapsed
     }
     this.reset(prev, 0)
     this.setState(current, 0)
@@ -131,7 +134,7 @@ export class AvatarEngine {
     const shapeMorphing = this.shapePrev !== null && sinceShape < morphSec
 
     if (!stateMorphing && !shapeMorphing) {
-      return sampleAvatar({ ...spec, state: this.cur, shape: this.shape })
+      return sampleAvatar({ ...spec, state: this.cur, shape: this.shape, t: Math.max(0, sinceState) })
     }
 
     const linear = stateMorphing

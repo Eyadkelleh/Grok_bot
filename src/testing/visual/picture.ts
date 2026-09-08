@@ -1,5 +1,7 @@
 import {
+  blockAt,
   BODY_RADIUS,
+  DEFAULT_MORPH_MS,
   pathForState,
   sampleAvatar,
   sampleMorph,
@@ -49,10 +51,20 @@ export function tokenizePath(d: string): PathToken[] {
   return tokens
 }
 
+function settledSeekT(visualCase: VisualCase): number | undefined {
+  const seek = visualCase.seek
+  if (!seek) return undefined
+  const hit = blockAt([...seek.blocks], seek.at)
+  if (hit.index === 0) return hit.elapsed
+  if (hit.elapsed * 1000 + 1e-6 < DEFAULT_MORPH_MS) return undefined
+  return hit.elapsed
+}
+
 export function frameForCase(visualCase: VisualCase): AvatarFrame {
   const rest = sampleAvatar({
     ...visualCase.props,
     state: visualCase.expect.state,
+    t: settledSeekT(visualCase),
   })
   const { silhouette } = visualCase.expect
   if (silhouette.kind === 'morph') {

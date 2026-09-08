@@ -121,7 +121,7 @@ describe('AvatarEngine.sample(t)', () => {
     expect(e.shownState(at)).toBe('Idle')
     expect(e.state).toBe('Comet')
     expect(mid.path).not.toBe(sampleAvatar({ state: 'Idle' }).path)
-    expect(mid.path).not.toBe(sampleAvatar({ state: 'Comet' }).path)
+    expect(mid.path).not.toBe(sampleAvatar({ state: 'Comet', t: at }).path)
 
     e.seek(1, blocks)
     e.sample(1)
@@ -133,7 +133,7 @@ describe('AvatarEngine.sample(t)', () => {
     const e = new AvatarEngine({}, 400)
     const blocks = [makeBlock('Comet', 2), makeBlock('Thinking', 2)]
     const at = e.seek(0, blocks)
-    expectSameFrame(e.sample(at), sampleAvatar({ state: 'Comet' }))
+    expectSameFrame(e.sample(at), sampleAvatar({ state: 'Comet', t: at }))
     expect(e.shownState(at)).toBe('Comet')
     expect(e.state).toBe('Comet')
   })
