@@ -13,7 +13,15 @@ import {
   type EyeOffset,
 } from './eyefit'
 import { resolveExpression, type ExpressionId } from './expressions'
-import { blinkScale, eyePoses, resolveGaze, type GazeInput, type HeadGaze } from './face'
+import {
+  blinkScale,
+  eyePoses,
+  liveliness,
+  resolveGaze,
+  type GazeInput,
+  type HeadGaze,
+  type Liveliness,
+} from './face'
 import { clamp, easeOutQuint } from './math'
 import {
   BODY_RADIUS,
@@ -37,6 +45,16 @@ export interface AvatarSpec {
   paper?: string
   /** Local time within the current state, in seconds. Omit for the still registry pose. */
   t?: number
+  /**
+   * Rest-face gaze wander. 0 (default) keeps Idle still so L0 dumps match.
+   * 1 is full rest amplitude. When set above 0, blink and float default on
+   * unless they are passed explicitly.
+   */
+  wander?: number
+  /** Blink calendar. Default false when wander is 0, true when wander > 0. */
+  blink?: boolean
+  /** Body drift and breath. Default false when wander is 0, true when wander > 0. */
+  float?: boolean
 }
 
 export interface AvatarEye {
@@ -92,26 +110,51 @@ function showsFace(face: FacePolicy): boolean {
   return face !== 'none'
 }
 
+/** Still when unset. Wander > 0 turns blink and float on unless overridden. */
+export function lifeFromSpec(spec: Pick<AvatarSpec, 't' | 'wander' | 'blink' | 'float'>): Liveliness | null {
+  const wander = spec.wander ?? 0
+  const blink = spec.blink ?? wander > 0
+  const float = spec.float ?? wander > 0
+  if (wander === 0 && !blink && !float) return null
+  return liveliness(spec.t ?? 0, { wander, blink, float })
+}
+
+function withLife(silhouette: Silhouette, life: Liveliness): Silhouette {
+  return {
+    ...silhouette,
+    cx: silhouette.cx + life.driftX,
+    cy: silhouette.cy + life.driftY,
+    sy: silhouette.sy * life.breath,
+  }
+}
+
 function eyesFor(
   face: FacePolicy,
   expressionId: string | undefined,
   gaze: GazeInput | undefined,
   silhouette: Silhouette,
   offset: EyeOffset,
+  life: Liveliness | null = null,
 ): { eyes: AvatarEye[]; gaze: HeadGaze; expression: ExpressionId } {
   const expression = resolveExpression(expressionId)
   const resolved = resolveGaze(expression.gaze, gaze)
+  if (life) {
+    resolved.yaw += life.dYaw
+    resolved.pitch += life.dPitch
+    resolved.roll += life.dRoll
+  }
   if (!showsFace(face)) {
     return { eyes: [], gaze: resolved, expression: expression.id }
   }
 
   const cfgs = faceEyeCfgs(face, expression)
   const poses = eyePoses(resolved, BODY_RADIUS, expression.split)
-  const shiftX = offset.x * BODY_RADIUS
-  const shiftY = offset.y * BODY_RADIUS
+  const shiftX = (offset.x + (life?.driftX ?? 0)) * BODY_RADIUS
+  const shiftY = (offset.y + (life?.driftY ?? 0)) * BODY_RADIUS
+  const lidOpen = life?.lid ?? 1
   const eyes: AvatarEye[] = poses.map((pose, i) => {
     const cfg = cfgs[i]!
-    const lid = blinkScale(cfg.open)
+    const lid = blinkScale(Math.min(lidOpen, cfg.open))
     const fit = radiusAtAngle(silhouette.radii, Math.atan2(pose.y, pose.x) - silhouette.rot)
     return {
       x: pose.x * fit + shiftX,
@@ -171,21 +214,27 @@ export function sampleAvatar(spec: AvatarSpec = {}): AvatarFrame {
   const shape = resolveShape(spec.shape)
   const fill = resolveColour(spec.colour)
   const paper = spec.paper ?? DEFAULT_PAPER
+  const life = lifeFromSpec(spec)
   const geometry = geometryAt(state, shape.id, spec.t)
+  const silhouette = life ? withLife(geometry.silhouette, life) : geometry.silhouette
   const { eyes, gaze, expression } = eyesFor(
     geometry.face,
     spec.expression,
     spec.gaze,
-    geometry.silhouette,
+    silhouette,
     eyeOffset(shape.id, state, spec.expression),
+    life,
   )
+  const dots = life
+    ? geometry.dots.map((dot) => ({ ...dot, x: dot.x + life.driftX, y: dot.y + life.driftY }))
+    : geometry.dots
 
   return {
-    path: silhouettePath(geometry.silhouette),
+    path: silhouettePath(silhouette),
     fill,
     paper,
     eyes,
-    dots: geometry.dots,
+    dots,
     shape: shape.id,
     expression,
     colour: fill,

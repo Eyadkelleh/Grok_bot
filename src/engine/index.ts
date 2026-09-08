@@ -1,4 +1,4 @@
-export { TAU, clamp, lerp, easeOutCubic, easeInOutCubic, easeOutQuint, r2 } from './math'
+export { TAU, clamp, lerp, easeOutCubic, easeInOutCubic, easeOutQuint, r2, loopNoise, createRng } from './math'
 export { PROFILE_SAMPLES, PROFILES, type ProfileName } from './profiles'
 export {
   circle,
@@ -69,13 +69,19 @@ export {
   EYE_H,
   EYE_SPLIT,
   EYE_W,
+  LIFE_DRIFT_X,
+  LIFE_DRIFT_Y,
   REST_GAZE,
+  STILL_LIFE,
   blinkScale,
   eyePoses,
+  liveliness,
   resolveGaze,
   type EyePose,
   type GazeInput,
   type HeadGaze,
+  type Liveliness,
+  type LivelinessOptions,
 } from './face'
 export {
   SHAPES,
@@ -118,6 +124,7 @@ export {
   DEFAULT_SIZE,
   DEFAULT_PAPER,
   activeSilhouette,
+  lifeFromSpec,
   sampleAvatar,
   sampleLiveMorph,
   gazeAttr,
