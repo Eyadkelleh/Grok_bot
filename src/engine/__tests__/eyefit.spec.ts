@@ -73,6 +73,24 @@ describe('wearable rest-face eyefit', () => {
     expect(violations, violations.join('\n')).toEqual([])
   })
 
+  it('keeps rolled capsules inside a narrow wearable', () => {
+    const gaze = { yaw: 12, pitch: -6, roll: 22 }
+    const violations: string[] = []
+    for (const shape of ['triangle', 'cloud', 'capsule'] as const) {
+      const frame = sampleAvatar({ shape, state: 'Idle', expression: 'angry', gaze })
+      const contour = toPoints(resolveStateGeometry('Idle', shape).silhouette, BODY_RADIUS)
+      for (const [index, eye] of frame.eyes.entries()) {
+        const angle = Math.atan2(eye.d, eye.c)
+        expect(angle, `${shape} eye ${index} long axis`).not.toBeCloseTo(Math.PI / 2, 2)
+        const clearance = eyeClearance(eye, contour)
+        if (clearance < -CLEARANCE_EPS) {
+          violations.push(`${shape}: eye ${index} clearance ${clearance.toFixed(3)}`)
+        }
+      }
+    }
+    expect(violations, violations.join('\n')).toEqual([])
+  })
+
   it('interpolates table endpoints on a shape morph', () => {
     const from = eyeOffset('circle', 'Idle', 'neutral')
     const to = eyeOffset('triangle', 'Idle', 'neutral')
