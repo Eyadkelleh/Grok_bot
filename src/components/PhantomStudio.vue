@@ -366,7 +366,7 @@ defineExpose({ svgCourant })
   border-color: color-mix(in srgb, var(--line) 70%, transparent);
   background: color-mix(in srgb, var(--paper) 82%, transparent);
   backdrop-filter: blur(10px);
-  box-shadow: 0 12px 40px rgb(0 0 0 / 0.06);
+  box-shadow: 0 12px 40px rgb(var(--wash) / 0.06);
 }
 
 @media (max-width: 40rem) {
@@ -465,7 +465,7 @@ defineExpose({ svgCourant })
   border-color: color-mix(in srgb, var(--line) 70%, transparent);
   background: color-mix(in srgb, var(--paper) 82%, transparent);
   backdrop-filter: blur(10px);
-  box-shadow: 0 12px 40px rgb(0 0 0 / 0.06);
+  box-shadow: 0 12px 40px rgb(var(--wash) / 0.06);
 }
 
 .field.customise[data-open-band='shape'] :deep(#customise-expression),

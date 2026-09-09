@@ -277,7 +277,7 @@ defineExpose({ seek, sample, block, elapsed, cycles, activeId, cycle, at })
   padding: 0.85rem 1.25rem 1.15rem;
   border-top: 1px solid var(--line);
   background: var(--paper);
-  box-shadow: 0 -8px 24px rgb(0 0 0 / 0.04);
+  box-shadow: 0 -8px 24px rgb(var(--wash) / 0.04);
 }
 
 .transport {
