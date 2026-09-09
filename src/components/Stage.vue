@@ -390,7 +390,7 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: color-mix(in srgb, #ffffff 88%, transparent);
+  background: color-mix(in srgb, #ffffff 88%, var(--stage));
   color: var(--stage-muted);
   font-size: 0.75rem;
   line-height: 1.3;
