@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_PAPER } from '../../engine'
 import { BLANC } from '../../ui/export'
@@ -85,5 +87,20 @@ describe('theme', () => {
     applyChrome('dark')
     expect(DEFAULT_PAPER).toBe('#f5f5f4')
     expect(BLANC).toBe('#ffffff')
+  })
+
+  /**
+   * The eye cut-outs are holes in a mask that reveal the paper behind the body,
+   * so a stage well that followed the theme turned them into pale blobs. Only
+   * CSS can hold that line, hence reading the stylesheet.
+   */
+  it('pins the stage well outside every theme block', () => {
+    const css = readFileSync(join(process.cwd(), 'src/assets/main.css'), 'utf8')
+    const blocks = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)]
+    const declaring = blocks.filter(([, , body]) => /--stage(-ink|-muted)?\s*:/.test(body!))
+
+    expect(declaring).toHaveLength(1)
+    expect(declaring[0]![1]).not.toMatch(/data-theme/)
+    expect(declaring[0]![2]).toContain(`--stage: ${DEFAULT_PAPER}`)
   })
 })

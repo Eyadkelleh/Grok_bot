@@ -309,6 +309,9 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   width: min(100%, 36rem);
   min-height: 16rem;
+  border-radius: 1.75rem;
+  background: var(--stage);
+  color: var(--stage-ink);
 }
 
 .hero-wrap :deep(.avatar) {
@@ -358,7 +361,7 @@ onBeforeUnmount(() => {
   inset: 50%;
   translate: -50% -50%;
   z-index: 1;
-  color: color-mix(in srgb, var(--muted) 55%, transparent);
+  color: color-mix(in srgb, var(--stage-muted) 55%, transparent);
   pointer-events: none;
   opacity: 0.55;
 }
@@ -370,8 +373,8 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--paper) 88%, transparent);
-  color: var(--muted);
+  background: color-mix(in srgb, #ffffff 88%, transparent);
+  color: var(--stage-muted);
   font-size: 0.75rem;
   line-height: 1.3;
 }

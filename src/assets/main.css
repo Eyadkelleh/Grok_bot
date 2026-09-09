@@ -31,9 +31,12 @@
   /**
    * The well the live avatar sits in. Pinned to the avatar's `DEFAULT_PAPER` in
    * both themes so the eye cut-outs, which reveal that paper through the mask,
-   * keep reading as holes instead of pale blobs on a dark page.
+   * keep reading as holes instead of pale blobs on a dark page. `--stage-ink`
+   * follows it, because chrome drawn inside the well cannot use `--ink`.
    */
   --stage: #f5f5f4;
+  --stage-ink: #1c1917;
+  --stage-muted: #57534e;
   --rail: 16rem;
   --chrome: 11rem;
 }
