@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { colour, expression, shape } from './customise'
+import { bannerCopy, bannerId } from './fond'
 import { nomDeCycle, t, type Cle } from './i18n'
 import { ecrireHash, lireHash, totalDuration, type AnimationState, type Block } from './engine'
 import PhantomStudio from './components/PhantomStudio.vue'
 import Settings from './components/Settings.vue'
 import Timeline from './components/Timeline.vue'
+import { exportBannerMontage, exportBannerStill } from './ui/bannerExport'
 import { exporte, exporteMontage } from './ui/capture'
 import { ACTION_BY_ID, Abandon, type ActionId, type EtatExport } from './ui/export'
 import {
@@ -70,25 +72,64 @@ function svgCourant(): SVGSVGElement | null {
   return phantom.value?.svgCourant() ?? null
 }
 
-async function surExport(payload: { action: ActionId; videoSource: VideoSourceKind }) {
+async function surExport(payload: {
+  action: ActionId | 'banner-png' | 'banner-mp4'
+  videoSource: VideoSourceKind
+}) {
   if (etatExport.value === 'occupe') return
-  const action = ACTION_BY_ID.get(payload.action)
-  if (!action) return
 
   clearTimeout(confirmation)
   exportAbort?.abort()
   exportAbort = new AbortController()
-  exportProgress.value = action.mode === 'montage' ? 0 : null
+  const isBanner = payload.action === 'banner-png' || payload.action === 'banner-mp4'
+  const action = isBanner ? null : ACTION_BY_ID.get(payload.action)
+  if (!isBanner && !action) return
+
+  exportProgress.value =
+    isBanner || action?.mode === 'montage' ? 0 : null
   etatExport.value = 'occupe'
   try {
-    if (action.mode === 'montage') {
+    if (payload.action === 'banner-png' || payload.action === 'banner-mp4') {
+      const id = bannerId.value
+      if (!id) throw new Error('no banner')
       const cycle = cycleActif.value
       if (!cycle) throw new Error('no montage')
       const source =
         payload.videoSource === 'pose'
           ? sourceFromPose(animationState.value)
           : sourceFromCycle(cycle)
-      const intent = makeVideoIntent(source, action.extension === 'mp4' ? 'mp4' : 'gif')
+      const montage = cycleForSource(source)
+      const reglages = {
+        shape: shape.value,
+        colour: colour.value,
+        expression: expression.value,
+      }
+      const nom =
+        source.kind === 'pose' ? source.state : nomDeCycle(cycle)
+      if (payload.action === 'banner-png') {
+        await exportBannerStill(id, bannerCopy.value, reglages, montage.blocks, nom)
+      } else {
+        await exportBannerMontage(
+          id,
+          bannerCopy.value,
+          reglages,
+          montage,
+          nom,
+          (fait, total) => {
+            exportProgress.value =
+              total > 0 ? Math.min(100, Math.round((100 * fait) / total)) : 0
+          },
+          exportAbort.signal,
+        )
+      }
+    } else if (action!.mode === 'montage') {
+      const cycle = cycleActif.value
+      if (!cycle) throw new Error('no montage')
+      const source =
+        payload.videoSource === 'pose'
+          ? sourceFromPose(animationState.value)
+          : sourceFromCycle(cycle)
+      const intent = makeVideoIntent(source, action!.extension === 'mp4' ? 'mp4' : 'gif')
       const montage = cycleForSource(intent.source)
       await exporteMontage(
         intent.format,
@@ -107,7 +148,7 @@ async function surExport(payload: { action: ActionId; videoSource: VideoSourceKi
     } else {
       const svg = svgCourant()
       if (!svg) throw new Error('no svg')
-      await exporte(svg, payload.action, animationState.value)
+      await exporte(svg, payload.action as ActionId, animationState.value)
     }
     etatExport.value = 'exporte'
   } catch (err) {
@@ -155,6 +196,8 @@ onBeforeUnmount(() => {
         v-model:expression="expression"
         v-model:colour="colour"
         v-model:state="animationState"
+        v-model:banner-id="bannerId"
+        v-model:banner-copy="bannerCopy"
         :label="t('app.botAria')"
         :etat-export="etatExport"
         :cycle-name="nomCycle"

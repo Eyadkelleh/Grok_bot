@@ -44,13 +44,16 @@ export function matteEstOpaque(px: Uint8ClampedArray): boolean {
 /** Clear the canvas, then paint the matte when a fill is required. */
 export function poseFond(
   ctx: CanvasRenderingContext2D,
-  taille: number,
-  fond: string | null,
+  largeur: number,
+  hauteurOuFond: number | string | null,
+  fond?: string | null,
 ) {
-  ctx.clearRect(0, 0, taille, taille)
-  if (!fond) return
-  ctx.fillStyle = fond
-  ctx.fillRect(0, 0, taille, taille)
+  const hauteur = typeof hauteurOuFond === 'number' ? hauteurOuFond : largeur
+  const fill = typeof hauteurOuFond === 'number' ? (fond ?? null) : hauteurOuFond
+  ctx.clearRect(0, 0, largeur, hauteur)
+  if (!fill) return
+  ctx.fillStyle = fill
+  ctx.fillRect(0, 0, largeur, hauteur)
 }
 
 /**
@@ -61,11 +64,14 @@ export function poseFond(
  */
 export function scelleMatte(
   ctx: CanvasRenderingContext2D,
-  taille: number,
-  fond: string | null,
+  largeur: number,
+  hauteurOuFond: number | string | null,
+  fond?: string | null,
 ) {
-  if (!fond) return
-  const image = ctx.getImageData(0, 0, taille, taille)
-  aplatitSurFond(image.data, fond)
+  const hauteur = typeof hauteurOuFond === 'number' ? hauteurOuFond : largeur
+  const fill = typeof hauteurOuFond === 'number' ? (fond ?? null) : hauteurOuFond
+  if (!fill) return
+  const image = ctx.getImageData(0, 0, largeur, hauteur)
+  aplatitSurFond(image.data, fill)
   ctx.putImageData(image, 0, 0)
 }

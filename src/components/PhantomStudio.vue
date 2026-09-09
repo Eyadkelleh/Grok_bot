@@ -13,21 +13,32 @@ import {
   type ExpressionId,
   type ShapeId,
 } from '../engine'
+import type { BannerCopy } from '../fond'
 import { t } from '../i18n'
 import { useStageGeometry } from '../ui/useStageGeometry'
+import {
+  CADRE_BANNER_PNG,
+  mesureScene,
+  sceneBanniere,
+  type BannerId,
+} from '../ui/scene'
 import AnimationsPalette from './AnimationsPalette.vue'
 import Avatar from './Avatar.vue'
+import BannerBackdrop from './BannerBackdrop.vue'
 import CustomisePanel from './CustomisePanel.vue'
 import ExportBar from './ExportBar.vue'
+import FondPanel from './FondPanel.vue'
 import type { ActionId, EtatExport } from '../ui/export'
 import type { VideoSourceKind } from '../ui/intent'
 
-type FieldId = 'shape' | 'expression' | 'colour' | 'state'
+type FieldId = 'shape' | 'expression' | 'colour' | 'state' | 'fond'
 
 const shape = defineModel<ShapeId>('shape', { required: true })
 const expression = defineModel<ExpressionId>('expression', { required: true })
 const colour = defineModel<ColorId>('colour', { required: true })
 const animationState = defineModel<AnimationState>('state', { required: true })
+const bannerId = defineModel<BannerId | null>('bannerId', { required: true })
+const bannerCopy = defineModel<BannerCopy>('bannerCopy', { required: true })
 
 const props = defineProps<{
   label: string
@@ -42,7 +53,12 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  exporter: [payload: { action: ActionId; videoSource: VideoSourceKind }]
+  exporter: [
+    payload: {
+      action: ActionId | 'banner-png' | 'banner-mp4'
+      videoSource: VideoSourceKind
+    },
+  ]
   annuler: []
   'stop-playing': []
 }>()
@@ -62,6 +78,21 @@ const morphMs = computed(() =>
     ? 0
     : DEFAULT_MORPH_MS,
 )
+const hasBanner = computed(() => bannerId.value !== null)
+
+const logoSlot = computed(() => {
+  if (!bannerId.value) return null
+  const scene = sceneBanniere(bannerId.value, CADRE_BANNER_PNG, bannerCopy.value)
+  return mesureScene(scene).logo
+})
+
+const avatarSize = computed(() => {
+  if (!hasBanner.value || !logoSlot.value) return size.value
+  const slot = logoSlot.value
+  const bannerW = Math.min(size.value * 0.55, 224)
+  const scale = bannerW / CADRE_BANNER_PNG.width
+  return Math.max(72, Math.round(Math.min(slot.w, slot.h) * scale * 0.84))
+})
 
 const hero = computed(() =>
   sampleAvatar({
@@ -86,7 +117,10 @@ const skinLimited = computed(
   () => hero.value.geometryKind === 'wearable' && hero.value.eyes.length === 0,
 )
 const appearanceOpen = computed(
-  () => field.value === 'shape' || field.value === 'expression' || field.value === 'colour',
+  () =>
+    field.value === 'shape' ||
+    field.value === 'expression' ||
+    field.value === 'colour',
 )
 
 function clearPreviews() {
@@ -136,11 +170,16 @@ defineExpose({ svgCourant })
 </script>
 
 <template>
-  <div class="phantom" data-phantom-studio>
+  <div class="phantom" data-phantom-studio :data-has-banner="hasBanner ? '' : undefined">
     <section id="studio" ref="stage" class="stage">
-      <div class="hero-wrap">
+      <div class="hero-wrap" :class="{ bannered: hasBanner }">
+        <BannerBackdrop
+          v-if="bannerId"
+          :banner-id="bannerId"
+          :copy="bannerCopy"
+        />
         <svg
-          v-if="showCavity"
+          v-if="showCavity && !hasBanner"
           class="cavity"
           :width="size"
           :height="size"
@@ -153,8 +192,9 @@ defineExpose({ svgCourant })
           <path :d="cavity.path" fill="none" stroke="currentColor" stroke-width="1.2" />
         </svg>
         <Avatar
+          class="hero-avatar"
           :state="shownState"
-          :size="size"
+          :size="avatarSize"
           :shape="shownShape"
           :expression="shownExpression"
           :colour="colour"
@@ -163,7 +203,7 @@ defineExpose({ svgCourant })
           :playhead="props.playhead ?? null"
           :blocks="props.blocks ?? []"
         />
-        <p v-if="showCavity" class="lock" role="status">{{ t('studio.shapeLocked') }}</p>
+        <p v-if="showCavity && !hasBanner" class="lock" role="status">{{ t('studio.shapeLocked') }}</p>
         <p v-else-if="skinLimited" class="lock" data-skin-limited role="status">
           {{ t('panel.skinLimited') }}
         </p>
@@ -199,6 +239,15 @@ defineExpose({ svgCourant })
         </button>
         <button
           type="button"
+          data-mode="fond"
+          :aria-pressed="field === 'fond'"
+          :class="{ on: field === 'fond' }"
+          @click="setField('fond')"
+        >
+          {{ t('studio.fond') }}
+        </button>
+        <button
+          type="button"
           data-mode="state"
           :aria-pressed="field === 'state'"
           :class="{ on: field === 'state' }"
@@ -229,13 +278,21 @@ defineExpose({ svgCourant })
         />
       </div>
 
+      <div class="field fond" :class="{ open: field === 'fond' }">
+        <FondPanel v-model:banner-id="bannerId" v-model:copy="bannerCopy" />
+      </div>
+
       <div
         class="field motion"
         :class="{ open: field === 'state', orbital: field === 'state', orbits: field === 'state' }"
         @pointerover="onChooserPointer"
         @pointerleave="clearPreviews"
       >
-        <AnimationsPalette id="animations" v-model="animationState" @update:modelValue="commitMotion" />
+        <AnimationsPalette
+          id="animations"
+          v-model="animationState"
+          @update:modelValue="commitMotion"
+        />
       </div>
 
       <h1>{{ t('app.name') }}</h1>
@@ -247,6 +304,7 @@ defineExpose({ svgCourant })
         :cycle-duration="props.cycleDuration"
         :cycle-block-count="props.cycleBlockCount"
         :progress="props.progress"
+        :banner-id="bannerId"
         @exporter="emit('exporter', $event)"
         @annuler="emit('annuler')"
       />
@@ -283,6 +341,43 @@ defineExpose({ svgCourant })
 .hero-wrap :deep(.avatar) {
   position: relative;
   z-index: 2;
+}
+
+.hero-wrap.bannered {
+  min-height: 22rem;
+}
+
+.hero-wrap.bannered :deep(.hero-avatar),
+.hero-wrap.bannered :deep(.avatar) {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  translate: -50% -50%;
+  z-index: 2;
+}
+
+.field.fond {
+  left: 0;
+  top: 4.5rem;
+}
+
+.field.fond :deep([data-fond-panel]) {
+  max-width: none;
+  border-color: color-mix(in srgb, var(--line) 70%, transparent);
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.06);
+}
+
+@media (max-width: 40rem) {
+  .field.fond {
+    left: 50%;
+    right: auto;
+    top: auto;
+    bottom: 7.5rem;
+    width: min(100% - 1rem, 22rem);
+    translate: -50% 0;
+  }
 }
 
 .cavity {

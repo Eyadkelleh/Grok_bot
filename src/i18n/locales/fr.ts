@@ -39,8 +39,21 @@ export default {
     shape: 'Forme',
     face: 'Visage',
     aura: 'Aura',
+    fond: 'Fond',
     motion: 'Mouvement',
     shapeLocked: 'Cette pose garde son propre contour.',
+  },
+
+  fond: {
+    title: 'Fond',
+    none: 'Aucun',
+    banner01: 'Bannière claire',
+    banner2: 'Bannière bleue',
+    banner3: 'Bannière sombre',
+    welcome: 'Accueil',
+    event1: 'Nom de l’événement',
+    event2: 'Ligne 2',
+    eventPlaceholder: 'Event name',
   },
 
   shapes: {
@@ -170,6 +183,9 @@ export default {
     mp4Unavailable: 'Ce navigateur ne peut pas encoder le MP4',
     done: 'Exporté',
     failed: "Échec de l'export",
+    banner: 'Bannière 2×6',
+    bannerPng: 'PNG bannière',
+    bannerMp4: 'MP4 bannière',
   },
 
   settings: {

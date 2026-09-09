@@ -15,10 +15,16 @@ const props = defineProps<{
   cycleDuration: number
   cycleBlockCount: number
   progress?: number | null
+  bannerId?: string | null
 }>()
 
 const emit = defineEmits<{
-  exporter: [payload: { action: ActionId; videoSource: VideoSourceKind }]
+  exporter: [
+    payload: {
+      action: ActionId | 'banner-png' | 'banner-mp4'
+      videoSource: VideoSourceKind
+    },
+  ]
   annuler: []
 }>()
 
@@ -43,7 +49,7 @@ const statut = computed(() => {
   return ''
 })
 
-function exporterPose(action: ActionId) {
+function exporterPose(action: ActionId | 'banner-png' | 'banner-mp4') {
   emit('exporter', { action, videoSource: 'pose' })
 }
 
@@ -54,6 +60,8 @@ function exporterCycle(action: ActionId) {
 function exporterPrimary() {
   exporterPose(primaryAction.value)
 }
+
+const hasBanner = computed(() => Boolean(props.bannerId))
 </script>
 
 <template>
@@ -106,6 +114,29 @@ function exporterPrimary() {
           @click="exporterPose('mp4')"
         >
           {{ t('export.mp4') }}
+        </button>
+      </div>
+    </div>
+
+    <div v-if="hasBanner" class="group banner-group" data-export-group="banner">
+      <h3>{{ t('export.banner') }}</h3>
+      <div class="actions">
+        <button
+          type="button"
+          data-export="banner-png"
+          :disabled="occupe"
+          @click="exporterPose('banner-png')"
+        >
+          {{ t('export.bannerPng') }}
+        </button>
+        <button
+          type="button"
+          data-export="banner-mp4"
+          :disabled="occupe || !mp4Ok"
+          :title="mp4Ok ? undefined : t('export.mp4Unavailable')"
+          @click="exporterPose('banner-mp4')"
+        >
+          {{ t('export.bannerMp4') }}
         </button>
       </div>
     </div>
