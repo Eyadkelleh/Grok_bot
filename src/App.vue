@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { colour, expression, shape } from './customise'
 import { bannerCopy, bannerId } from './fond'
 import { nomDeCycle, t, type Cle } from './i18n'
-import { ecrireHash, lireHash, totalDuration, type AnimationState } from './engine'
+import { ecrireHash, lireHash, totalDuration, type AnimationState, type Block } from './engine'
 import PhantomStudio from './components/PhantomStudio.vue'
 import Settings from './components/Settings.vue'
 import Timeline from './components/Timeline.vue'
@@ -37,6 +37,10 @@ const dureeCycle = computed(() =>
   cycleActif.value ? totalDuration(cycleActif.value.blocks) : 0,
 )
 const blocsCycle = computed(() => cycleActif.value?.blocks.length ?? 0)
+const AUCUN: Block[] = []
+const timelineAt = ref(0)
+const playhead = computed(() => (playing.value ? timelineAt.value : null))
+const blocsMontage = computed(() => cycleActif.value?.blocks ?? AUCUN)
 
 watch(
   [animationState, playing],
@@ -200,13 +204,21 @@ onBeforeUnmount(() => {
         :cycle-duration="dureeCycle"
         :cycle-block-count="blocsCycle"
         :progress="exportProgress"
+        :playing="playing"
+        :playhead="playhead"
+        :blocks="blocsMontage"
         @exporter="surExport"
         @annuler="annulerExport"
         @stop-playing="playing = false"
       />
       <Settings />
     </main>
-    <Timeline ref="timeline" v-model:state="animationState" v-model:playing="playing" />
+    <Timeline
+      ref="timeline"
+      v-model:state="animationState"
+      v-model:playing="playing"
+      v-model:playhead="timelineAt"
+    />
   </div>
 </template>
 

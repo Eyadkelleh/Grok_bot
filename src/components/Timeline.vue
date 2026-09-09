@@ -158,7 +158,12 @@ function addBlock(s: AnimationState) {
   edit({ blocks: blocksWith(blocks.value, s) })
 }
 
-defineExpose({ seek, sample, block, elapsed, cycles, activeId, cycle })
+const playhead = defineModel<number>('playhead', { default: 0 })
+watch(at, (v) => {
+  playhead.value = v
+}, { immediate: true })
+
+defineExpose({ seek, sample, block, elapsed, cycles, activeId, cycle, at })
 </script>
 
 <template>

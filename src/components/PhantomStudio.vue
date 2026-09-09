@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import {
+  DEFAULT_MORPH_MS,
+  isAnimationState,
+  isExpressionId,
   isShapeId,
   sampleAvatar,
   viewBoxAttr,
   type AnimationState,
+  type Block,
   type ColorId,
   type ExpressionId,
   type ShapeId,
@@ -43,6 +47,9 @@ const props = defineProps<{
   cycleDuration: number
   cycleBlockCount: number
   progress?: number | null
+  playing?: boolean
+  playhead?: number | null
+  blocks?: Block[]
 }>()
 
 const emit = defineEmits<{
@@ -60,8 +67,17 @@ const stage = ref<HTMLElement | null>(null)
 const { size } = useStageGeometry(stage)
 const field = ref<FieldId | null>(null)
 const previewShape = ref<ShapeId | null>(null)
+const previewExpression = ref<ExpressionId | null>(null)
+const previewState = ref<AnimationState | null>(null)
 
 const shownShape = computed(() => previewShape.value ?? shape.value)
+const shownExpression = computed(() => previewExpression.value ?? expression.value)
+const shownState = computed(() => previewState.value ?? animationState.value)
+const morphMs = computed(() =>
+  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 0
+    : DEFAULT_MORPH_MS,
+)
 const hasBanner = computed(() => bannerId.value !== null)
 
 const logoSlot = computed(() => {
@@ -81,16 +97,16 @@ const avatarSize = computed(() => {
 const hero = computed(() =>
   sampleAvatar({
     shape: shownShape.value,
-    expression: expression.value,
+    expression: shownExpression.value,
     colour: colour.value,
-    state: animationState.value,
+    state: shownState.value,
   }),
 )
 
 const cavity = computed(() =>
   sampleAvatar({
     shape: shownShape.value,
-    expression: expression.value,
+    expression: shownExpression.value,
     colour: colour.value,
     state: 'Idle',
   }),
@@ -107,22 +123,42 @@ const appearanceOpen = computed(
     field.value === 'colour',
 )
 
-watch(animationState, () => emit('stop-playing'))
+function clearPreviews() {
+  previewShape.value = null
+  previewExpression.value = null
+  previewState.value = null
+}
 
 function setField(next: FieldId) {
-  previewShape.value = null
+  clearPreviews()
   field.value = field.value === next ? null : next
 }
 
-function onShapePointer(event: PointerEvent) {
-  if (field.value !== 'shape') return
-  const node = (event.target as HTMLElement | null)?.closest('[data-shape]')
-  const id = node?.getAttribute('data-shape')
-  previewShape.value = id && isShapeId(id) ? id : null
+function onChooserPointer(event: PointerEvent) {
+  const node = event.target as HTMLElement | null
+  if (field.value === 'shape') {
+    const id = node?.closest('[data-shape]')?.getAttribute('data-shape')
+    previewShape.value = id && isShapeId(id) ? id : null
+    return
+  }
+  if (field.value === 'expression') {
+    const id = node?.closest('[data-expression]')?.getAttribute('data-expression')
+    previewExpression.value = id && isExpressionId(id) ? id : null
+    return
+  }
+  if (field.value === 'state') {
+    if (props.playing) return
+    const id = node?.closest('[data-state]')?.getAttribute('data-state')
+    previewState.value = id && isAnimationState(id) ? id : null
+  }
 }
 
-function clearShapePreview() {
-  previewShape.value = null
+function commitMotion() {
+  emit('stop-playing')
+}
+
+function commitFace() {
+  emit('stop-playing')
 }
 
 function svgCourant(): SVGSVGElement | null {
@@ -157,12 +193,15 @@ defineExpose({ svgCourant })
         </svg>
         <Avatar
           class="hero-avatar"
-          :state="animationState"
+          :state="shownState"
           :size="avatarSize"
           :shape="shownShape"
-          :expression="expression"
+          :expression="shownExpression"
           :colour="colour"
           :label="label"
+          :duration-ms="morphMs"
+          :playhead="props.playhead ?? null"
+          :blocks="props.blocks ?? []"
         />
         <p v-if="showCavity && !hasBanner" class="lock" role="status">{{ t('studio.shapeLocked') }}</p>
         <p v-else-if="skinLimited" class="lock" data-skin-limited role="status">
@@ -220,16 +259,22 @@ defineExpose({ svgCourant })
 
       <div
         class="field customise"
-        :class="{ open: appearanceOpen, skins: field === 'shape' }"
+        :class="{
+          open: appearanceOpen,
+          orbital: field === 'shape' || field === 'expression',
+          skins: field === 'shape',
+          faces: field === 'expression',
+        }"
         :data-open-band="appearanceOpen ? field : null"
-        @pointerover="onShapePointer"
-        @pointerleave="clearShapePreview"
+        @pointerover="onChooserPointer"
+        @pointerleave="clearPreviews"
       >
         <CustomisePanel
           id="customise"
           v-model:shape="shape"
           v-model:expression="expression"
           v-model:colour="colour"
+          @update:expression="commitFace"
         />
       </div>
 
@@ -237,8 +282,17 @@ defineExpose({ svgCourant })
         <FondPanel v-model:banner-id="bannerId" v-model:copy="bannerCopy" />
       </div>
 
-      <div class="field motion" :class="{ open: field === 'state' }">
-        <AnimationsPalette id="animations" v-model="animationState" />
+      <div
+        class="field motion"
+        :class="{ open: field === 'state', orbital: field === 'state', orbits: field === 'state' }"
+        @pointerover="onChooserPointer"
+        @pointerleave="clearPreviews"
+      >
+        <AnimationsPalette
+          id="animations"
+          v-model="animationState"
+          @update:modelValue="commitMotion"
+        />
       </div>
 
       <h1>{{ t('app.name') }}</h1>
@@ -429,7 +483,8 @@ defineExpose({ svgCourant })
 .field.customise[data-open-band='shape'] :deep(#customise-title),
 .field.customise[data-open-band='expression'] :deep(#customise-title),
 .field.customise[data-open-band='colour'] :deep(#customise-title),
-.field.customise.skins :deep(#customise-shape) {
+.field.customise.skins :deep(#customise-shape),
+.field.customise.faces :deep(#customise-expression) {
   display: none;
 }
 
@@ -437,7 +492,7 @@ defineExpose({ svgCourant })
   display: none;
 }
 
-.field.customise.skins {
+.field.orbital {
   inset: 0;
   width: 100%;
   max-width: none;
@@ -447,11 +502,12 @@ defineExpose({ svgCourant })
   pointer-events: none;
 }
 
-.field.customise.skins.open {
+.field.orbital.open {
   pointer-events: none;
 }
 
-.field.customise.skins :deep([data-customise-panel]) {
+.field.orbital :deep([data-customise-panel]),
+.field.orbital :deep([data-animations-palette]) {
   max-width: none;
   border: none;
   background: none;
@@ -459,26 +515,79 @@ defineExpose({ svgCourant })
   backdrop-filter: none;
 }
 
-.field.customise.skins :deep(.tiles) {
+.field.orbital :deep(.tiles),
+.field.orbital :deep(.swatches) {
   display: contents;
 }
 
-.field.customise.skins :deep([data-shape]) {
+.field.orbital :deep([data-shape]),
+.field.orbital :deep([data-expression]),
+.field.orbital :deep([data-state]) {
   position: absolute;
   z-index: 5;
-  width: 3.25rem;
-  height: 3.25rem;
   opacity: 0.4;
   pointer-events: auto;
   border-color: transparent;
   background: color-mix(in srgb, var(--paper) 55%, transparent);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    border-color 160ms ease;
+}
+
+.field.customise.skins :deep([data-shape]) {
+  width: 3.25rem;
+  height: 3.25rem;
+}
+
+.field.customise.faces :deep([data-expression]),
+.field.motion.orbits :deep([data-state]) {
+  left: 50%;
+  top: 36%;
+  width: 2.65rem;
+  height: 2.65rem;
+  margin: -1.325rem;
+  transform: rotate(var(--a, 0deg)) translate(min(42vw, 15.25rem)) rotate(calc(var(--a, 0deg) * -1))
+    scale(0.96);
+}
+
+.field.motion.orbits :deep(button span) {
+  display: none;
+}
+
+.field.motion.orbits :deep(svg) {
+  width: 100%;
+  height: auto;
+}
+
+.field.customise.skins :deep([data-shape].selected),
+.field.customise.skins :deep([data-shape]:hover),
+.field.customise.skins :deep([data-shape]:focus-visible),
+.field.customise.faces :deep([data-expression].selected),
+.field.customise.faces :deep([data-expression]:hover),
+.field.customise.faces :deep([data-expression]:focus-visible),
+.field.motion.orbits :deep([data-state].selected),
+.field.motion.orbits :deep([data-state]:hover),
+.field.motion.orbits :deep([data-state]:focus-visible) {
+  z-index: 6;
+  opacity: 0.9;
+  border-color: var(--line);
 }
 
 .field.customise.skins :deep([data-shape].selected),
 .field.customise.skins :deep([data-shape]:hover),
 .field.customise.skins :deep([data-shape]:focus-visible) {
-  opacity: 0.85;
-  border-color: var(--line);
+  transform: scale(1.06);
+}
+
+.field.customise.faces :deep([data-expression].selected),
+.field.customise.faces :deep([data-expression]:hover),
+.field.customise.faces :deep([data-expression]:focus-visible),
+.field.motion.orbits :deep([data-state].selected),
+.field.motion.orbits :deep([data-state]:hover),
+.field.motion.orbits :deep([data-state]:focus-visible) {
+  transform: rotate(var(--a, 0deg)) translate(min(42vw, 15.25rem)) rotate(calc(var(--a, 0deg) * -1))
+    scale(1.08);
 }
 
 .field.customise.skins :deep([data-shape='circle']) {
@@ -518,9 +627,101 @@ defineExpose({ svgCourant })
   left: auto;
 }
 
+.field.customise.faces :deep([data-expression='neutral']) {
+  --a: -90deg;
+}
+.field.customise.faces :deep([data-expression='attentive']) {
+  --a: -67.5deg;
+}
+.field.customise.faces :deep([data-expression='surprised']) {
+  --a: -45deg;
+}
+.field.customise.faces :deep([data-expression='excited']) {
+  --a: -22.5deg;
+}
+.field.customise.faces :deep([data-expression='happy']) {
+  --a: 0deg;
+}
+.field.customise.faces :deep([data-expression='laughing']) {
+  --a: 22.5deg;
+}
+.field.customise.faces :deep([data-expression='angry']) {
+  --a: 45deg;
+}
+.field.customise.faces :deep([data-expression='sad']) {
+  --a: 67.5deg;
+}
+.field.customise.faces :deep([data-expression='scared']) {
+  --a: 90deg;
+}
+.field.customise.faces :deep([data-expression='wary']) {
+  --a: 112.5deg;
+}
+.field.customise.faces :deep([data-expression='confused']) {
+  --a: 135deg;
+}
+.field.customise.faces :deep([data-expression='curious']) {
+  --a: 157.5deg;
+}
+.field.customise.faces :deep([data-expression='proud']) {
+  --a: 180deg;
+}
+.field.customise.faces :deep([data-expression='shy']) {
+  --a: -157.5deg;
+}
+.field.customise.faces :deep([data-expression='bored']) {
+  --a: -135deg;
+}
+.field.customise.faces :deep([data-expression='sleepy']) {
+  --a: -112.5deg;
+}
+
+.field.motion.orbits :deep([data-state='Idle']) {
+  --a: -90deg;
+}
+.field.motion.orbits :deep([data-state='Thinking']) {
+  --a: -64.3deg;
+}
+.field.motion.orbits :deep([data-state='Wink']) {
+  --a: -38.6deg;
+}
+.field.motion.orbits :deep([data-state='WideEyes']) {
+  --a: -12.9deg;
+}
+.field.motion.orbits :deep([data-state='Alert']) {
+  --a: 12.8deg;
+}
+.field.motion.orbits :deep([data-state='Notification']) {
+  --a: 38.6deg;
+}
+.field.motion.orbits :deep([data-state='Exclamation']) {
+  --a: 64.3deg;
+}
+.field.motion.orbits :deep([data-state='Sleep']) {
+  --a: 90deg;
+}
+.field.motion.orbits :deep([data-state='Egg']) {
+  --a: 115.7deg;
+}
+.field.motion.orbits :deep([data-state='Hexagon']) {
+  --a: 141.4deg;
+}
+.field.motion.orbits :deep([data-state='Play']) {
+  --a: 167.1deg;
+}
+.field.motion.orbits :deep([data-state='Orbit']) {
+  --a: 192.8deg;
+}
+.field.motion.orbits :deep([data-state='Burst']) {
+  --a: 218.6deg;
+}
+.field.motion.orbits :deep([data-state='Comet']) {
+  --a: 244.3deg;
+}
+
 @media (max-width: 40rem) {
-  .field.customise:not(.skins),
-  .field.motion {
+  .field.customise:not(.orbital),
+  .field.motion:not(.orbital) {
     left: 50%;
     right: auto;
     top: auto;
@@ -545,7 +746,10 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .field {
+  .field,
+  .field.orbital :deep([data-shape]),
+  .field.orbital :deep([data-expression]),
+  .field.orbital :deep([data-state]) {
     transition: none;
   }
 }

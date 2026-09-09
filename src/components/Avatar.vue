@@ -29,6 +29,8 @@ const props = withDefaults(
     paper?: string
     label?: string
     durationMs?: number
+    playhead?: number | null
+    blocks?: Block[]
   }>(),
   {
     size: DEFAULT_SIZE,
@@ -39,6 +41,8 @@ const props = withDefaults(
     paper: DEFAULT_PAPER,
     label: 'Grok_bot',
     durationMs: DEFAULT_MORPH_MS,
+    playhead: null,
+    blocks: () => [],
   },
 )
 
@@ -71,14 +75,18 @@ function appearance() {
   }
 }
 
+function dating() {
+  return props.playhead != null && props.blocks.length > 0
+}
+
 function tick(ts: number) {
+  if (dating()) return
   clockT.value = ts / 1000
-  if (engine.morphingAt(clockT.value)) {
-    raf = requestAnimationFrame(tick)
-  }
+  if (engine.morphingAt(clockT.value)) raf = requestAnimationFrame(tick)
 }
 
 function morphTo(nextState: AnimationState, nextShape: string) {
+  if (dating()) return
   if (nextState === engine.state && nextShape === engine.shapeId) return
   engine.morphMs = props.durationMs
   const t = performance.now() / 1000
@@ -93,13 +101,21 @@ function morphTo(nextState: AnimationState, nextShape: string) {
 watch(
   () => props.state,
   (next) => {
+    if (dating()) return
     if (typeof next === 'string') morphTo(next as AnimationState, engine.shapeId)
   },
 )
 
 watch(
   () => props.shape,
-  (next) => morphTo(engine.state, next),
+  (next) => {
+    if (dating()) {
+      engine.setShape(next, clockT.value)
+      bump()
+      return
+    }
+    morphTo(engine.state, next)
+  },
 )
 
 watch(
@@ -113,16 +129,31 @@ watch(
  * Seek the bot to an absolute date on a montage. Cancels the live rAF loop so
  * export can step frame by frame. The first block is already settled: previous
  * is itself, so t=0 does not morph in from a state that was never shown.
+ *
+ * Live Play uses this same path on each playhead tick so pose(t) keeps dating
+ * after the arrival morph would have stopped wall-clock rAF.
  */
 function rendAt(t: number, blocks: Block[]) {
   cancelAnimationFrame(raf)
   raf = 0
   engine.morphMs = props.durationMs
   clockT.value = engine.seek(t, blocks)
+  if (engine.shapeId !== props.shape) engine.setShape(props.shape, clockT.value)
   bump()
 }
 
+watch(
+  () => [props.playhead, props.blocks] as const,
+  () => {
+    if (props.playhead != null && props.blocks.length > 0) rendAt(props.playhead, props.blocks)
+  },
+)
+
 onMounted(() => {
+  if (props.playhead != null && props.blocks.length > 0) {
+    rendAt(props.playhead, props.blocks)
+    return
+  }
   const now = performance.now() / 1000
   engine.reset(engine.state, now)
   clockT.value = now
