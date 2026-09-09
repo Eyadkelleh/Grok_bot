@@ -18,11 +18,8 @@ const focus = studio.focus
 const desk = computed(() => studio.deskOf(focus.value))
 const video = studio.video
 
+/** The export bar names the cycle on video and the standing pose on image. */
 const cycle = computed(() => video.activeCycle.value)
-/** Image exports a short clip of the standing pose; video exports the cycle. */
-const clip = computed(() =>
-  focus.value === 'video' ? cycle.value : poseCycle(studio.image.config.value.pose),
-)
 const poseDuration = computed(() =>
   totalDuration(poseCycle(desk.value.config.value.pose).blocks),
 )
@@ -59,14 +56,15 @@ function aller(id: (typeof SECTIONS)[number]) {
     </header>
 
     <main class="page" :class="{ docked: focus === 'video' }">
+      <!-- Keyed so the stage remounts and re-attaches its SVG to the focused desk. -->
       <Stage
         :key="focus"
         :desk="desk"
         :banner-copy="studio.bannerCopy.value"
         :label="t('app.botAria')"
-        :cycle-name="nomDeCycle(clip)"
-        :cycle-duration="totalDuration(clip.blocks)"
-        :cycle-block-count="clip.blocks.length"
+        :cycle-name="nomDeCycle(cycle)"
+        :cycle-duration="totalDuration(cycle.blocks)"
+        :cycle-block-count="cycle.blocks.length"
         :pose-duration="poseDuration"
         @banner-copy="studio.setBannerCopy($event)"
       />

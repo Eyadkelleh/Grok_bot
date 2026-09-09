@@ -65,10 +65,14 @@ export function createStudioSession(): StudioSession {
     focused.value.commit({ field: 'pose', value: opening.pose })
   }
 
+  let shown: DeskKind | null = null
+
   watch(
     () => [focus.value, focused.value.config.value.pose, video.transport.playing.value] as const,
     ([kind, pose, playing]) => {
-      ownWrite = writeLocation({ focus: kind, pose, playing: kind === 'video' && playing })
+      const mode = shown !== null && shown !== kind ? 'push' : 'replace'
+      shown = kind
+      ownWrite = writeLocation({ focus: kind, pose, playing: kind === 'video' && playing }, mode)
     },
     { immediate: true, flush: 'sync' },
   )

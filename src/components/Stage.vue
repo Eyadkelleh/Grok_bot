@@ -13,7 +13,14 @@ import {
   type ShapeId,
 } from '../engine'
 import { t } from '../i18n'
-import type { BannerCopy, ImageDesk, LookFacet, PickerBand, VideoDesk } from '../studio'
+import type {
+  BannerCopy,
+  FormatFor,
+  ImageDesk,
+  LookFacet,
+  PickerBand,
+  VideoDesk,
+} from '../studio'
 import { useStageGeometry } from '../ui/useStageGeometry'
 import { CADRE_BANNER_PNG, mesureScene, sceneBanniere, type BannerId } from '../ui/scene'
 import AnimationsPalette from './AnimationsPalette.vue'
@@ -133,6 +140,16 @@ function onChooserPointer(event: PointerEvent) {
 
 function clearPreviews() {
   props.desk.preview(null)
+}
+
+/**
+ * The offers came from this desk, so the format is legal by construction; a
+ * union of two `deliver` signatures has no way to say so.
+ */
+function deliver(format: string) {
+  const desk = props.desk
+  if (desk.kind === 'image') void desk.deliver(format as FormatFor<'image'>)
+  else void desk.deliver(format as FormatFor<'video'>)
 }
 
 function svgCourant(): SVGSVGElement | null {
@@ -278,7 +295,7 @@ onBeforeUnmount(() => {
         :cycle-name="cycleName"
         :cycle-duration="cycleDuration"
         :cycle-block-count="cycleBlockCount"
-        @deliver="desk.deliver($event as never)"
+        @deliver="deliver"
         @annuler="desk.cancelDelivery()"
       />
     </section>

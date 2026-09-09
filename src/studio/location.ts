@@ -23,6 +23,8 @@ export interface LocationRead {
 
 export const DESK_PARAM = 'desk'
 
+export type WriteMode = 'push' | 'replace'
+
 export function readLocation(href = location.href): LocationRead {
   const url = new URL(href)
   const desk = url.searchParams.get(DESK_PARAM)
@@ -34,14 +36,22 @@ export function readLocation(href = location.href): LocationRead {
   }
 }
 
-/** Returns the fragment-and-query string written, so the session can ignore its own echo. */
-export function writeLocation(state: LocationState): string {
+/**
+ * Returns the fragment-and-query string written, so the session can ignore its
+ * own echo.
+ *
+ * A desk switch pushes, because the dock renders real links and Back should
+ * come back. A pose change replaces: hovering the palette would otherwise bury
+ * the previous page under a dozen history entries.
+ */
+export function writeLocation(state: LocationState, mode: WriteMode = 'replace'): string {
   const url = new URL(location.href)
   url.searchParams.set(DESK_PARAM, state.focus)
   url.hash = fragmentPour(state.pose, state.playing)
   const next = `${url.pathname}${url.search}${url.hash}`
   if (`${location.pathname}${location.search}${location.hash}` !== next) {
-    history.replaceState(null, '', next)
+    if (mode === 'push') history.pushState(null, '', next)
+    else history.replaceState(null, '', next)
   }
   return next
 }

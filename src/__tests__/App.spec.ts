@@ -346,6 +346,24 @@ describe('output dock', () => {
     wrapper.unmount()
   })
 
+  it('leaves a history entry so Back returns to the previous desk', async () => {
+    const wrapper = mount(App)
+    await toVideo(wrapper)
+    expect(location.search).toBe('?desk=video')
+
+    // jsdom applies history traversal and fires popstate on a later task.
+    const popped = new Promise<void>((r) =>
+      window.addEventListener('popstate', () => r(), { once: true }),
+    )
+    history.back()
+    await popped
+    await flushPromises()
+
+    expect(location.search).toBe('?desk=image')
+    expect(wrapper.get('#studio').attributes('data-desk')).toBe('image')
+    wrapper.unmount()
+  })
+
   it('restores the focused desk from ?desk= on load', () => {
     history.replaceState(null, '', '/?desk=video')
     const wrapper = mount(App)
