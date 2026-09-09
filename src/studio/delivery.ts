@@ -19,12 +19,21 @@ export type FormatFor<K extends DeskKind> = {
 
 export type DeliveryState = 'ready' | 'busy' | 'done' | 'error'
 
+/**
+ * `enabled: false` still gets rendered. A missing MP4 button reads as a missing
+ * feature; a disabled one with a reason reads as a browser limitation.
+ */
+export interface DeliveryOffer<K extends DeskKind> {
+  readonly format: FormatFor<K>
+  readonly enabled: boolean
+}
+
 export interface DeliveryStatus<K extends DeskKind> {
   readonly state: DeliveryState
-  /** 0â€“100 for framed formats, null for one-shot stills. */
+  /** 0 to 100 for framed formats, null for one-shot stills. */
   readonly progress: number | null
   /** Offered right now, so the export bar carries no availability policy. */
-  readonly formats: readonly FormatFor<K>[]
+  readonly formats: readonly DeliveryOffer<K>[]
 }
 
 export interface DeliveryOptions {
@@ -43,18 +52,20 @@ export class StageUnavailable extends Error {
 export function offerableFormats<K extends DeskKind>(
   kind: K,
   config: ConfigFor<K>,
-): readonly FormatFor<K>[] {
+): readonly DeliveryOffer<K>[] {
   const plate = config.look.banner !== null
+  const offer = (format: string, enabled = true) =>
+    ({ format, enabled }) as DeliveryOffer<K>
+
   if (kind === 'image') {
-    const out: FormatFor<'image'>[] = ['png', 'svg']
-    if (plate) out.push('banner-png')
-    return out as readonly FormatFor<K>[]
+    const out = [offer('png'), offer('svg')]
+    if (plate) out.push(offer('banner-png'))
+    return out
   }
-  const out: FormatFor<'video'>[] = []
-  if (videoPossible()) out.push('mp4')
-  out.push('gif')
-  if (plate && videoPossible()) out.push('banner-mp4')
-  return out as readonly FormatFor<K>[]
+  const mp4 = videoPossible()
+  const out = [offer('mp4', mp4), offer('gif')]
+  if (plate) out.push(offer('banner-mp4', mp4))
+  return out
 }
 
 function reglagesOf(config: ConfigFor<DeskKind>): ReglagesBot {

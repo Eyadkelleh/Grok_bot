@@ -13,7 +13,6 @@ import {
   activeCycleOf,
   applyMontageEdit,
   blockAt,
-  poseCycle,
   totalDuration,
   type Cycle,
   type Montage,
@@ -72,9 +71,6 @@ export interface VideoDesk extends DeskBase<'video'> {
   readonly activeCycle: ComputedRef<Cycle>
   readonly transport: Transport
   editMontage(edit: MontageEdit): void
-  /** Replace the active cycle's blocks with the clip for the current pose.
-   *  Idempotent, and the visible replacement for the deleted pose-vs-cycle radio. */
-  clipCurrentPose(): void
 }
 
 export type DeskFor<K extends DeskKind> = K extends 'image' ? ImageDesk : VideoDesk
@@ -190,7 +186,7 @@ export function createDesk<K extends DeskKind>(kind: K, port: DeskPort<K>): Desk
     }
   }
 
-  const desk = {
+  return {
     kind,
     config: port.config,
     frame,
@@ -267,17 +263,5 @@ export function createDesk<K extends DeskKind>(kind: K, port: DeskPort<K>): Desk
       }
       port.write({ ...config, montage: next } as ConfigFor<K>)
     },
-
-    clipCurrentPose() {
-      const config = port.config.value as ConfigFor<'video'>
-      desk.editMontage({
-        op: 'set-blocks',
-        id: activeCycleOf(config.montage).id,
-        blocks: poseCycle(config.pose).blocks,
-      })
-      transport.seek(0)
-    },
-  }
-
-  return desk as unknown as DeskFor<K>
+  } as unknown as DeskFor<K>
 }

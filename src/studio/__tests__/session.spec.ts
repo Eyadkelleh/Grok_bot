@@ -97,12 +97,15 @@ describe('studio session', () => {
   it('offers only the formats a desk can actually produce', () => {
     const s = open()
 
-    expect(s.image.delivery.value.formats).toEqual(['png', 'svg'])
-    expect(s.video.delivery.value.formats).not.toContain('png')
-    expect(s.video.delivery.value.formats).toContain('gif')
+    const offered = (d: { delivery: { value: { formats: readonly { format: string }[] } } }) =>
+      d.delivery.value.formats.map((f) => f.format)
+
+    expect(offered(s.image)).toEqual(['png', 'svg'])
+    expect(offered(s.video)).not.toContain('png')
+    expect(offered(s.video)).toContain('gif')
 
     s.image.commit({ field: 'banner', value: 'banner-3' })
-    expect(s.image.delivery.value.formats).toContain('banner-png')
+    expect(offered(s.image)).toContain('banner-png')
   })
 })
 
@@ -159,20 +162,14 @@ describe('video transport', () => {
     expect(s.video.frame.value.pose).toBe('Burst')
   })
 
-  it('clips the current pose onto the track as visible state', () => {
+  it('seeds a new cycle from the desk pose, which replaces the old pose-vs-cycle radio', () => {
     const s = open()
     s.video.commit({ field: 'pose', value: 'Comet' })
 
-    s.video.clipCurrentPose()
+    s.video.editMontage({ op: 'create', name: 'Comet only', seed: s.video.config.value.pose })
 
-    expect(s.video.activeCycle.value.blocks).toEqual([
-      { state: 'Idle', duration: 0.4 },
-      { state: 'Comet', duration: 1.2 },
-      { state: 'Idle', duration: 0.4 },
-    ])
-
-    s.video.clipCurrentPose()
-    expect(s.video.activeCycle.value.blocks).toHaveLength(3)
+    expect(s.video.activeCycle.value.name).toBe('Comet only')
+    expect(s.video.activeCycle.value.blocks.map((b) => b.state)).toEqual(['Comet'])
   })
 
   it('leaves the image desk with no montage to play', () => {
