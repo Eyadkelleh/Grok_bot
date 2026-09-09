@@ -1,39 +1,26 @@
-export { createDesk, type DeskFor, type ImageDesk, type Transport, type VideoDesk } from './desk'
-export {
-  offerableFormats,
-  StageUnavailable,
-  type DeliveryOffer,
-  type DeliveryState,
-  type DeliveryStatus,
-  type FormatFor,
-} from './delivery'
-export {
-  defaultStudioDoc,
-  loadDoc,
-  migrateLegacy,
-  parseStudioDoc,
-  saveDoc,
-  serializeStudioDoc,
-  STUDIO_DOC_VERSION,
-  type StudioDoc,
-} from './doc'
-export { hrefForDesk, readLocation, writeLocation, type LocationState } from './location'
-export { createStudioSession, STUDIO, useDesk, useStudio, type StudioSession } from './session'
-export { applyChrome, createTheme, THEME_CHOICES, type ThemeController } from './theme'
-export {
-  DESK_KINDS,
-  isDeskKind,
-  isThemeChoice,
-  type BannerCopy,
-  type ConfigFor,
-  type DeskConfig,
-  type DeskFrame,
-  type DeskKind,
-  type ImageConfig,
-  type Look,
-  type LookFacet,
-  type PickerBand,
-  type Theme,
-  type ThemeChoice,
-  type VideoConfig,
+/**
+ * The studio's public surface. Modules inside `studio/` import each other
+ * directly; everything outside it comes through here, which is what keeps
+ * `desk.ts` internals — and any second writer to `StudioDoc` — unreachable.
+ */
+
+export type { DeskFor, ImageDesk, Transport, VideoDesk } from './desk'
+export type { DeliveryOffer, DeliveryState, DeliveryStatus, FormatFor } from './delivery'
+export { defaultStudioDoc, parseStudioDoc, saveDoc, type StudioDoc } from './doc'
+export { hrefForDesk } from './location'
+export { createStudioSession, STUDIO, useStudio, type StudioSession } from './session'
+export { THEME_CHOICES, type ThemeController } from './theme'
+export type {
+  BannerCopy,
+  ConfigFor,
+  DeskConfig,
+  DeskFrame,
+  DeskKind,
+  ImageConfig,
+  Look,
+  LookFacet,
+  PickerBand,
+  Theme,
+  ThemeChoice,
+  VideoConfig,
 } from './types'

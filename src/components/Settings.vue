@@ -2,15 +2,16 @@
 import { computed } from 'vue'
 import { brand } from '../brand'
 import { langue, LANGUES, t, type Cle } from '../i18n'
-import { useStudio, type ThemeChoice } from '../studio'
+import { THEME_CHOICES, useStudio } from '../studio'
 
 const { theme } = useStudio()
 
-const THEMES: readonly { id: ThemeChoice; key: 'themeLight' | 'themeDark' | 'themeSystem' }[] = [
-  { id: 'light', key: 'themeLight' },
-  { id: 'dark', key: 'themeDark' },
-  { id: 'system', key: 'themeSystem' },
-]
+const THEMES = computed(() =>
+  THEME_CHOICES.map((id) => ({
+    id,
+    labelKey: `settings.theme${id[0]!.toUpperCase()}${id.slice(1)}` as Cle,
+  })),
+)
 
 const credits = computed(() => {
   const [avant = '', apres = ''] = t('settings.credits').split('{name}')
@@ -46,7 +47,7 @@ function auClavier(event: KeyboardEvent, index: number) {
         :class="{ selected: choice.id === theme.choice.value }"
         @click="theme.choose(choice.id)"
       >
-        {{ t(`settings.${choice.key}` as Cle) }}
+        {{ t(choice.labelKey) }}
       </button>
     </div>
 

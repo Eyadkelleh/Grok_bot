@@ -5,8 +5,6 @@ export type { BannerCopy } from '../ui/scene'
 
 export type DeskKind = 'image' | 'video'
 
-export const DESK_KINDS: readonly DeskKind[] = ['image', 'video']
-
 export function isDeskKind(value: string | null | undefined): value is DeskKind {
   return value === 'image' || value === 'video'
 }

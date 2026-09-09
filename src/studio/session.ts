@@ -117,7 +117,3 @@ export function useStudio(): StudioSession {
   if (!session) throw new Error('studio session not provided')
   return session
 }
-
-export function useDesk<K extends DeskKind>(kind: K): DeskFor<K> {
-  return useStudio().deskOf(kind)
-}
