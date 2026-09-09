@@ -189,6 +189,7 @@ export {
   STEP,
   DEFAULT_BLOCK_DURATION,
   DEFAULT_CYCLE_ID,
+  POSE_HOLD,
   clampDuration,
   makeBlock,
   defaultCycle,
@@ -204,8 +205,11 @@ export {
   parseCycles,
   parseMontage,
   serializeMontage,
+  activeCycleOf,
+  applyMontageEdit,
   type Block,
   type Cycle,
   type Montage,
+  type MontageEdit,
 } from './cycles'
 export { BASE_SCALE, MIN_ZOOM, MAX_ZOOM, clampZoom, mmss, ticksFor } from './timeline'
