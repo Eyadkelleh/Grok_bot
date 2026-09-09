@@ -1,6 +1,8 @@
 import type { AnimationState, Block, ColorId, ExpressionId, Montage, ShapeId } from '../engine'
 import type { BannerId } from '../ui/scene'
 
+export type { BannerCopy } from '../ui/scene'
+
 export type DeskKind = 'image' | 'video'
 
 export const DESK_KINDS: readonly DeskKind[] = ['image', 'video']
@@ -35,13 +37,6 @@ export type LookFacet =
 
 /** Which picker band is open on a desk. One at a time. */
 export type PickerBand = 'shape' | 'expression' | 'colour' | 'banner' | 'pose' | null
-
-export interface BannerCopy {
-  welcome: string
-  event1: string
-  event2: string
-  presentedBy: string
-}
 
 export interface ImageConfig {
   readonly kind: 'image'
