@@ -103,6 +103,14 @@ describe('ExportBar', () => {
     expect(wrapper.get('[data-export-cancel]').text()).toBe(en.export.cancel)
   })
 
+  it('counts no percentage for a still, which has no frames to count', () => {
+    const wrapper = mount(ExportBar, { props: { ...still, state: 'busy' } })
+    const status = wrapper.get('[data-export-status]')
+    expect(status.text()).toBe(en.export.busy)
+    expect(status.attributes('data-export-progress')).toBeUndefined()
+    expect(wrapper.get('[data-export-cancel]').exists()).toBe(true)
+  })
+
   it('confirms a finished export', () => {
     const wrapper = mount(ExportBar, { props: { ...motion, state: 'done' } })
     expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)

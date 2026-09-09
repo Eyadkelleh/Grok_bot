@@ -34,8 +34,9 @@ const LABELS: Record<string, Cle> = {
 
 const occupe = computed(() => props.state === 'busy')
 const poseLabel = computed(() => t(`animations.${props.pose}` as Cle))
+/** Null for a still, which has no frames to count. */
 const progressPercent = computed(() =>
-  Math.round(Math.min(100, Math.max(0, props.progress ?? 0))),
+  props.progress == null ? null : Math.round(Math.min(100, Math.max(0, props.progress))),
 )
 
 const plain = computed(() => props.formats.filter((f) => !f.format.startsWith('banner-')))
@@ -74,7 +75,11 @@ function unavailable(offer: Offer) {
 }
 
 const statut = computed(() => {
-  if (props.state === 'busy') return t('export.progress', { percent: progressPercent.value })
+  if (props.state === 'busy') {
+    return progressPercent.value === null
+      ? t('export.busy')
+      : t('export.progress', { percent: progressPercent.value })
+  }
   if (props.state === 'done') return t('export.done')
   if (props.state === 'error') return t('export.failed')
   return ''
@@ -146,7 +151,7 @@ const statut = computed(() => {
         class="status"
         data-export-status
         :data-export-busy="occupe ? '' : undefined"
-        :data-export-progress="occupe ? progressPercent : undefined"
+        :data-export-progress="occupe ? (progressPercent ?? undefined) : undefined"
         role="status"
       >
         {{ statut }}

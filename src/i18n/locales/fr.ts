@@ -165,6 +165,7 @@ export default {
     mp4: 'Télécharger le MP4',
     metaPose: '{name} · {duration} · court clip de cette pose',
     metaCycle: '{name} · {duration} · {count} animations',
+    busy: 'Export en cours…',
     progress: 'Export en cours… {percent} %',
     cancel: 'Annuler l’export',
     mp4Unavailable: 'Ce navigateur ne peut pas encoder le MP4',

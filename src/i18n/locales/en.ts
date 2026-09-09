@@ -167,6 +167,7 @@ const en: typeof fr = {
     mp4: 'Download MP4',
     metaPose: '{name} · {duration} · short clip of this pose',
     metaCycle: '{name} · {duration} · {count} animations in the timeline',
+    busy: 'Exporting…',
     progress: 'Exporting… {percent}%',
     cancel: 'Cancel export',
     mp4Unavailable: 'This browser cannot encode MP4',

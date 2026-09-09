@@ -167,6 +167,7 @@ const zh: typeof fr = {
     mp4: '下载 MP4',
     metaPose: '{name} · {duration} · 当前动作短片',
     metaCycle: '{name} · {duration} · {count} 个动画',
+    busy: '正在导出…',
     progress: '正在导出… {percent}%',
     cancel: '取消导出',
     mp4Unavailable: '此浏览器无法编码 MP4',
