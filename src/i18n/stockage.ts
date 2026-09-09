@@ -1,20 +1,21 @@
 const PREFIXE = 'grok_bot:'
 
-const NOMS = ['langue', 'studio', 'forme', 'couleur', 'expression', 'cycles', 'fond', 'fondCopy'] as const
+const NOMS = ['langue', 'studio'] as const
 
 /** Pre-`studio` keys. Readable so `migrateLegacy` can upgrade them. */
 const LEGACY_NOMS = ['forme', 'couleur', 'expression', 'cycles', 'fond', 'fondCopy'] as const
 
 export type NomStocke = (typeof NOMS)[number]
 export type NomLegacy = (typeof LEGACY_NOMS)[number]
+type Nom = NomStocke | NomLegacy
 
 export const NOMS_LEGACY: readonly NomLegacy[] = LEGACY_NOMS
 
-export function cle(nom: NomStocke): string {
+export function cle(nom: Nom): string {
   return `${PREFIXE}${nom}`
 }
 
-export function lis(nom: NomStocke): string | null {
+export function lis(nom: Nom): string | null {
   try {
     return window.localStorage.getItem(cle(nom))
   } catch {
@@ -30,7 +31,7 @@ export function ecris(nom: NomStocke, valeur: string) {
   }
 }
 
-export function efface(nom: NomStocke) {
+export function efface(nom: Nom) {
   try {
     window.localStorage.removeItem(cle(nom))
   } catch {

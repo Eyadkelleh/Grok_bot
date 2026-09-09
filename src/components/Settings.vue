@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { brand } from '../brand'
-import { langue, LANGUES, t } from '../i18n'
+import { langue, LANGUES, t, type Cle } from '../i18n'
+import { useStudio, type ThemeChoice } from '../studio'
+
+const { theme } = useStudio()
+
+const THEMES: readonly { id: ThemeChoice; key: 'themeLight' | 'themeDark' | 'themeSystem' }[] = [
+  { id: 'light', key: 'themeLight' },
+  { id: 'dark', key: 'themeDark' },
+  { id: 'system', key: 'themeSystem' },
+]
 
 const credits = computed(() => {
   const [avant = '', apres = ''] = t('settings.credits').split('{name}')
@@ -23,6 +32,23 @@ function auClavier(event: KeyboardEvent, index: number) {
 <template>
   <section id="settings" class="settings surface" aria-labelledby="settings-title">
     <h2 id="settings-title">{{ t('settings.title') }}</h2>
+
+    <h3>{{ t('settings.theme') }}</h3>
+    <div class="themes" role="radiogroup" :aria-label="t('settings.theme')">
+      <button
+        v-for="choice in THEMES"
+        :key="choice.id"
+        type="button"
+        role="radio"
+        :aria-checked="choice.id === theme.choice.value"
+        :data-theme-choice="choice.id"
+        :tabindex="choice.id === theme.choice.value ? 0 : -1"
+        :class="{ selected: choice.id === theme.choice.value }"
+        @click="theme.choose(choice.id)"
+      >
+        {{ t(`settings.${choice.key}` as Cle) }}
+      </button>
+    </div>
 
     <h3>{{ t('settings.language') }}</h3>
     <div class="langs" role="radiogroup" :aria-label="t('settings.language')">
@@ -101,6 +127,35 @@ h3 {
 
 h3 {
   margin-top: 1.25rem;
+}
+
+.themes {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.themes button {
+  flex: 1;
+  padding: 0.5rem 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.themes button.selected {
+  border-color: var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.themes button:hover {
+  border-color: var(--muted);
 }
 
 .langs {

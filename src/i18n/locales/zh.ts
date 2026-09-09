@@ -4,28 +4,24 @@ const zh: typeof fr = {
   app: {
     name: 'Grok_bot',
     title: 'Grok_bot — SVG 头像工作室',
-    tagline: '三步完成：选外观、选动作、下载视频。',
+    tagline: '设计你的机器人，然后导出为图片或视频。',
     botAria: 'Grok_bot 头像',
   },
 
   nav: {
     label: '导航',
-    studio: '工作室',
-    customise: '个性化',
     settings: '设置',
     about: '关于',
   },
 
-  flow: {
-    stepsLabel: '创建视频的步骤',
-    look: '外观',
-    motion: '动作',
+  dock: {
+    label: '输出',
+    image: '图片',
     video: '视频',
-    lookTitle: '1. 选择外观',
-    motionTitle: '2. 选择动作',
-    videoTitle: '3. 下载视频',
-    summary: '就绪：{pose}',
-    advancedTimeline: '高级：编辑序列',
+    imageHint: 'PNG · SVG',
+    videoHint: 'GIF · MP4',
+    imageAria: '图片工作台',
+    videoAria: '视频工作台',
   },
 
   panel: {
@@ -135,10 +131,12 @@ const zh: typeof fr = {
     moveRight: '将 {state} 右移',
   },
 
+  video: {
+    timeline: '时间轴',
+  },
+
   dialog: {
     cancel: '取消',
-    nameCreateTitle: '新建序列',
-    nameRenameTitle: '重命名序列',
     nameField: '序列名称',
     nameCreate: '创建',
     nameRename: '重命名',
@@ -162,24 +160,13 @@ const zh: typeof fr = {
 
   export: {
     title: '导出',
-    stills: '静态图',
-    video: '视频',
-    primaryVideo: '下载 {format} · {name}',
-    moreOptions: '高级：导出时间轴循环',
+    primary: '下载 {format} · {name}',
     png: '下载 PNG',
     svg: '下载 SVG',
     gif: '下载 GIF',
     mp4: '下载 MP4',
-    gifPose: '{name} 的 GIF',
-    gifCycle: '循环的 GIF',
-    mp4Pose: '{name} 的 MP4',
-    mp4Cycle: '循环的 MP4',
-    sourceLabel: '视频来源',
-    sourcePose: '当前动作 · {name}',
-    sourceCycle: '循环 · {name}',
     metaPose: '{name} · {duration} · 当前动作短片',
     metaCycle: '{name} · {duration} · {count} 个动画',
-    busy: '正在导出…',
     progress: '正在导出… {percent}%',
     cancel: '取消导出',
     mp4Unavailable: '此浏览器无法编码 MP4',
@@ -193,6 +180,10 @@ const zh: typeof fr = {
   settings: {
     title: '设置',
     language: '语言',
+    theme: '主题',
+    themeLight: '浅色',
+    themeDark: '深色',
+    themeSystem: '跟随系统',
     about: '关于',
     credits: '独立再创作自 {name}（MIT）。',
     creditsAria: 'bloub 的 GitHub 仓库，在新标签页中打开',

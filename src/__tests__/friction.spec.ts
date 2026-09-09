@@ -2,7 +2,6 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 import App from '../App.vue'
 import ExportBar from '../components/ExportBar.vue'
-import { rechargerApparence } from '../customise'
 import { rechargerLangue, langue } from '../i18n'
 import en from '../i18n/locales/en'
 import { FRICTION_VERSION, maxFriction, scoreFriction } from '../ui/friction'
@@ -18,12 +17,15 @@ describe('video friction harness (issue #33)', () => {
     history.replaceState(null, '', '/')
     window.localStorage.clear()
     rechargerLangue()
-    rechargerApparence()
     langue.value = 'en'
   })
 
   it('emits a stable friction score for the frozen checklist', async () => {
     const wrapper = mount(App)
+    await flushPromises()
+
+    // The checklist is about making a video, so it is scored on the video desk.
+    await wrapper.get('[data-output-dock] [data-desk="video"]').trigger('click')
     await flushPromises()
 
     const flags = probeFriction(wrapper)
@@ -46,8 +48,14 @@ describe('video friction harness (issue #33)', () => {
 
     const busy = mount(ExportBar, {
       props: {
-        etat: 'occupe',
+        kind: 'video',
+        formats: [
+          { format: 'mp4', enabled: true },
+          { format: 'gif', enabled: true },
+        ],
+        state: 'busy',
         pose: 'Idle',
+        poseDuration: 2,
         cycleName: en.cycles.defaultName,
         cycleDuration: 2,
         cycleBlockCount: 1,
@@ -71,5 +79,7 @@ describe('video friction harness (issue #33)', () => {
         flags,
       }),
     )
+
+    wrapper.unmount()
   })
 })

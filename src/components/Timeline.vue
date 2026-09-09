@@ -1,119 +1,43 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
-import {
-  blockAt,
-  blocksWith,
-  makeBlock,
-  nextCycleId,
-  offsetOf,
-  parseMontage,
-  serializeMontage,
-  totalDuration,
-  uniqueName,
-  mmss,
-  type AnimationState,
-  type Block,
-  type Cycle,
-} from '../engine'
-import { ecris, lis } from '../i18n/stockage'
+import { computed, ref } from 'vue'
+import { blockAt, mmss, offsetOf, totalDuration, type AnimationState, type Block } from '../engine'
 import { nomDeCycle, t } from '../i18n'
+import type { VideoDesk } from '../studio'
 import TimelineTrack from './TimelineTrack.vue'
 
-const state = defineModel<AnimationState>('state', { required: true })
-const playing = defineModel<boolean>('playing', { required: true })
+const props = defineProps<{ desk: VideoDesk }>()
 
-const stored = parseMontage(lis('cycles'))
-const cycles = ref<Cycle[]>(stored.cycles)
-const activeId = ref(stored.activeId)
-const block = ref(0)
-const elapsed = ref(0)
 const zoom = ref(1)
 const naming = ref<'create' | 'rename' | null>(null)
 const nameDraft = ref('')
 const confirmRemove = ref(false)
 
-const cycle = computed(() => cycles.value.find((c) => c.id === activeId.value) ?? cycles.value[0]!)
+const montage = computed(() => props.desk.montage.value)
+const cycle = computed(() => props.desk.activeCycle.value)
 const blocks = computed(() => cycle.value.blocks)
 const total = computed(() => totalDuration(blocks.value))
-const at = computed(() => offsetOf(blocks.value, block.value) + elapsed.value)
+const transport = props.desk.transport
+const at = computed(() => transport.at.value)
+const hit = computed(() => blockAt(blocks.value, at.value))
+const elapsed = computed(() => hit.value.elapsed)
 
-let raf = 0
-let originWall = 0
-let originClock = 0
-
-function persist() {
-  ecris('cycles', serializeMontage({ activeId: activeId.value, cycles: cycles.value }))
-}
-
-watch([cycles, activeId], persist, { deep: true })
-
-function edit(next: Partial<Cycle>) {
-  cycles.value = cycles.value.map((c) => (c.id === cycle.value.id ? { ...c, ...next } : c))
-}
-
-function sample(t: number) {
-  const hit = blockAt(blocks.value, t)
-  block.value = hit.index
-  elapsed.value = hit.elapsed
-  const next = blocks.value[hit.index]?.state
-  if (next && next !== state.value) state.value = next
-}
-
-function loop(ts: number) {
-  sample(originClock + (ts - originWall) / 1000)
-  raf = requestAnimationFrame(loop)
-}
-
-function startClock() {
-  cancelAnimationFrame(raf)
-  originWall = performance.now()
-  originClock = at.value
-  raf = requestAnimationFrame(loop)
-}
-
-function stopClock() {
-  cancelAnimationFrame(raf)
-  raf = 0
-}
-
-watch(playing, (on) => {
-  if (on) {
-    const current = blocks.value[block.value]?.state
-    if (current) state.value = current
-    startClock()
-  } else {
-    stopClock()
-  }
+/** The playhead is the source of truth; selecting a card seeks to it. */
+const block = computed({
+  get: () => hit.value.index,
+  set: (index: number) => transport.seek(offsetOf(blocks.value, index)),
 })
-
-watch(activeId, () => {
-  playing.value = false
-  block.value = 0
-  elapsed.value = 0
-  const first = blocks.value[0]?.state
-  if (first) state.value = first
-})
-
-onUnmounted(stopClock)
 
 function seek(seconds: number) {
-  const hit = blockAt(blocks.value, seconds)
-  originClock = offsetOf(blocks.value, hit.index) + hit.elapsed
-  originWall = performance.now()
-  sample(originClock)
-}
-
-function togglePlay() {
-  playing.value = !playing.value
+  transport.seek(seconds)
 }
 
 function selectCycle(id: string) {
-  activeId.value = id
+  props.desk.editMontage({ op: 'select', id })
 }
 
 function askCreate() {
   naming.value = 'create'
-  nameDraft.value = uniqueName(t('cycles.newName'), cycles.value)
+  nameDraft.value = t('cycles.newName')
 }
 
 function askRename() {
@@ -122,63 +46,50 @@ function askRename() {
 }
 
 function createCycle() {
-  const name = uniqueName(nameDraft.value.trim() || t('cycles.newName'), cycles.value)
-  const neuf: Cycle = {
-    id: nextCycleId(cycles.value),
-    name,
-    blocks: [makeBlock(state.value)],
-  }
-  cycles.value = [...cycles.value, neuf]
+  props.desk.editMontage({
+    op: 'create',
+    name: nameDraft.value.trim() || t('cycles.newName'),
+    seed: props.desk.config.value.pose,
+  })
   naming.value = null
-  selectCycle(neuf.id)
 }
 
 function renameCycle() {
-  const unique = uniqueName(
-    nameDraft.value.trim() || t('cycles.newName'),
-    cycles.value.filter((c) => c.id !== cycle.value.id),
-  )
-  edit({ name: unique })
+  props.desk.editMontage({
+    op: 'rename',
+    id: cycle.value.id,
+    name: nameDraft.value.trim() || t('cycles.newName'),
+  })
   naming.value = null
 }
 
 function removeCycle() {
-  if (cycles.value.length < 2) return
-  const reste = cycles.value.filter((c) => c.id !== cycle.value.id)
-  cycles.value = reste
+  props.desk.editMontage({ op: 'remove', id: cycle.value.id })
   confirmRemove.value = false
-  selectCycle(reste[0]!.id)
 }
 
 function onBlocks(next: Block[]) {
-  edit({ blocks: next })
+  props.desk.editMontage({ op: 'set-blocks', id: cycle.value.id, blocks: next })
 }
 
-function addBlock(s: AnimationState) {
-  edit({ blocks: blocksWith(blocks.value, s) })
+function addBlock(state: AnimationState) {
+  props.desk.editMontage({ op: 'append', state })
 }
-
-const playhead = defineModel<number>('playhead', { default: 0 })
-watch(at, (v) => {
-  playhead.value = v
-}, { immediate: true })
-
-defineExpose({ seek, sample, block, elapsed, cycles, activeId, cycle, at })
 </script>
 
 <template>
-  <section class="bar" data-timeline :aria-label="t('timeline.cycles')">
+  <section class="bar" data-timeline :aria-label="t('video.timeline')">
     <div class="transport">
       <span class="clock now" data-clock>{{ mmss(at) }}</span>
       <button
         type="button"
         data-play
         class="play"
-        :aria-pressed="playing ? 'true' : 'false'"
-        :aria-label="playing ? t('timeline.pause') : t('timeline.play')"
-        @click="togglePlay"
+        :aria-pressed="transport.playing.value ? 'true' : 'false'"
+        :aria-label="transport.playing.value ? t('timeline.pause') : t('timeline.play')"
+        @click="transport.toggle()"
       >
-        <svg v-if="!playing" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+        <svg v-if="!transport.playing.value" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
           <path
             fill="currentColor"
             d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z"
@@ -201,8 +112,13 @@ defineExpose({ seek, sample, block, elapsed, cycles, activeId, cycle, at })
     <div class="tools">
       <div class="cycles">
         <label class="sr" for="cycle-select">{{ t('timeline.cycles') }}</label>
-        <select id="cycle-select" data-cycle-select :value="activeId" @change="selectCycle(($event.target as HTMLSelectElement).value)">
-          <option v-for="c in cycles" :key="c.id" :value="c.id" :data-cycle="c.id">
+        <select
+          id="cycle-select"
+          data-cycle-select
+          :value="montage.activeId"
+          @change="selectCycle(($event.target as HTMLSelectElement).value)"
+        >
+          <option v-for="c in montage.cycles" :key="c.id" :value="c.id" :data-cycle="c.id">
             {{ nomDeCycle(c) }}
           </option>
         </select>
@@ -218,7 +134,7 @@ defineExpose({ seek, sample, block, elapsed, cycles, activeId, cycle, at })
         <button
           type="button"
           data-cycle-remove
-          :disabled="cycles.length < 2"
+          :disabled="montage.cycles.length < 2"
           :aria-label="t('cycles.menuRemoveAria', { name: nomDeCycle(cycle) })"
           @click="confirmRemove = true"
         >
@@ -254,9 +170,9 @@ defineExpose({ seek, sample, block, elapsed, cycles, activeId, cycle, at })
     <TimelineTrack
       v-model:block="block"
       v-model:zoom="zoom"
-      :blocks="blocks"
+      :blocks="[...blocks]"
       :elapsed="elapsed"
-      :add-state="state"
+      :add-state="desk.config.value.pose"
       @update:blocks="onBlocks"
       @add="addBlock"
       @seek="seek"
