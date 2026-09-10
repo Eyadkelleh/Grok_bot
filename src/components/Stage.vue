@@ -289,7 +289,7 @@ onBeforeUnmount(() => {
           class="field customise"
           :class="{ open: appearanceOpen }"
           :data-open-band="appearanceOpen ? band : null"
-          :inert="!appearanceOpen"
+          :inert="appearanceOpen ? undefined : true"
           :aria-hidden="appearanceOpen ? undefined : true"
           @pointerover="onChooserPointer"
           @pointerleave="clearPreviews"
@@ -306,7 +306,7 @@ onBeforeUnmount(() => {
         <div
           class="field motion"
           :class="{ open: band === 'pose' }"
-          :inert="band !== 'pose'"
+          :inert="band === 'pose' ? undefined : true"
           :aria-hidden="band === 'pose' ? undefined : true"
           @pointerover="onChooserPointer"
           @pointerleave="clearPreviews"
