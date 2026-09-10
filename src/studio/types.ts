@@ -33,8 +33,8 @@ export type LookFacet =
   | { field: 'banner'; value: BannerId | null }
   | { field: 'pose'; value: AnimationState }
 
-/** Which picker band is open on a desk. One at a time. */
-export type PickerBand = 'shape' | 'expression' | 'colour' | 'banner' | 'pose' | null
+/** Which appearance band is open on a desk. One at a time. */
+export type PickerBand = 'shape' | 'expression' | 'colour' | 'pose' | null
 
 export interface ImageConfig {
   readonly kind: 'image'

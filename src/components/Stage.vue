@@ -22,13 +22,12 @@ import type {
   VideoDesk,
 } from '../studio'
 import { useStageGeometry } from '../ui/useStageGeometry'
-import { CADRE_BANNER_PNG, mesureScene, sceneBanniere, type BannerId } from '../ui/scene'
+import { CADRE_BANNER_PNG, mesureScene, sceneBanniere } from '../ui/scene'
 import AnimationsPalette from './AnimationsPalette.vue'
 import Avatar from './Avatar.vue'
 import BannerBackdrop from './BannerBackdrop.vue'
 import CustomisePanel from './CustomisePanel.vue'
 import ExportBar from './ExportBar.vue'
-import FondPanel from './FondPanel.vue'
 
 const props = defineProps<{
   desk: ImageDesk | VideoDesk
@@ -39,8 +38,6 @@ const props = defineProps<{
   cycleBlockCount?: number
   poseDuration: number
 }>()
-
-const emit = defineEmits<{ 'banner-copy': [patch: Partial<BannerCopy>] }>()
 
 const stage = ref<HTMLElement | null>(null)
 const { size } = useStageGeometry(stage)
@@ -61,12 +58,6 @@ const shape = facet<ShapeId>(() => props.desk.config.value.look.shape, 'shape')
 const expression = facet<ExpressionId>(() => props.desk.config.value.look.expression, 'expression')
 const colour = facet<ColorId>(() => props.desk.config.value.look.colour, 'colour')
 const pose = facet<AnimationState>(() => props.desk.config.value.pose, 'pose')
-const bannerId = facet<BannerId | null>(() => props.desk.config.value.look.banner, 'banner')
-
-const copy = computed({
-  get: () => props.bannerCopy,
-  set: (next: BannerCopy) => emit('banner-copy', next),
-})
 
 const morphMs = computed(() =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -233,15 +224,6 @@ onBeforeUnmount(() => {
         </button>
         <button
           type="button"
-          data-mode="fond"
-          :aria-pressed="band === 'banner'"
-          :class="{ on: band === 'banner' }"
-          @click="setField('banner')"
-        >
-          {{ t('studio.fond') }}
-        </button>
-        <button
-          type="button"
           data-mode="state"
           :aria-pressed="band === 'pose'"
           :class="{ on: band === 'pose' }"
@@ -269,10 +251,6 @@ onBeforeUnmount(() => {
           v-model:expression="expression"
           v-model:colour="colour"
         />
-      </div>
-
-      <div class="field fond" :class="{ open: band === 'banner' }">
-        <FondPanel v-model:banner-id="bannerId" v-model:copy="copy" />
       </div>
 
       <div
@@ -347,30 +325,6 @@ onBeforeUnmount(() => {
   top: 44%;
   translate: -50% -50%;
   z-index: 2;
-}
-
-.field.fond {
-  left: 0;
-  top: 4.5rem;
-}
-
-.field.fond :deep([data-fond-panel]) {
-  max-width: none;
-  border-color: color-mix(in srgb, var(--line) 70%, transparent);
-  background: color-mix(in srgb, var(--paper) 82%, transparent);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 12px 40px rgb(var(--wash) / 0.06);
-}
-
-@media (max-width: 40rem) {
-  .field.fond {
-    left: 50%;
-    right: auto;
-    top: auto;
-    bottom: 7.5rem;
-    width: min(100% - 1rem, 22rem);
-    translate: -50% 0;
-  }
 }
 
 .cavity {

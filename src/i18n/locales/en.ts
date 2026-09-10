@@ -10,6 +10,7 @@ const en: typeof fr = {
 
   nav: {
     label: 'Navigation',
+    rollup: 'Rollup',
     settings: 'Settings',
     about: 'About',
   },
@@ -37,9 +38,13 @@ const en: typeof fr = {
     shape: 'Shape',
     face: 'Face',
     aura: 'Aura',
-    fond: 'Backdrop',
     motion: 'Motion',
     shapeLocked: 'This pose keeps its own outline.',
+  },
+
+  rollup: {
+    title: 'Rollup',
+    lead: 'Event banner layout, not the bot.',
   },
 
   fond: {

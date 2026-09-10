@@ -230,8 +230,11 @@ describe('App', () => {
     const wrapper = mount(App)
     expect(wrapper.get('[data-output-dock] [data-desk="image"]').text()).toContain(en.dock.image)
     expect(wrapper.get('[data-output-dock] [data-desk="video"]').text()).toContain(en.dock.video)
+    expect(wrapper.get('[data-nav="rollup"]').text()).toBe(en.nav.rollup)
     expect(wrapper.get('[data-nav="settings"]').text()).toBe(en.nav.settings)
     expect(wrapper.get('[data-nav="about"]').text()).toBe(en.nav.about)
+    expect(wrapper.text()).toContain(en.rollup.title)
+    expect(wrapper.text()).toContain(en.rollup.lead)
     expect(wrapper.text()).toContain(en.panel.shape)
     expect(wrapper.text()).toContain(en.animations.title)
     expect(wrapper.text()).toContain(en.settings.title)
@@ -246,6 +249,7 @@ describe('App', () => {
     const wrapper = mount(App)
     await wrapper.get('[data-locale="fr"]').trigger('click')
 
+    expect(wrapper.get('[data-nav="rollup"]').text()).toBe(fr.nav.rollup)
     expect(wrapper.get('[data-nav="settings"]').text()).toBe(fr.nav.settings)
     expect(wrapper.get('[data-nav="about"]').text()).toBe(fr.nav.about)
     expect(wrapper.get('[data-output-dock] [data-desk="video"]').text()).toContain(fr.dock.video)
@@ -260,6 +264,7 @@ describe('App', () => {
     const wrapper = mount(App)
     await wrapper.get('[data-locale="zh"]').trigger('click')
 
+    expect(wrapper.get('[data-nav="rollup"]').text()).toBe(zh.nav.rollup)
     expect(wrapper.get('[data-nav="settings"]').text()).toBe(zh.nav.settings)
     expect(wrapper.get('[data-nav="about"]').text()).toBe(zh.nav.about)
     expect(wrapper.text()).toContain(zh.panel.shape)
@@ -286,6 +291,57 @@ describe('App', () => {
     expect(wrapper.get('[data-disclaimer]').text().toLowerCase()).toMatch(
       /not affiliated|sans affiliation|没有任何/,
     )
+  })
+})
+
+describe('rollup', () => {
+  beforeEach(() => {
+    history.replaceState(null, '', '/')
+    window.localStorage.clear()
+    rechargerLangue()
+    langue.value = 'en'
+  })
+
+  afterEach(() => {
+    history.replaceState(null, '', '/')
+  })
+
+  it('hosts the backdrop picker in a page section, not on the stage toolbar', () => {
+    const wrapper = mount(App)
+    expect(wrapper.find('[data-mode="fond"]').exists()).toBe(false)
+    expect(wrapper.find('#studio [data-fond-panel]').exists()).toBe(false)
+    expect(wrapper.get('#rollup').attributes('data-rollup')).toBeDefined()
+    expect(wrapper.find('#rollup [data-fond-panel]').exists()).toBe(true)
+    expect(wrapper.findAll('#studio [data-mode]').map((n) => n.attributes('data-mode'))).toEqual([
+      'shape',
+      'expression',
+      'colour',
+      'state',
+    ])
+    wrapper.unmount()
+  })
+
+  it('commits the plate on the focused desk and keeps copy shared', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('#rollup [data-fond="banner-2"]').trigger('click')
+    expect(wrapper.get('[data-banner-backdrop]').attributes('data-banner')).toBe('banner-2')
+    expect(stored()?.image.look.banner).toBe('banner-2')
+    expect(stored()?.video.look.banner).toBeNull()
+
+    await wrapper.get('#rollup [data-fond-welcome]').setValue('Hallo')
+    expect(stored()?.shared.bannerCopy.welcome).toBe('Hallo')
+
+    await toVideo(wrapper)
+    expect(wrapper.find('[data-banner-backdrop]').exists()).toBe(false)
+    await wrapper.get('#rollup [data-fond="banner-3"]').trigger('click')
+    expect(wrapper.get('[data-banner-backdrop]').attributes('data-banner')).toBe('banner-3')
+    expect((wrapper.get('#rollup [data-fond-welcome]').element as HTMLInputElement).value).toBe(
+      'Hallo',
+    )
+    expect(stored()?.image.look.banner).toBe('banner-2')
+    expect(stored()?.video.look.banner).toBe('banner-3')
+    expect(stored()?.shared.bannerCopy.welcome).toBe('Hallo')
+    wrapper.unmount()
   })
 })
 

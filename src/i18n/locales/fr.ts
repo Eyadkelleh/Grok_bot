@@ -8,6 +8,7 @@ export default {
 
   nav: {
     label: 'Navigation',
+    rollup: 'Kakémono',
     settings: 'Réglages',
     about: 'À propos',
   },
@@ -35,9 +36,13 @@ export default {
     shape: 'Forme',
     face: 'Visage',
     aura: 'Aura',
-    fond: 'Fond',
     motion: 'Mouvement',
     shapeLocked: 'Cette pose garde son propre contour.',
+  },
+
+  rollup: {
+    title: 'Kakémono',
+    lead: 'Mise en page de la bannière d’événement, pas du bot.',
   },
 
   fond: {

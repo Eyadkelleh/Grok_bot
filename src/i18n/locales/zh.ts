@@ -10,6 +10,7 @@ const zh: typeof fr = {
 
   nav: {
     label: '导航',
+    rollup: '易拉宝',
     settings: '设置',
     about: '关于',
   },
@@ -37,9 +38,13 @@ const zh: typeof fr = {
     shape: '外形',
     face: '表情',
     aura: '光晕',
-    fond: '背景',
     motion: '动作',
     shapeLocked: '该姿势保留自己的轮廓。',
+  },
+
+  rollup: {
+    title: '易拉宝',
+    lead: '活动横幅排版，不是机器人外观。',
   },
 
   fond: {

@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, provide } from 'vue'
 import { nomDeCycle, t, type Cle } from './i18n'
 import { poseCycle, totalDuration } from './engine'
 import OutputDock from './components/OutputDock.vue'
+import RollupPanel from './components/RollupPanel.vue'
 import Settings from './components/Settings.vue'
 import Stage from './components/Stage.vue'
 import Timeline from './components/Timeline.vue'
@@ -12,7 +13,7 @@ const studio = createStudioSession()
 provide(STUDIO, studio)
 onBeforeUnmount(studio.dispose)
 
-const SECTIONS = ['settings', 'about'] as const
+const SECTIONS = ['rollup', 'settings', 'about'] as const
 
 const focus = studio.focus
 const desk = computed(() => studio.deskOf(focus.value))
@@ -66,6 +67,10 @@ function aller(id: (typeof SECTIONS)[number]) {
         :cycle-duration="totalDuration(cycle.blocks)"
         :cycle-block-count="cycle.blocks.length"
         :pose-duration="poseDuration"
+      />
+      <RollupPanel
+        :desk="desk"
+        :banner-copy="studio.bannerCopy.value"
         @banner-copy="studio.setBannerCopy($event)"
       />
       <Settings />
