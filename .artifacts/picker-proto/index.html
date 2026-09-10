@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Picker proto — Shape / Face / Aura</title>
+  <style>
+    :root {
+      --ink: #1c1917;
+      --muted: #57534e;
+      --line: #d6d3d1;
+      --paper: #fff;
+      --canvas: #f5f5f4;
+      --stage: #f5f5f4;
+      --accent: #0a0a0c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font: 15px/1.4 "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 50% -10%, #fff 0%, var(--canvas) 55%);
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1rem;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--paper) 88%, transparent);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .brand { font-weight: 700; letter-spacing: -0.02em; }
+    .switcher, .bands {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+    .switcher button, .bands button, .dial-nav button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 0.4rem 0.85rem;
+      cursor: pointer;
+      font: inherit;
+    }
+    .switcher button[aria-pressed="true"],
+    .bands button[aria-pressed="true"] {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 3rem;
+    }
+    .note {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin: 0 0 1rem;
+    }
+    .stage-wrap {
+      position: relative;
+      aspect-ratio: 1;
+      max-width: 520px;
+      margin: 0 auto 1rem;
+      background: var(--stage);
+      border-radius: 1.25rem;
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+    .hero {
+      position: absolute;
+      inset: 18%;
+      display: grid;
+      place-items: center;
+      transition: filter 160ms ease;
+    }
+    .hero svg { width: 100%; height: 100%; }
+    .label-chip {
+      position: absolute;
+      left: 50%;
+      bottom: 0.85rem;
+      transform: translateX(-50%);
+      background: color-mix(in srgb, var(--paper) 92%, transparent);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* A — orbit baseline */
+    .orbit {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .orbit .tile {
+      pointer-events: auto;
+      position: absolute;
+      width: 52px;
+      height: 52px;
+      margin: -26px;
+      left: 50%;
+      top: 50%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--paper) 70%, transparent);
+      padding: 4px;
+      cursor: pointer;
+      transform: rotate(var(--a)) translate(168px) rotate(calc(-1 * var(--a)));
+    }
+    .orbit .tile[aria-checked="true"] {
+      outline: 2px solid var(--ink);
+      background: var(--paper);
+    }
+    .orbit .tile svg { width: 100%; height: 100%; display: block; }
+
+    /* B — filmstrip */
+    .strip {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(88px, 1fr);
+      gap: 0.55rem;
+      overflow-x: auto;
+      padding: 0.25rem 0.15rem 0.75rem;
+      scroll-snap-type: x mandatory;
+    }
+    .strip .card {
+      scroll-snap-align: center;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 1rem;
+      padding: 0.55rem 0.45rem 0.5rem;
+      cursor: pointer;
+      min-height: 118px;
+      display: grid;
+      gap: 0.35rem;
+      place-items: center;
+      transition: transform 140ms ease, border-color 140ms ease;
+    }
+    .strip .card:hover { transform: translateY(-2px); }
+    .strip .card[aria-checked="true"] {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 2px var(--ink);
+    }
+    .strip .card .glyph {
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+    }
+    .strip .card .glyph svg { width: 100%; height: 100%; }
+    .strip .card .name {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .swatch-fat {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      border: 2px solid color-mix(in srgb, var(--ink) 18%, transparent);
+      box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
+    }
+
+    /* C — focus dial */
+    .dial {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.75rem;
+      align-items: center;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .dial-nav button {
+      width: 2.6rem;
+      height: 2.6rem;
+      border-radius: 999px;
+      padding: 0;
+      font-size: 1.25rem;
+    }
+    .candidate {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 1.25rem;
+      min-height: 140px;
+      display: grid;
+      place-items: center;
+      gap: 0.4rem;
+      padding: 0.85rem;
+      cursor: pointer;
+    }
+    .candidate .big {
+      width: 96px;
+      height: 96px;
+    }
+    .candidate .big svg, .candidate .big .swatch-fat {
+      width: 100%;
+      height: 100%;
+    }
+    .candidate .hint {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .candidate:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    kbd {
+      font: 0.78rem ui-monospace, monospace;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0.05rem 0.3rem;
+      background: var(--paper);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Picker proto (throwaway)</div>
+    <div class="switcher" role="toolbar" aria-label="Variants">
+      <button type="button" data-variant="A" aria-pressed="true">A Orbit</button>
+      <button type="button" data-variant="B" aria-pressed="false">B Filmstrip</button>
+      <button type="button" data-variant="C" aria-pressed="false">C Focus dial</button>
+    </div>
+    <div class="bands" role="toolbar" aria-label="Trait">
+      <button type="button" data-band="shape" aria-pressed="true">Shape</button>
+      <button type="button" data-band="face" aria-pressed="false">Face</button>
+      <button type="button" data-band="aura" aria-pressed="false">Aura</button>
+    </div>
+  </header>
+
+  <main>
+    <p class="note" id="blurb">
+      Baseline. Mini full-body tiles on a ring. Face options look like body shapes.
+    </p>
+
+    <div class="stage-wrap" id="stage">
+      <div class="hero" id="hero" aria-hidden="true"></div>
+      <div class="orbit" id="orbit" hidden></div>
+      <div class="label-chip" id="chip">triangle · neutral · ink</div>
+    </div>
+
+    <section class="panel active" id="panel-A" aria-label="Variant A"></section>
+    <section class="panel" id="panel-B" aria-label="Variant B">
+      <div class="strip" id="strip" role="listbox" aria-label="Choices"></div>
+    </section>
+    <section class="panel" id="panel-C" aria-label="Variant C">
+      <div class="dial">
+        <div class="dial-nav"><button type="button" id="prev" aria-label="Previous">‹</button></div>
+        <button type="button" class="candidate" id="candidate">
+          <div class="big" id="candGlyph"></div>
+          <div class="hint" id="candHint">Press Enter or click to commit · <kbd>←</kbd> <kbd>→</kbd></div>
+        </button>
+        <div class="dial-nav"><button type="button" id="next" aria-label="Next">›</button></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const SHAPES = [
+      { id: 'circle', path: 'M50 12a38 38 0 1 1 0 76a38 38 0 1 1 0-76z' },
+      { id: 'pebble', path: 'M28 22c18-14 48-10 58 12 10 22-2 48-26 56s-48-6-52-28 2-26 20-40z' },
+      { id: 'squircle', path: 'M22 22h56a18 18 0 0 1 18 18v20a18 18 0 0 1-18 18H22A18 18 0 0 1 4 60V40A18 18 0 0 1 22 22z' },
+      { id: 'capsule', path: 'M35 12h30a28 28 0 0 1 0 76H35a28 28 0 0 1 0-76z' },
+      { id: 'triangle', path: 'M50 14 L90 82 H10 Z' },
+      { id: 'hexagon', path: 'M50 10 L84 30 V70 L50 90 L16 70 V30 Z' },
+      { id: 'cloud', path: 'M28 62c-12 0-18-10-14-20 2-6 8-10 16-10 2-12 14-20 28-16 8 2 14 10 14 18 10 0 18 8 16 18-2 8-10 12-20 10H28z' },
+      { id: 'droplet', path: 'M50 10c18 24 32 40 32 54a32 32 0 1 1-64 0c0-14 14-30 32-54z' },
+    ]
+    const FACES = [
+      { id: 'neutral', eyes: [[38,44],[62,44]], mouth: 'M42 62h16' },
+      { id: 'attentive', eyes: [[38,42],[62,42]], mouth: 'M44 64h12' },
+      { id: 'happy', eyes: [[38,44],[62,44]], mouth: 'M40 60q10 12 20 0' },
+      { id: 'surprised', eyes: [[38,42],[62,42]], mouth: 'M50 64m-5 0a5 5 0 1 0 10 0a5 5 0 1 0-10 0' },
+      { id: 'sleepy', eyes: [[38,44],[62,44]], mouth: 'M44 64h12', sleepy: true },
+      { id: 'angry', eyes: [[38,46],[62,46]], mouth: 'M42 66q8-6 16 0', brows: true },
+    ]
+    const AURAS = [
+      { id: 'ink', fill: '#0a0a0c' },
+      { id: 'cream', fill: '#f1efe9' },
+      { id: 'brown', fill: '#8b5e3c' },
+      { id: 'red', fill: '#c2410c' },
+      { id: 'orange', fill: '#ea580c' },
+      { id: 'amber', fill: '#d97706' },
+      { id: 'green', fill: '#15803d' },
+      { id: 'blue', fill: '#1d4ed8' },
+      { id: 'purple', fill: '#7e22ce' },
+      { id: 'pink', fill: '#db2777' },
+    ]
+
+    const state = {
+      variant: 'A',
+      band: 'shape',
+      shape: 'triangle',
+      face: 'neutral',
+      aura: 'ink',
+      dialIndex: 0,
+      preview: null, // { band, id } or null
+    }
+
+    const blurbs = {
+      A: 'Baseline. Mini full-body tiles on a ring. Face options look like body shapes.',
+      B: 'Trait filmstrip. Large cards under the hero. Shape = silhouette, Face = eyes only, Aura = fat swatch.',
+      C: 'Focus dial. One oversized candidate. Arrows cycle. Click or Enter commits. Trait-specific glyph.',
+    }
+
+    function effective() {
+      const p = state.preview
+      return {
+        shape: p?.band === 'shape' ? p.id : state.shape,
+        face: p?.band === 'face' ? p.id : state.face,
+        aura: p?.band === 'aura' ? p.id : state.aura,
+      }
+    }
+
+    function eyesSvg(face, scale = 1) {
+      const f = FACES.find((x) => x.id === face) || FACES[0]
+      const lids = f.sleepy
+        ? f.eyes.map(([x, y]) => `<path d="M${x - 6} ${y}h12" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`).join('')
+        : f.eyes.map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="${7 * scale}" ry="${10 * scale}" fill="#fff"/>`).join('')
+      const brows = f.brows
+        ? `<path d="M30 34 L44 38 M70 34 L56 38" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`
+        : ''
+      const mouth = f.mouth.startsWith('M50 64m')
+        ? `<circle cx="50" cy="64" r="5" fill="none" stroke="#fff" stroke-width="3"/>`
+        : `<path d="${f.mouth}" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`
+      return lids + brows + mouth
+    }
+
+    function botSvg(shapeId, faceId, auraId, opts = {}) {
+      const shape = SHAPES.find((s) => s.id === shapeId) || SHAPES[0]
+      const aura = AURAS.find((a) => a.id === auraId) || AURAS[0]
+      const faceOnly = opts.faceOnly
+      if (faceOnly) {
+        return `<svg viewBox="0 0 100 100" aria-hidden="true">
+          <rect width="100" height="100" rx="22" fill="${aura.fill}"/>
+          ${eyesSvg(faceId, 1.15)}
+        </svg>`
+      }
+      if (opts.silOnly) {
+        return `<svg viewBox="0 0 100 100" aria-hidden="true">
+          <path d="${shape.path}" fill="${aura.fill}"/>
+        </svg>`
+      }
+      return `<svg viewBox="0 0 100 100" aria-hidden="true">
+        <path d="${shape.path}" fill="${aura.fill}"/>
+        ${eyesSvg(faceId)}
+      </svg>`
+    }
+
+    function optionsFor(band) {
+      if (band === 'shape') return SHAPES.map((s) => s.id)
+      if (band === 'face') return FACES.map((f) => f.id)
+      return AURAS.map((a) => a.id)
+    }
+
+    function selectedId(band) {
+      return band === 'shape' ? state.shape : band === 'face' ? state.face : state.aura
+    }
+
+    function commit(band, id) {
+      if (band === 'shape') state.shape = id
+      if (band === 'face') state.face = id
+      if (band === 'aura') state.aura = id
+      state.preview = null
+      if (state.variant === 'C') {
+        state.dialIndex = optionsFor(band).indexOf(id)
+      }
+      render()
+    }
+
+    function preview(band, id) {
+      state.preview = id ? { band, id } : null
+      renderHero()
+      updateChip()
+    }
+
+    function renderHero() {
+      const e = effective()
+      document.getElementById('hero').innerHTML = botSvg(e.shape, e.face, e.aura)
+    }
+
+    function updateChip() {
+      const e = effective()
+      const tag = state.preview ? 'preview' : 'committed'
+      document.getElementById('chip').textContent =
+        `${e.shape} · ${e.face} · ${e.aura} (${tag})`
+    }
+
+    function renderOrbit() {
+      const orbit = document.getElementById('orbit')
+      const band = state.band
+      const opts = optionsFor(band)
+      const selected = selectedId(band)
+      orbit.hidden = state.variant !== 'A'
+      if (state.variant !== 'A') {
+        orbit.innerHTML = ''
+        return
+      }
+      orbit.innerHTML = opts.map((id, i) => {
+        const a = (i / opts.length) * 360 - 90
+        // BUG reproduced: always full-body mini bot
+        const inner = botSvg(
+          band === 'shape' ? id : state.shape,
+          band === 'face' ? id : state.face,
+          band === 'aura' ? id : state.aura,
+        )
+        return `<button type="button" class="tile" style="--a:${a}deg" role="option"
+          aria-checked="${id === selected}" data-id="${id}" aria-label="${id}">${inner}</button>`
+      }).join('')
+      orbit.querySelectorAll('.tile').forEach((el) => {
+        el.addEventListener('pointerenter', () => preview(band, el.dataset.id))
+        el.addEventListener('pointerleave', () => preview(band, null))
+        el.addEventListener('click', () => commit(band, el.dataset.id))
+      })
+    }
+
+    function glyphFor(band, id) {
+      if (band === 'shape') return botSvg(id, 'neutral', state.aura, { silOnly: true })
+      if (band === 'face') return botSvg(state.shape, id, state.aura, { faceOnly: true })
+      const fill = (AURAS.find((a) => a.id === id) || AURAS[0]).fill
+      return `<div class="swatch-fat" style="background:${fill}"></div>`
+    }
+
+    function renderStrip() {
+      const strip = document.getElementById('strip')
+      const band = state.band
+      const opts = optionsFor(band)
+      const selected = selectedId(band)
+      strip.innerHTML = opts.map((id) => `
+        <button type="button" class="card" role="option" aria-checked="${id === selected}"
+          data-id="${id}" aria-label="${id}">
+          <div class="glyph">${glyphFor(band, id)}</div>
+          <div class="name">${id}</div>
+        </button>`).join('')
+      strip.querySelectorAll('.card').forEach((el) => {
+        el.addEventListener('pointerenter', () => preview(band, el.dataset.id))
+        el.addEventListener('pointerleave', () => preview(band, null))
+        el.addEventListener('click', () => commit(band, el.dataset.id))
+      })
+    }
+
+    function renderDial() {
+      const band = state.band
+      const opts = optionsFor(band)
+      if (state.dialIndex < 0 || state.dialIndex >= opts.length) {
+        state.dialIndex = Math.max(0, opts.indexOf(selectedId(band)))
+      }
+      const id = opts[state.dialIndex]
+      document.getElementById('candGlyph').innerHTML = glyphFor(band, id)
+      document.getElementById('candHint').innerHTML =
+        `<strong>${id}</strong> · click or Enter to commit · <kbd>←</kbd> <kbd>→</kbd>`
+      preview(band, id)
+    }
+
+    function setVariant(v) {
+      state.variant = v
+      state.preview = null
+      document.querySelectorAll('.switcher button').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.variant === v))
+      })
+      document.querySelectorAll('.panel').forEach((p) => {
+        p.classList.toggle('active', p.id === `panel-${v}`)
+      })
+      document.getElementById('blurb').textContent = blurbs[v]
+      if (v === 'C') {
+        state.dialIndex = optionsFor(state.band).indexOf(selectedId(state.band))
+      }
+      render()
+    }
+
+    function setBand(band) {
+      state.band = band
+      state.preview = null
+      document.querySelectorAll('.bands button').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.band === band))
+      })
+      if (state.variant === 'C') {
+        state.dialIndex = optionsFor(band).indexOf(selectedId(band))
+      }
+      render()
+    }
+
+    function render() {
+      renderHero()
+      updateChip()
+      renderOrbit()
+      if (state.variant === 'B') renderStrip()
+      if (state.variant === 'C') renderDial()
+    }
+
+    document.querySelectorAll('.switcher button').forEach((b) => {
+      b.addEventListener('click', () => setVariant(b.dataset.variant))
+    })
+    document.querySelectorAll('.bands button').forEach((b) => {
+      b.addEventListener('click', () => setBand(b.dataset.band))
+    })
+    document.getElementById('prev').addEventListener('click', () => {
+      const n = optionsFor(state.band).length
+      state.dialIndex = (state.dialIndex - 1 + n) % n
+      renderDial()
+    })
+    document.getElementById('next').addEventListener('click', () => {
+      const n = optionsFor(state.band).length
+      state.dialIndex = (state.dialIndex + 1) % n
+      renderDial()
+    })
+    document.getElementById('candidate').addEventListener('click', () => {
+      const id = optionsFor(state.band)[state.dialIndex]
+      commit(state.band, id)
+    })
+    window.addEventListener('keydown', (e) => {
+      if (state.variant !== 'C') return
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        document.getElementById('prev').click()
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        document.getElementById('next').click()
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        document.getElementById('candidate').click()
+      }
+    })
+
+    render()
+  </script>
+</body>
+</html>
