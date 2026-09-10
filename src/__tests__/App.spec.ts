@@ -134,6 +134,21 @@ describe('App', () => {
     expect(stored()?.image.look.expression).toBe('happy')
   })
 
+  it('previews a colour on pointer hover without moving chrome accent', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    const tile = wrapper.get('[data-customise-panel] [data-colour="blue"]')
+    await tile.trigger('pointerover')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-colour')).toBe('blue')
+    expect(shellAccent(wrapper)['--bot-accent']).toBe('#0a0a0c')
+    expect(stored()?.image.look.colour).not.toBe('blue')
+
+    await tile.trigger('click')
+    expect(stored()?.image.look.colour).toBe('blue')
+    expect(shellAccent(wrapper)['--bot-accent']).toBe('#3b93f0')
+    wrapper.unmount()
+  })
+
   it('previews a motion pose on pointer hover without committing', async () => {
     const wrapper = mount(App)
     await wrapper.get('[data-mode="state"]').trigger('click')
@@ -441,6 +456,105 @@ describe('output dock', () => {
     const wrapper = mount(App)
     expect(wrapper.get('#studio').attributes('data-desk')).toBe('video')
     expect(wrapper.find('[data-timeline]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+})
+
+describe('spectrum rail', () => {
+  beforeEach(() => {
+    history.replaceState(null, '', '/')
+    window.localStorage.clear()
+    document.documentElement.removeAttribute('data-theme')
+    rechargerLangue()
+    langue.value = 'en'
+  })
+
+  afterEach(() => {
+    history.replaceState(null, '', '/')
+  })
+
+  it('keeps English verb labels next to glyphs and drives data-mode from VERBS', () => {
+    const wrapper = mount(App)
+    const buttons = wrapper.findAll('#studio [data-mode]')
+    expect(buttons.map((n) => n.attributes('data-mode'))).toEqual([
+      'shape',
+      'expression',
+      'colour',
+      'state',
+    ])
+    expect(wrapper.get('[data-mode="shape"]').text()).toContain(en.studio.shape)
+    expect(wrapper.get('[data-mode="expression"]').text()).toContain(en.studio.face)
+    expect(wrapper.get('[data-mode="colour"]').text()).toContain(en.studio.aura)
+    expect(wrapper.get('[data-mode="state"]').text()).toContain(en.studio.motion)
+    expect(wrapper.get('[data-mode="shape"] .glyph').attributes('aria-hidden')).toBe('true')
+    wrapper.unmount()
+  })
+
+  it('paints the rail from catalogue colour stops', () => {
+    const wrapper = mount(App)
+    const style = wrapper.get('.verbs').attributes('style') ?? ''
+    for (const { hex } of COLORS) {
+      expect(style).toContain(hex)
+    }
+    wrapper.unmount()
+  })
+
+  it('opens pickers on a compact shelf and leaves closed bands inert', async () => {
+    const wrapper = mount(App)
+    const customise = wrapper.get('.field.customise')
+    const motion = wrapper.get('.field.motion')
+    expect(wrapper.get('[data-customise-panel]').classes()).toContain('compact')
+    expect(wrapper.get('[data-animations-palette]').classes()).toContain('strip')
+    expect(customise.attributes('inert')).toBeDefined()
+    expect(customise.attributes('aria-hidden')).toBe('true')
+    expect(motion.attributes('inert')).toBeDefined()
+    expect(motion.attributes('aria-hidden')).toBe('true')
+
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    expect(wrapper.get('.field.customise').attributes('inert')).toBeUndefined()
+    expect(wrapper.get('.field.customise').attributes('aria-hidden')).toBeUndefined()
+    expect(wrapper.get('.field.customise').attributes('data-open-band')).toBe('colour')
+    expect(wrapper.get('.shelf-head').text()).toBe(en.studio.aura)
+    expect(wrapper.get('.field.motion').attributes('aria-hidden')).toBe('true')
+
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    expect(wrapper.get('.field.motion').attributes('inert')).toBeUndefined()
+    expect(wrapper.get('.field.motion').attributes('aria-hidden')).toBeUndefined()
+    expect(wrapper.get('.field.customise').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.get('.shelf-head').text()).toBe(en.studio.motion)
+    wrapper.unmount()
+  })
+
+  it('keeps playback running through shape and aura commits', async () => {
+    const wrapper = mount(App)
+    await toVideo(wrapper)
+    await wrapper.get('[data-play]').trigger('click')
+    const desk = wrapper.getComponent(Timeline).props('desk')
+    expect(desk.transport.playing.value).toBe(true)
+
+    await wrapper.get('[data-mode="shape"]').trigger('click')
+    await wrapper.get('[data-customise-panel] [data-shape="hexagon"]').trigger('click')
+    expect(desk.transport.playing.value).toBe(true)
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-shape')).toBe('hexagon')
+
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    await wrapper.get('[data-customise-panel] [data-colour="blue"]').trigger('click')
+    expect(desk.transport.playing.value).toBe(true)
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-colour')).toBe('blue')
+    wrapper.unmount()
+  })
+
+  it('refuses pose preview while the transport is playing', async () => {
+    const wrapper = mount(App)
+    await toVideo(wrapper)
+    await wrapper.get('[data-play]').trigger('click')
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('pointerover')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).not.toBe('Comet')
+    expect(
+      wrapper.get('[data-animations-palette] [data-state="Idle"]').attributes('aria-checked'),
+    ).toBe('true')
+    expect(wrapper.getComponent(Timeline).props('desk').transport.playing.value).toBe(true)
     wrapper.unmount()
   })
 })

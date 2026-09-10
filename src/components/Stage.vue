@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, type WritableComputedRef } from 'vue'
 import {
+  COLORS,
   DEFAULT_MORPH_MS,
   isAnimationState,
+  isColorId,
   isExpressionId,
   isShapeId,
   sampleAvatar,
@@ -13,13 +15,14 @@ import {
   type ShapeId,
 } from '../engine'
 import { t } from '../i18n'
-import type {
-  BannerCopy,
-  FormatFor,
-  ImageDesk,
-  LookFacet,
-  PickerBand,
-  VideoDesk,
+import {
+  VERBS,
+  type BannerCopy,
+  type FormatFor,
+  type ImageDesk,
+  type LookFacet,
+  type VerbId,
+  type VideoDesk,
 } from '../studio'
 import { useStageGeometry } from '../ui/useStageGeometry'
 import { CADRE_BANNER_PNG, mesureScene, sceneBanniere } from '../ui/scene'
@@ -45,6 +48,20 @@ const { size } = useStageGeometry(stage)
 const frame = computed(() => props.desk.frame.value)
 const band = computed(() => props.desk.band.value)
 const status = computed(() => props.desk.delivery.value)
+const hoverId = ref<VerbId | null>(null)
+
+const landmarks = (['shape', 'expression', 'colour', 'pose'] as const).map((id) => VERBS[id])
+
+const spectrum = `linear-gradient(90deg, ${COLORS.map(
+  (colour) => `color-mix(in srgb, ${colour.hex} 58%, var(--paper))`,
+).join(', ')})`
+
+const openIndex = computed(() => (band.value ? VERBS[band.value].railIndex : null))
+const hoverIndex = computed(() => {
+  if (!hoverId.value || hoverId.value === band.value) return null
+  return VERBS[hoverId.value].railIndex
+})
+const shelfTitle = computed(() => (band.value ? t(VERBS[band.value].labelKey) : ''))
 
 /** Pickers show the committed value; the hero shows the preview. */
 function facet<T>(read: () => T, field: LookFacet['field']): WritableComputedRef<T> {
@@ -106,8 +123,16 @@ const appearanceOpen = computed(
   () => band.value === 'shape' || band.value === 'expression' || band.value === 'colour',
 )
 
-function setField(next: PickerBand) {
-  props.desk.openBand(next)
+function onVerbKeydown(event: KeyboardEvent) {
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+  const buttons = [
+    ...(event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>('[data-mode]'),
+  ]
+  const index = buttons.findIndex((button) => button === document.activeElement)
+  if (index < 0) return
+  event.preventDefault()
+  const step = event.key === 'ArrowRight' ? 1 : -1
+  buttons[(index + step + buttons.length) % buttons.length]?.focus()
 }
 
 function onChooserPointer(event: PointerEvent) {
@@ -121,6 +146,11 @@ function onChooserPointer(event: PointerEvent) {
   if (open === 'expression') {
     const id = node?.closest('[data-expression]')?.getAttribute('data-expression')
     props.desk.preview(id && isExpressionId(id) ? { field: 'expression', value: id } : null)
+    return
+  }
+  if (open === 'colour') {
+    const id = node?.closest('[data-colour]')?.getAttribute('data-colour')
+    props.desk.preview(id && isColorId(id) ? { field: 'colour', value: id } : null)
     return
   }
   if (open === 'pose') {
@@ -194,72 +224,95 @@ onBeforeUnmount(() => {
         </p>
       </div>
 
-      <div class="verbs" role="toolbar" :aria-label="t('studio.modes')">
-        <button
-          type="button"
-          data-mode="shape"
-          :aria-pressed="band === 'shape'"
-          :class="{ on: band === 'shape' }"
-          @click="setField('shape')"
-        >
-          {{ t('studio.shape') }}
-        </button>
-        <button
-          type="button"
-          data-mode="expression"
-          :aria-pressed="band === 'expression'"
-          :class="{ on: band === 'expression' }"
-          @click="setField('expression')"
-        >
-          {{ t('studio.face') }}
-        </button>
-        <button
-          type="button"
-          data-mode="colour"
-          :aria-pressed="band === 'colour'"
-          :class="{ on: band === 'colour' }"
-          @click="setField('colour')"
-        >
-          {{ t('studio.aura') }}
-        </button>
-        <button
-          type="button"
-          data-mode="state"
-          :aria-pressed="band === 'pose'"
-          :class="{ on: band === 'pose' }"
-          @click="setField('pose')"
-        >
-          {{ t('studio.motion') }}
-        </button>
-      </div>
-
       <div
-        class="field customise"
-        :class="{
-          open: appearanceOpen,
-          orbital: band === 'shape' || band === 'expression',
-          skins: band === 'shape',
-          faces: band === 'expression',
+        class="verbs"
+        role="toolbar"
+        :aria-label="t('studio.modes')"
+        :style="{
+          '--spectrum': spectrum,
+          '--open-index': openIndex ?? 0,
+          '--hover-index': hoverIndex ?? 0,
         }"
-        :data-open-band="appearanceOpen ? band : null"
-        @pointerover="onChooserPointer"
-        @pointerleave="clearPreviews"
+        :data-bead="openIndex == null ? undefined : openIndex"
+        :data-tick="hoverIndex == null ? undefined : hoverIndex"
+        @keydown="onVerbKeydown"
       >
-        <CustomisePanel
-          id="customise"
-          v-model:shape="shape"
-          v-model:expression="expression"
-          v-model:colour="colour"
-        />
+        <div class="landmarks">
+          <button
+            v-for="verb in landmarks"
+            :key="verb.id"
+            type="button"
+            :data-mode="verb.dataMode"
+            :aria-pressed="band === verb.id"
+            :class="{ open: band === verb.id }"
+            @click="desk.openBand(verb.id)"
+            @pointerenter="hoverId = verb.id"
+            @pointerleave="hoverId = null"
+          >
+            <span class="glyph" aria-hidden="true">
+              <svg viewBox="0 0 16 16">
+                <circle
+                  v-if="verb.id === 'shape'"
+                  cx="8"
+                  cy="8"
+                  r="5.25"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                />
+                <g v-else-if="verb.id === 'expression'" fill="currentColor">
+                  <circle cx="5.4" cy="7.2" r="1.35" />
+                  <circle cx="10.6" cy="7.2" r="1.35" />
+                </g>
+                <circle v-else-if="verb.id === 'colour'" cx="8" cy="8" r="5" fill="currentColor" />
+                <g v-else fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+                  <path d="M3.2 11.4c2.4-1.1 4.1-3.6 4.6-6.6" />
+                  <circle cx="11.2" cy="4.2" r="1.7" fill="currentColor" stroke="none" />
+                </g>
+              </svg>
+            </span>
+            <span class="label">{{ t(verb.labelKey) }}</span>
+          </button>
+        </div>
+        <div class="spectrum" aria-hidden="true">
+          <span class="track" />
+          <span class="glint" />
+          <span class="glow" />
+          <span class="bead" />
+          <span class="tick" />
+        </div>
       </div>
 
-      <div
-        class="field motion"
-        :class="{ open: band === 'pose', orbital: band === 'pose', orbits: band === 'pose' }"
-        @pointerover="onChooserPointer"
-        @pointerleave="clearPreviews"
-      >
-        <AnimationsPalette id="animations" v-model="pose" :colour="frame.colour" />
+      <div class="shelf">
+        <p v-if="band" class="shelf-head">{{ shelfTitle }}</p>
+        <div
+          class="field customise"
+          :class="{ open: appearanceOpen }"
+          :data-open-band="appearanceOpen ? band : null"
+          :inert="!appearanceOpen"
+          :aria-hidden="appearanceOpen ? undefined : true"
+          @pointerover="onChooserPointer"
+          @pointerleave="clearPreviews"
+        >
+          <CustomisePanel
+            id="customise"
+            layout="compact"
+            v-model:shape="shape"
+            v-model:expression="expression"
+            v-model:colour="colour"
+          />
+        </div>
+
+        <div
+          class="field motion"
+          :class="{ open: band === 'pose' }"
+          :inert="band !== 'pose'"
+          :aria-hidden="band === 'pose' ? undefined : true"
+          @pointerover="onChooserPointer"
+          @pointerleave="clearPreviews"
+        >
+          <AnimationsPalette id="animations" layout="strip" v-model="pose" :colour="frame.colour" />
+        </div>
       </div>
 
       <p class="tagline">{{ t('app.tagline') }}</p>
@@ -351,17 +404,27 @@ onBeforeUnmount(() => {
 }
 
 .verbs {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.4rem;
+  display: grid;
+  gap: 0.15rem;
+  width: min(100%, 36rem);
   z-index: 4;
 }
 
+.landmarks {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .verbs button {
-  padding: 0.4rem 0.85rem;
-  border: 1px solid transparent;
-  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.35rem 0.4rem;
+  border: 0;
+  border-radius: 0.55rem;
   background: transparent;
   color: var(--muted);
   font: inherit;
@@ -369,313 +432,199 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.verbs button.on,
-.verbs button:hover,
-.verbs button:focus-visible {
-  border-color: var(--line);
+.verbs button.open {
   color: var(--ink);
-  background: color-mix(in srgb, var(--paper) 80%, transparent);
+  font-weight: 500;
+}
+
+.verbs button:hover:not(.open) {
+  color: var(--ink);
+}
+
+.verbs button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.verbs button:focus-visible::before,
+.verbs button:focus-visible::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 0.7rem;
+  height: 2px;
+  background: var(--ink);
+  translate: -50% 0;
+}
+
+.verbs button:focus-visible::before {
+  bottom: -0.2rem;
+}
+
+.verbs button:focus-visible::after {
+  bottom: -0.7rem;
+}
+
+.landmarks button {
+  position: relative;
+}
+
+.glyph {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 0.9rem;
+  height: 0.9rem;
+  color: currentColor;
+}
+
+.glyph svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.label {
+  display: inline;
+  white-space: nowrap;
+}
+
+.spectrum {
+  position: relative;
+  height: 0.7rem;
+  pointer-events: none;
+}
+
+.track {
+  position: absolute;
+  inset-inline: 0.4rem;
+  top: 50%;
+  height: 3px;
+  translate: 0 -50%;
+  border-radius: 999px;
+  background: var(--spectrum);
+  opacity: 0.42;
+}
+
+.glint {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.85rem;
+  height: 3px;
+  translate: -50% -50%;
+  border-radius: 999px;
+  background: var(--accent-display);
+  opacity: 0.5;
+}
+
+.verbs[data-bead] .glint {
+  opacity: 0;
+}
+
+.glow {
+  position: absolute;
+  top: 50%;
+  width: 3.25rem;
+  height: 4px;
+  inset-inline-start: calc((var(--open-index) + 0.5) * 25%);
+  translate: -50% -50%;
+  border-radius: 999px;
+  background: var(--accent-glow);
+  opacity: 0;
+  transition: inset-inline-start 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bead {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  inset-inline-start: calc((var(--open-index) + 0.5) * 25%);
+  translate: -50% -50%;
+  border-radius: 999px;
+  background: var(--accent-display);
+  box-shadow: 0 0 22px var(--accent-glow);
+  opacity: 0;
+  transition:
+    inset-inline-start 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 280ms ease;
+}
+
+.verbs[data-bead] .glow,
+.verbs[data-bead] .bead {
+  opacity: 1;
+}
+
+.tick {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 7px;
+  inset-inline-start: calc((var(--hover-index) + 0.5) * 25%);
+  translate: -50% -50%;
+  border-radius: 1px;
+  background: var(--ink);
+  opacity: 0;
+}
+
+.verbs[data-tick] .tick {
+  opacity: 0.72;
+}
+
+.shelf {
+  display: grid;
+  width: min(100%, 36rem);
+  z-index: 3;
+}
+
+.shelf-head {
+  grid-area: 1 / 1;
+  margin: 0 0 0.45rem;
+  color: var(--ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: left;
 }
 
 .field {
-  position: absolute;
-  z-index: 3;
-  width: min(100%, 18rem);
-  max-height: min(52vh, 28rem);
-  overflow: auto;
+  grid-area: 2 / 1;
+  width: 100%;
+  max-height: 0;
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(0.4rem) scale(0.98);
+  transform: translateY(0.35rem);
   transition:
     opacity 160ms ease,
     transform 160ms ease;
 }
 
 .field.open {
+  max-height: min(52vh, 28rem);
+  overflow: auto;
   opacity: 1;
   pointer-events: auto;
   transform: none;
 }
 
-.field.customise {
-  left: 0;
-  top: 4.5rem;
-}
-
-.field.motion {
-  right: 0;
-  top: 4.5rem;
-}
-
 .field :deep(.rail) {
   max-width: none;
   border-color: color-mix(in srgb, var(--line) 70%, transparent);
-  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
   backdrop-filter: blur(10px);
   box-shadow: 0 12px 40px rgb(var(--wash) / 0.06);
 }
 
-.field.customise[data-open-band='shape'] :deep(#customise-expression),
+.field.customise :deep(#customise-title),
+.field.customise :deep(h3),
 .field.customise[data-open-band='shape'] :deep(#customise-expression + .tiles),
-.field.customise[data-open-band='shape'] :deep(#customise-colour),
 .field.customise[data-open-band='shape'] :deep(#customise-colour + .swatches),
-.field.customise[data-open-band='expression'] :deep(#customise-shape),
 .field.customise[data-open-band='expression'] :deep(#customise-shape + .tiles),
-.field.customise[data-open-band='expression'] :deep(#customise-colour),
 .field.customise[data-open-band='expression'] :deep(#customise-colour + .swatches),
-.field.customise[data-open-band='colour'] :deep(#customise-shape),
 .field.customise[data-open-band='colour'] :deep(#customise-shape + .tiles),
-.field.customise[data-open-band='colour'] :deep(#customise-expression),
-.field.customise[data-open-band='colour'] :deep(#customise-expression + .tiles),
-.field.customise[data-open-band='shape'] :deep(#customise-title),
-.field.customise[data-open-band='expression'] :deep(#customise-title),
-.field.customise[data-open-band='colour'] :deep(#customise-title),
-.field.customise.skins :deep(#customise-shape),
-.field.customise.faces :deep(#customise-expression) {
+.field.customise[data-open-band='colour'] :deep(#customise-expression + .tiles) {
   display: none;
-}
-
-.field.motion :deep(h2) {
-  display: none;
-}
-
-.field.orbital {
-  inset: 0;
-  width: 100%;
-  max-width: none;
-  max-height: none;
-  overflow: visible;
-  background: none;
-  pointer-events: none;
-}
-
-.field.orbital.open {
-  pointer-events: none;
-}
-
-.field.orbital :deep([data-customise-panel]),
-.field.orbital :deep([data-animations-palette]) {
-  max-width: none;
-  border: none;
-  background: none;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-.field.orbital :deep(.tiles),
-.field.orbital :deep(.swatches) {
-  display: contents;
-}
-
-.field.orbital :deep([data-shape]),
-.field.orbital :deep([data-expression]),
-.field.orbital :deep([data-state]) {
-  position: absolute;
-  z-index: 5;
-  opacity: 0.4;
-  pointer-events: auto;
-  border-color: transparent;
-  background: color-mix(in srgb, var(--paper) 55%, transparent);
-  transition:
-    opacity 160ms ease,
-    transform 160ms ease,
-    border-color 160ms ease;
-}
-
-.field.customise.skins :deep([data-shape]) {
-  width: 3.25rem;
-  height: 3.25rem;
-}
-
-.field.customise.faces :deep([data-expression]),
-.field.motion.orbits :deep([data-state]) {
-  left: 50%;
-  top: 36%;
-  width: 2.65rem;
-  height: 2.65rem;
-  margin: -1.325rem;
-  transform: rotate(var(--a, 0deg)) translate(min(42vw, 15.25rem)) rotate(calc(var(--a, 0deg) * -1))
-    scale(0.96);
-}
-
-.field.motion.orbits :deep(button span) {
-  display: none;
-}
-
-.field.motion.orbits :deep(svg) {
-  width: 100%;
-  height: auto;
-}
-
-.field.customise.skins :deep([data-shape].selected),
-.field.customise.skins :deep([data-shape]:hover),
-.field.customise.skins :deep([data-shape]:focus-visible),
-.field.customise.faces :deep([data-expression].selected),
-.field.customise.faces :deep([data-expression]:hover),
-.field.customise.faces :deep([data-expression]:focus-visible),
-.field.motion.orbits :deep([data-state].selected),
-.field.motion.orbits :deep([data-state]:hover),
-.field.motion.orbits :deep([data-state]:focus-visible) {
-  z-index: 6;
-  opacity: 0.9;
-  border-color: var(--line);
-}
-
-.field.customise.skins :deep([data-shape].selected),
-.field.customise.skins :deep([data-shape]:hover),
-.field.customise.skins :deep([data-shape]:focus-visible) {
-  transform: scale(1.06);
-}
-
-.field.customise.faces :deep([data-expression].selected),
-.field.customise.faces :deep([data-expression]:hover),
-.field.customise.faces :deep([data-expression]:focus-visible),
-.field.motion.orbits :deep([data-state].selected),
-.field.motion.orbits :deep([data-state]:hover),
-.field.motion.orbits :deep([data-state]:focus-visible) {
-  transform: rotate(var(--a, 0deg)) translate(min(42vw, 15.25rem)) rotate(calc(var(--a, 0deg) * -1))
-    scale(1.08);
-}
-
-.field.customise.skins :deep([data-shape='circle']) {
-  left: 6%;
-  top: 24%;
-}
-.field.customise.skins :deep([data-shape='pebble']) {
-  left: 4%;
-  top: 46%;
-}
-.field.customise.skins :deep([data-shape='squircle']) {
-  left: 10%;
-  top: 68%;
-}
-.field.customise.skins :deep([data-shape='capsule']) {
-  left: 28%;
-  top: 10%;
-}
-.field.customise.skins :deep([data-shape='triangle']) {
-  right: 28%;
-  top: 10%;
-  left: auto;
-}
-.field.customise.skins :deep([data-shape='hexagon']) {
-  right: 6%;
-  top: 26%;
-  left: auto;
-}
-.field.customise.skins :deep([data-shape='cloud']) {
-  right: 4%;
-  top: 48%;
-  left: auto;
-}
-.field.customise.skins :deep([data-shape='droplet']) {
-  right: 12%;
-  top: 70%;
-  left: auto;
-}
-
-.field.customise.faces :deep([data-expression='neutral']) {
-  --a: -90deg;
-}
-.field.customise.faces :deep([data-expression='attentive']) {
-  --a: -67.5deg;
-}
-.field.customise.faces :deep([data-expression='surprised']) {
-  --a: -45deg;
-}
-.field.customise.faces :deep([data-expression='excited']) {
-  --a: -22.5deg;
-}
-.field.customise.faces :deep([data-expression='happy']) {
-  --a: 0deg;
-}
-.field.customise.faces :deep([data-expression='laughing']) {
-  --a: 22.5deg;
-}
-.field.customise.faces :deep([data-expression='angry']) {
-  --a: 45deg;
-}
-.field.customise.faces :deep([data-expression='sad']) {
-  --a: 67.5deg;
-}
-.field.customise.faces :deep([data-expression='scared']) {
-  --a: 90deg;
-}
-.field.customise.faces :deep([data-expression='wary']) {
-  --a: 112.5deg;
-}
-.field.customise.faces :deep([data-expression='confused']) {
-  --a: 135deg;
-}
-.field.customise.faces :deep([data-expression='curious']) {
-  --a: 157.5deg;
-}
-.field.customise.faces :deep([data-expression='proud']) {
-  --a: 180deg;
-}
-.field.customise.faces :deep([data-expression='shy']) {
-  --a: -157.5deg;
-}
-.field.customise.faces :deep([data-expression='bored']) {
-  --a: -135deg;
-}
-.field.customise.faces :deep([data-expression='sleepy']) {
-  --a: -112.5deg;
-}
-
-.field.motion.orbits :deep([data-state='Idle']) {
-  --a: -90deg;
-}
-.field.motion.orbits :deep([data-state='Thinking']) {
-  --a: -64.3deg;
-}
-.field.motion.orbits :deep([data-state='Wink']) {
-  --a: -38.6deg;
-}
-.field.motion.orbits :deep([data-state='WideEyes']) {
-  --a: -12.9deg;
-}
-.field.motion.orbits :deep([data-state='Alert']) {
-  --a: 12.8deg;
-}
-.field.motion.orbits :deep([data-state='Notification']) {
-  --a: 38.6deg;
-}
-.field.motion.orbits :deep([data-state='Exclamation']) {
-  --a: 64.3deg;
-}
-.field.motion.orbits :deep([data-state='Sleep']) {
-  --a: 90deg;
-}
-.field.motion.orbits :deep([data-state='Egg']) {
-  --a: 115.7deg;
-}
-.field.motion.orbits :deep([data-state='Hexagon']) {
-  --a: 141.4deg;
-}
-.field.motion.orbits :deep([data-state='Play']) {
-  --a: 167.1deg;
-}
-.field.motion.orbits :deep([data-state='Orbit']) {
-  --a: 192.8deg;
-}
-.field.motion.orbits :deep([data-state='Burst']) {
-  --a: 218.6deg;
-}
-.field.motion.orbits :deep([data-state='Comet']) {
-  --a: 244.3deg;
-}
-
-@media (max-width: 40rem) {
-  .field.customise:not(.orbital),
-  .field.motion:not(.orbital) {
-    left: 50%;
-    right: auto;
-    top: auto;
-    bottom: 7.5rem;
-    width: min(100% - 1rem, 22rem);
-    translate: -50% 0;
-  }
 }
 
 .tagline {
@@ -685,12 +634,35 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 
+@media (max-width: 39.99rem) {
+  .verbs button {
+    font-size: 0.8125rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .field,
-  .field.orbital :deep([data-shape]),
-  .field.orbital :deep([data-expression]),
-  .field.orbital :deep([data-state]) {
+  .bead,
+  .glow,
+  .tick,
+  .glint,
+  .field {
     transition: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .track {
+    opacity: 1;
+    background: var(--line);
+  }
+
+  .glow {
+    display: none;
+  }
+
+  .bead {
+    box-shadow: none;
+    outline: 2px solid var(--ink);
   }
 }
 </style>
