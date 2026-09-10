@@ -35,6 +35,16 @@ function stored() {
   return parseStudioDoc(window.localStorage.getItem(cle('studio')))
 }
 
+function shellAccent(wrapper: VueWrapper) {
+  const style = (wrapper.get('.shell').element as HTMLElement).style
+  return {
+    '--bot-accent': style.getPropertyValue('--bot-accent'),
+    '--bot-accent-rgb': style.getPropertyValue('--bot-accent-rgb'),
+    '--accent-contrast': style.getPropertyValue('--accent-contrast'),
+    '--accent-display': style.getPropertyValue('--accent-display'),
+  }
+}
+
 async function toVideo(wrapper: VueWrapper) {
   await wrapper.get('[data-output-dock] [data-desk="video"]').trigger('click')
   await flushPromises()
@@ -64,6 +74,8 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('circle')
     expect(svg.attributes('data-expression')).toBe('neutral')
     expect(svg.attributes('data-colour')).toBe('ink')
+    expect(shellAccent(wrapper)['--bot-accent']).toBe('#0a0a0c')
+    expect(shellAccent(wrapper)['--accent-display']).not.toBe('#0a0a0c')
     expect(wrapper.findAll('#studio svg[role="img"]')).toHaveLength(1)
     expect(svg.findAll('[data-eye]')).toHaveLength(2)
     const path = svg.get('path')
@@ -122,6 +134,21 @@ describe('App', () => {
     expect(stored()?.image.look.expression).toBe('happy')
   })
 
+  it('previews a colour on pointer hover without moving chrome accent', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    const tile = wrapper.get('[data-customise-panel] [data-colour="blue"]')
+    await tile.trigger('pointerover')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-colour')).toBe('blue')
+    expect(shellAccent(wrapper)['--bot-accent']).toBe('#0a0a0c')
+    expect(stored()?.image.look.colour).not.toBe('blue')
+
+    await tile.trigger('click')
+    expect(stored()?.image.look.colour).toBe('blue')
+    expect(shellAccent(wrapper)['--bot-accent']).toBe('#3b93f0')
+    wrapper.unmount()
+  })
+
   it('previews a motion pose on pointer hover without committing', async () => {
     const wrapper = mount(App)
     await wrapper.get('[data-mode="state"]').trigger('click')
@@ -175,6 +202,8 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('hexagon')
     expect(svg.attributes('data-expression')).toBe('happy')
     expect(svg.attributes('data-colour')).toBe('blue')
+    expect(shellAccent(wrapper)['--bot-accent']).toBe('#3b93f0')
+    expect(shellAccent(wrapper)['--accent-display']).toBe('#3b93f0')
     expect(stored()?.image.look).toMatchObject({
       shape: 'hexagon',
       expression: 'happy',
@@ -196,6 +225,8 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('droplet')
     expect(svg.attributes('data-expression')).toBe('sleepy')
     expect(svg.attributes('data-colour')).toBe('cream')
+    expect(shellAccent(wrapper)['--bot-accent']).toBe('#f1efe9')
+    expect(shellAccent(wrapper)['--accent-display']).not.toBe('#f1efe9')
     await wrapper.get('[data-mode="shape"]').trigger('click')
     expect(
       wrapper.get('[data-customise-panel] [data-shape="droplet"]').attributes('aria-checked'),
@@ -291,6 +322,98 @@ describe('App', () => {
     expect(wrapper.get('[data-disclaimer]').text().toLowerCase()).toMatch(
       /not affiliated|sans affiliation|没有任何/,
     )
+    expect(wrapper.get('[data-github]').text()).toContain(en.settings.github)
+    expect(wrapper.get('[data-github]').attributes('href')).toBe(brand.github)
+  })
+
+  it('keeps English in the language lead and nests the others', () => {
+    const wrapper = mount(App)
+    expect(wrapper.get('[data-lang-lead] [data-locale="en"]').text()).toContain('English')
+    expect(wrapper.get('[data-lang-lead]').text()).toContain(en.settings.languageDefault)
+    expect(wrapper.find('[data-lang-lead] [data-locale="fr"]').exists()).toBe(false)
+    expect(wrapper.get('[data-lang-others] [data-locale="fr"]').text()).toContain('Français')
+    expect(wrapper.get('[data-lang-others] [data-locale="zh"]').text()).toContain('简体中文')
+    expect(wrapper.get('.others summary').text()).toBe(en.settings.otherLanguages)
+  })
+
+  it('promotes the active non-English locale beside English', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-locale="fr"]').trigger('click')
+
+    expect(wrapper.get('[data-lang-lead] [data-locale="en"]').exists()).toBe(true)
+    expect(wrapper.get('[data-lang-lead] [data-locale="fr"]').attributes('aria-checked')).toBe(
+      'true',
+    )
+    expect(wrapper.find('[data-lang-others] [data-locale="fr"]').exists()).toBe(false)
+    expect(wrapper.get('[data-lang-others] [data-locale="zh"]').exists()).toBe(true)
+  })
+
+  it('moves theme choice with arrow keys and wraps', async () => {
+    const wrapper = mount(App)
+    expect(wrapper.get('[data-theme-choice="system"]').attributes('aria-checked')).toBe('true')
+
+    await wrapper.get('[data-theme-choice="system"]').trigger('keydown', { key: 'ArrowRight' })
+    expect(wrapper.get('[data-theme-choice="light"]').attributes('aria-checked')).toBe('true')
+    expect(stored()?.theme).toBe('light')
+
+    await wrapper.get('[data-theme-choice="light"]').trigger('keydown', { key: 'ArrowLeft' })
+    expect(wrapper.get('[data-theme-choice="system"]').attributes('aria-checked')).toBe('true')
+  })
+
+  it('moves language with arrow keys and promotes the choice', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-locale="en"]').trigger('keydown', { key: 'ArrowRight' })
+    expect(wrapper.get('[data-locale="fr"]').attributes('aria-checked')).toBe('true')
+    expect(wrapper.get('[data-lang-lead] [data-locale="fr"]').exists()).toBe(true)
+    expect(window.localStorage.getItem(cle('langue'))).toBe('fr')
+  })
+
+  it('scrolls to a section without writing the pose hash', async () => {
+    const wrapper = mount(App)
+    expect(location.hash).toBe('#etat=idle&stop')
+
+    await wrapper.get('[data-nav="settings"]').trigger('click')
+
+    expect(location.hash).toBe('#etat=idle&stop')
+    expect(wrapper.get('[data-nav="settings"]').attributes('aria-current')).toBe('location')
+    expect(wrapper.get('[data-nav="rollup"]').attributes('aria-current')).toBeUndefined()
+  })
+
+  it('marks the intersecting section on the nav', async () => {
+    const seen: IntersectionObserverCallback[] = []
+    class FakeObserver implements IntersectionObserver {
+      readonly root = null
+      readonly rootMargin = ''
+      readonly thresholds: readonly number[] = []
+      constructor(cb: IntersectionObserverCallback) {
+        seen.push(cb)
+      }
+      disconnect() {}
+      observe() {}
+      unobserve() {}
+      takeRecords(): IntersectionObserverEntry[] {
+        return []
+      }
+    }
+    vi.stubGlobal('IntersectionObserver', FakeObserver)
+    const wrapper = mount(App)
+    const about = wrapper.get('#about').element
+    seen[0]!(
+      [
+        {
+          target: about,
+          isIntersecting: true,
+          intersectionRatio: 0.8,
+        } as IntersectionObserverEntry,
+      ],
+      {} as IntersectionObserver,
+    )
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('[data-nav="about"]').attributes('aria-current')).toBe('location')
+    expect(wrapper.get('[data-nav="settings"]').attributes('aria-current')).toBeUndefined()
+    wrapper.unmount()
+    vi.unstubAllGlobals()
   })
 })
 
@@ -425,6 +548,105 @@ describe('output dock', () => {
     const wrapper = mount(App)
     expect(wrapper.get('#studio').attributes('data-desk')).toBe('video')
     expect(wrapper.find('[data-timeline]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+})
+
+describe('spectrum rail', () => {
+  beforeEach(() => {
+    history.replaceState(null, '', '/')
+    window.localStorage.clear()
+    document.documentElement.removeAttribute('data-theme')
+    rechargerLangue()
+    langue.value = 'en'
+  })
+
+  afterEach(() => {
+    history.replaceState(null, '', '/')
+  })
+
+  it('keeps English verb labels next to glyphs and drives data-mode from VERBS', () => {
+    const wrapper = mount(App)
+    const buttons = wrapper.findAll('#studio [data-mode]')
+    expect(buttons.map((n) => n.attributes('data-mode'))).toEqual([
+      'shape',
+      'expression',
+      'colour',
+      'state',
+    ])
+    expect(wrapper.get('[data-mode="shape"]').text()).toContain(en.studio.shape)
+    expect(wrapper.get('[data-mode="expression"]').text()).toContain(en.studio.face)
+    expect(wrapper.get('[data-mode="colour"]').text()).toContain(en.studio.aura)
+    expect(wrapper.get('[data-mode="state"]').text()).toContain(en.studio.motion)
+    expect(wrapper.get('[data-mode="shape"] .glyph').attributes('aria-hidden')).toBe('true')
+    wrapper.unmount()
+  })
+
+  it('paints the rail from catalogue colour stops', () => {
+    const wrapper = mount(App)
+    const style = wrapper.get('.verbs').attributes('style') ?? ''
+    for (const { hex } of COLORS) {
+      expect(style).toContain(hex)
+    }
+    wrapper.unmount()
+  })
+
+  it('opens pickers on a compact shelf and leaves closed bands inert', async () => {
+    const wrapper = mount(App)
+    const customise = wrapper.get('.field.customise')
+    const motion = wrapper.get('.field.motion')
+    expect(wrapper.get('[data-customise-panel]').classes()).toContain('compact')
+    expect(wrapper.get('[data-animations-palette]').classes()).toContain('strip')
+    expect(customise.attributes('inert')).toBeDefined()
+    expect(customise.attributes('aria-hidden')).toBe('true')
+    expect(motion.attributes('inert')).toBeDefined()
+    expect(motion.attributes('aria-hidden')).toBe('true')
+
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    expect(wrapper.get('.field.customise').attributes('inert')).toBeUndefined()
+    expect(wrapper.get('.field.customise').attributes('aria-hidden')).toBeUndefined()
+    expect(wrapper.get('.field.customise').attributes('data-open-band')).toBe('colour')
+    expect(wrapper.get('.shelf-head').text()).toBe(en.studio.aura)
+    expect(wrapper.get('.field.motion').attributes('aria-hidden')).toBe('true')
+
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    expect(wrapper.get('.field.motion').attributes('inert')).toBeUndefined()
+    expect(wrapper.get('.field.motion').attributes('aria-hidden')).toBeUndefined()
+    expect(wrapper.get('.field.customise').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.get('.shelf-head').text()).toBe(en.studio.motion)
+    wrapper.unmount()
+  })
+
+  it('keeps playback running through shape and aura commits', async () => {
+    const wrapper = mount(App)
+    await toVideo(wrapper)
+    await wrapper.get('[data-play]').trigger('click')
+    const desk = wrapper.getComponent(Timeline).props('desk')
+    expect(desk.transport.playing.value).toBe(true)
+
+    await wrapper.get('[data-mode="shape"]').trigger('click')
+    await wrapper.get('[data-customise-panel] [data-shape="hexagon"]').trigger('click')
+    expect(desk.transport.playing.value).toBe(true)
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-shape')).toBe('hexagon')
+
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    await wrapper.get('[data-customise-panel] [data-colour="blue"]').trigger('click')
+    expect(desk.transport.playing.value).toBe(true)
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-colour')).toBe('blue')
+    wrapper.unmount()
+  })
+
+  it('refuses pose preview while the transport is playing', async () => {
+    const wrapper = mount(App)
+    await toVideo(wrapper)
+    await wrapper.get('[data-play]').trigger('click')
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('pointerover')
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).not.toBe('Comet')
+    expect(
+      wrapper.get('[data-animations-palette] [data-state="Idle"]').attributes('aria-checked'),
+    ).toBe('true')
+    expect(wrapper.getComponent(Timeline).props('desk').transport.playing.value).toBe(true)
     wrapper.unmount()
   })
 })

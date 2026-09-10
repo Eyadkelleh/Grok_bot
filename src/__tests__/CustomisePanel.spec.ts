@@ -43,4 +43,13 @@ describe('CustomisePanel', () => {
     await wrapper.get('[data-colour="blue"]').trigger('click')
     expect(wrapper.emitted('update:colour')?.[0]).toEqual(['blue'])
   })
+
+  it('defaults to a grid and can lay out as a compact strip', () => {
+    const grid = mount(CustomisePanel, { props })
+    expect(grid.get('[data-customise-panel]').attributes('data-layout')).toBe('grid')
+    expect(grid.get('[data-customise-panel]').classes()).not.toContain('compact')
+    const compact = mount(CustomisePanel, { props: { ...props, layout: 'compact' } })
+    expect(compact.get('[data-customise-panel]').attributes('data-layout')).toBe('compact')
+    expect(compact.get('[data-customise-panel]').classes()).toContain('compact')
+  })
 })

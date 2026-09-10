@@ -67,6 +67,7 @@ const idsCouleurs = COLORS.map((c) => c.id)
     class="rail surface"
     :class="{ compact: props.layout === 'compact' }"
     data-customise-panel
+    :data-layout="props.layout"
     aria-labelledby="customise-title"
   >
     <h2 id="customise-title">{{ t('panel.title') }}</h2>
@@ -212,7 +213,18 @@ h3 {
 }
 
 .compact .swatches {
-  grid-template-columns: repeat(auto-fill, minmax(1.85rem, 1fr));
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scroll-snap-type: x proximity;
+}
+
+.compact .swatches button {
+  flex: 0 0 auto;
+  width: 1.85rem;
+  scroll-snap-align: start;
 }
 
 button {

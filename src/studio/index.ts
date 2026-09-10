@@ -10,6 +10,13 @@ export { defaultStudioDoc, parseStudioDoc, saveDoc, type StudioDoc } from './doc
 export { hrefForDesk } from './location'
 export { createStudioSession, STUDIO, useStudio, type StudioSession } from './session'
 export { THEME_CHOICES, type ThemeController } from './theme'
+export {
+  VERBS,
+  type PeekAttr,
+  type VerbDataMode,
+  type VerbId,
+  type VerbSpec,
+} from './verbs'
 export type {
   BannerCopy,
   ConfigFor,

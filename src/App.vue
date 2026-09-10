@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, provide } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
 import { nomDeCycle, t, type Cle } from './i18n'
 import { poseCycle, totalDuration } from './engine'
 import OutputDock from './components/OutputDock.vue'
@@ -8,16 +8,25 @@ import Settings from './components/Settings.vue'
 import Stage from './components/Stage.vue'
 import Timeline from './components/Timeline.vue'
 import { createStudioSession, STUDIO } from './studio'
+import { resolveChromeAccent } from './ui/chromeAccent'
 
 const studio = createStudioSession()
 provide(STUDIO, studio)
-onBeforeUnmount(studio.dispose)
 
 const SECTIONS = ['rollup', 'settings', 'about'] as const
+type SectionId = (typeof SECTIONS)[number]
+
+const shell = ref<HTMLElement | null>(null)
+const navCourante = ref<SectionId | null>(null)
+const visibles = new Set<SectionId>()
+let observateur: IntersectionObserver | null = null
 
 const focus = studio.focus
 const desk = computed(() => studio.deskOf(focus.value))
 const video = studio.video
+const chromeAccent = computed(() =>
+  resolveChromeAccent(desk.value.config.value.look.colour),
+)
 
 /** The export bar names the cycle on video and the standing pose on image. */
 const cycle = computed(() => video.activeCycle.value)
@@ -25,16 +34,61 @@ const poseDuration = computed(() =>
   totalDuration(poseCycle(desk.value.config.value.pose).blocks),
 )
 
-function aller(id: (typeof SECTIONS)[number]) {
-  const cible = document.getElementById(id)
-  if (!cible) return
-  const calme = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  cible.scrollIntoView({ behavior: calme ? 'auto' : 'smooth', block: 'start' })
+function sectionDe(cible: Element | null): SectionId | null {
+  const id = cible?.id
+  return id === 'rollup' || id === 'settings' || id === 'about' ? id : null
 }
+
+function rangerNav() {
+  observateur?.disconnect()
+  observateur = null
+  visibles.clear()
+}
+
+function choisirNav() {
+  const suivante = [...SECTIONS].reverse().find((id) => visibles.has(id))
+  if (suivante) navCourante.value = suivante
+}
+
+function lierNav() {
+  rangerNav()
+  if (typeof IntersectionObserver !== 'function') return
+  observateur = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const id = sectionDe(entry.target)
+        if (!id) continue
+        if (entry.isIntersecting) visibles.add(id)
+        else visibles.delete(id)
+      }
+      choisirNav()
+    },
+    { rootMargin: '-12% 0px -70% 0px', threshold: [0, 0.25, 0.6] },
+  )
+  for (const id of SECTIONS) {
+    const cible = shell.value?.querySelector(`#${id}`)
+    if (cible) observateur.observe(cible)
+  }
+}
+
+function aller(id: SectionId) {
+  navCourante.value = id
+  const cible = shell.value?.querySelector(`#${id}`)
+  if (!(cible instanceof HTMLElement)) return
+  const calme =
+    typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+  cible.scrollIntoView?.({ behavior: calme ? 'auto' : 'smooth', block: 'start' })
+}
+
+onMounted(lierNav)
+onBeforeUnmount(() => {
+  rangerNav()
+  studio.dispose()
+})
 </script>
 
 <template>
-  <div class="shell" :data-focus="focus">
+  <div ref="shell" class="shell" :data-focus="focus" :style="chromeAccent.cssVars">
     <header class="topbar">
       <p class="brand">{{ t('app.name') }}</p>
       <OutputDock
@@ -50,6 +104,7 @@ function aller(id: (typeof SECTIONS)[number]) {
           :key="id"
           :href="`#${id}`"
           :data-nav="id"
+          :aria-current="navCourante === id ? 'location' : undefined"
           @click.prevent="aller(id)"
           >{{ t(`nav.${id}` as Cle) }}</a
         >
@@ -106,18 +161,75 @@ function aller(id: (typeof SECTIONS)[number]) {
 .nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 0.85rem;
+  gap: 0.5rem 1.05rem;
+  margin-left: 0.15rem;
+  padding-left: 0.95rem;
+  border-left: 1px solid var(--line);
 }
 
 .nav a {
+  position: relative;
   color: var(--muted);
   font-size: 0.875rem;
   text-decoration: none;
+  padding: 0.1rem 0.05rem 0.5rem;
 }
 
-.nav a:hover,
+.nav a::before {
+  content: '';
+  position: absolute;
+  left: 0.05rem;
+  right: 0.05rem;
+  bottom: 0.18rem;
+  height: 1px;
+  background: var(--line);
+}
+
+.nav a::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0.05rem;
+  width: 0;
+  height: 4px;
+  border-radius: 99px;
+  background: transparent;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.nav a:hover:not([aria-current='location']) {
+  color: var(--ink);
+}
+
+.nav a:hover:not([aria-current='location'])::after {
+  width: 5px;
+  background: var(--muted);
+}
+
+.nav a[aria-current='location'] {
+  color: var(--ink);
+}
+
+.nav a[aria-current='location']::after {
+  width: 1.75rem;
+  height: 4px;
+  background:
+    radial-gradient(circle at 50% 50%, var(--accent-display) 2px, transparent 2.4px),
+    linear-gradient(var(--accent-display), var(--accent-display)) center / 1.75rem 2px no-repeat;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
 .nav a:focus-visible {
   color: var(--ink);
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav a[aria-current='location']::after {
+    box-shadow: none;
+  }
 }
 
 .page {
