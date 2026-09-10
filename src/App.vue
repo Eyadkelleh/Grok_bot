@@ -8,6 +8,7 @@ import Settings from './components/Settings.vue'
 import Stage from './components/Stage.vue'
 import Timeline from './components/Timeline.vue'
 import { createStudioSession, STUDIO } from './studio'
+import { resolveChromeAccent } from './ui/chromeAccent'
 
 const studio = createStudioSession()
 provide(STUDIO, studio)
@@ -18,6 +19,9 @@ const SECTIONS = ['rollup', 'settings', 'about'] as const
 const focus = studio.focus
 const desk = computed(() => studio.deskOf(focus.value))
 const video = studio.video
+const chromeAccent = computed(() =>
+  resolveChromeAccent(desk.value.config.value.look.colour),
+)
 
 /** The export bar names the cycle on video and the standing pose on image. */
 const cycle = computed(() => video.activeCycle.value)
@@ -34,7 +38,7 @@ function aller(id: (typeof SECTIONS)[number]) {
 </script>
 
 <template>
-  <div class="shell" :data-focus="focus">
+  <div class="shell" :data-focus="focus" :style="chromeAccent.cssVars">
     <header class="topbar">
       <p class="brand">{{ t('app.name') }}</p>
       <OutputDock

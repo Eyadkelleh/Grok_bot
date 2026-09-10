@@ -35,6 +35,16 @@ function stored() {
   return parseStudioDoc(window.localStorage.getItem(cle('studio')))
 }
 
+function shellAccent(wrapper: VueWrapper) {
+  const style = (wrapper.get('.shell').element as HTMLElement).style
+  return {
+    '--bot-accent': style.getPropertyValue('--bot-accent'),
+    '--bot-accent-rgb': style.getPropertyValue('--bot-accent-rgb'),
+    '--accent-contrast': style.getPropertyValue('--accent-contrast'),
+    '--accent-display': style.getPropertyValue('--accent-display'),
+  }
+}
+
 async function toVideo(wrapper: VueWrapper) {
   await wrapper.get('[data-output-dock] [data-desk="video"]').trigger('click')
   await flushPromises()
@@ -64,6 +74,8 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('circle')
     expect(svg.attributes('data-expression')).toBe('neutral')
     expect(svg.attributes('data-colour')).toBe('ink')
+    expect(shellAccent(wrapper)['--bot-accent']).toBe('#0a0a0c')
+    expect(shellAccent(wrapper)['--accent-display']).not.toBe('#0a0a0c')
     expect(wrapper.findAll('#studio svg[role="img"]')).toHaveLength(1)
     expect(svg.findAll('[data-eye]')).toHaveLength(2)
     const path = svg.get('path')
@@ -175,6 +187,8 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('hexagon')
     expect(svg.attributes('data-expression')).toBe('happy')
     expect(svg.attributes('data-colour')).toBe('blue')
+    expect(shellAccent(wrapper)['--bot-accent']).toBe('#3b93f0')
+    expect(shellAccent(wrapper)['--accent-display']).toBe('#3b93f0')
     expect(stored()?.image.look).toMatchObject({
       shape: 'hexagon',
       expression: 'happy',
@@ -196,6 +210,8 @@ describe('App', () => {
     expect(svg.attributes('data-shape')).toBe('droplet')
     expect(svg.attributes('data-expression')).toBe('sleepy')
     expect(svg.attributes('data-colour')).toBe('cream')
+    expect(shellAccent(wrapper)['--bot-accent']).toBe('#f1efe9')
+    expect(shellAccent(wrapper)['--accent-display']).not.toBe('#f1efe9')
     await wrapper.get('[data-mode="shape"]').trigger('click')
     expect(
       wrapper.get('[data-customise-panel] [data-shape="droplet"]').attributes('aria-checked'),

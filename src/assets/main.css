@@ -12,6 +12,17 @@
   --line: #d6d3d1;
   --paper: #ffffff;
   --wash: 0 0 0;
+  /**
+   * Bot-colour chrome. Runtime values come from `resolveChromeAccent` on the
+   * studio shell. Fallbacks match engine `DEFAULT_COLOR` (ink). Soft/glow mix
+   * with `--accent-display` so ink and cream stay visible as markers.
+   */
+  --bot-accent: #0a0a0c;
+  --bot-accent-rgb: 10 10 12;
+  --accent-contrast: #ffffff;
+  --accent-display: var(--bot-accent);
+  --accent-soft: color-mix(in srgb, var(--accent-display) 14%, var(--paper));
+  --accent-glow: color-mix(in srgb, var(--accent-display) 42%, transparent);
 }
 
 :root[data-theme='dark'] {
@@ -22,6 +33,12 @@
   --line: #3a3532;
   --paper: #211d1a;
   --wash: 255 255 255;
+  --bot-accent: #0a0a0c;
+  --bot-accent-rgb: 10 10 12;
+  --accent-contrast: #ffffff;
+  --accent-display: var(--bot-accent);
+  --accent-soft: color-mix(in srgb, var(--accent-display) 14%, var(--paper));
+  --accent-glow: color-mix(in srgb, var(--accent-display) 42%, transparent);
 }
 
 :root {
