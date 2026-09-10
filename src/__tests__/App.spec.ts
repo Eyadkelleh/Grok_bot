@@ -322,6 +322,98 @@ describe('App', () => {
     expect(wrapper.get('[data-disclaimer]').text().toLowerCase()).toMatch(
       /not affiliated|sans affiliation|没有任何/,
     )
+    expect(wrapper.get('[data-github]').text()).toContain(en.settings.github)
+    expect(wrapper.get('[data-github]').attributes('href')).toBe(brand.github)
+  })
+
+  it('keeps English in the language lead and nests the others', () => {
+    const wrapper = mount(App)
+    expect(wrapper.get('[data-lang-lead] [data-locale="en"]').text()).toContain('English')
+    expect(wrapper.get('[data-lang-lead]').text()).toContain(en.settings.languageDefault)
+    expect(wrapper.find('[data-lang-lead] [data-locale="fr"]').exists()).toBe(false)
+    expect(wrapper.get('[data-lang-others] [data-locale="fr"]').text()).toContain('Français')
+    expect(wrapper.get('[data-lang-others] [data-locale="zh"]').text()).toContain('简体中文')
+    expect(wrapper.get('.others summary').text()).toBe(en.settings.otherLanguages)
+  })
+
+  it('promotes the active non-English locale beside English', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-locale="fr"]').trigger('click')
+
+    expect(wrapper.get('[data-lang-lead] [data-locale="en"]').exists()).toBe(true)
+    expect(wrapper.get('[data-lang-lead] [data-locale="fr"]').attributes('aria-checked')).toBe(
+      'true',
+    )
+    expect(wrapper.find('[data-lang-others] [data-locale="fr"]').exists()).toBe(false)
+    expect(wrapper.get('[data-lang-others] [data-locale="zh"]').exists()).toBe(true)
+  })
+
+  it('moves theme choice with arrow keys and wraps', async () => {
+    const wrapper = mount(App)
+    expect(wrapper.get('[data-theme-choice="system"]').attributes('aria-checked')).toBe('true')
+
+    await wrapper.get('[data-theme-choice="system"]').trigger('keydown', { key: 'ArrowRight' })
+    expect(wrapper.get('[data-theme-choice="light"]').attributes('aria-checked')).toBe('true')
+    expect(stored()?.theme).toBe('light')
+
+    await wrapper.get('[data-theme-choice="light"]').trigger('keydown', { key: 'ArrowLeft' })
+    expect(wrapper.get('[data-theme-choice="system"]').attributes('aria-checked')).toBe('true')
+  })
+
+  it('moves language with arrow keys and promotes the choice', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-locale="en"]').trigger('keydown', { key: 'ArrowRight' })
+    expect(wrapper.get('[data-locale="fr"]').attributes('aria-checked')).toBe('true')
+    expect(wrapper.get('[data-lang-lead] [data-locale="fr"]').exists()).toBe(true)
+    expect(window.localStorage.getItem(cle('langue'))).toBe('fr')
+  })
+
+  it('scrolls to a section without writing the pose hash', async () => {
+    const wrapper = mount(App)
+    expect(location.hash).toBe('#etat=idle&stop')
+
+    await wrapper.get('[data-nav="settings"]').trigger('click')
+
+    expect(location.hash).toBe('#etat=idle&stop')
+    expect(wrapper.get('[data-nav="settings"]').attributes('aria-current')).toBe('location')
+    expect(wrapper.get('[data-nav="rollup"]').attributes('aria-current')).toBeUndefined()
+  })
+
+  it('marks the intersecting section on the nav', async () => {
+    const seen: IntersectionObserverCallback[] = []
+    class FakeObserver implements IntersectionObserver {
+      readonly root = null
+      readonly rootMargin = ''
+      readonly thresholds: readonly number[] = []
+      constructor(cb: IntersectionObserverCallback) {
+        seen.push(cb)
+      }
+      disconnect() {}
+      observe() {}
+      unobserve() {}
+      takeRecords(): IntersectionObserverEntry[] {
+        return []
+      }
+    }
+    vi.stubGlobal('IntersectionObserver', FakeObserver)
+    const wrapper = mount(App)
+    const about = wrapper.get('#about').element
+    seen[0]!(
+      [
+        {
+          target: about,
+          isIntersecting: true,
+          intersectionRatio: 0.8,
+        } as IntersectionObserverEntry,
+      ],
+      {} as IntersectionObserver,
+    )
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('[data-nav="about"]').attributes('aria-current')).toBe('location')
+    expect(wrapper.get('[data-nav="settings"]').attributes('aria-current')).toBeUndefined()
+    wrapper.unmount()
+    vi.unstubAllGlobals()
   })
 })
 
