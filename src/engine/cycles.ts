@@ -143,6 +143,81 @@ export function nextCycleId(cycles: Cycle[]): string {
   return `c${n}`
 }
 
+/**
+ * One edit to a montage. The UI emits these and stays a view; nothing outside
+ * this reducer mutates a cycle.
+ */
+export type MontageEdit =
+  | { op: 'select'; id: string }
+  | { op: 'create'; name: string; seed: AnimationState }
+  | { op: 'rename'; id: string; name: string }
+  | { op: 'remove'; id: string }
+  | { op: 'set-blocks'; id: string; blocks: Block[] }
+  | { op: 'append'; state: AnimationState }
+
+export function activeCycleOf(montage: Montage): Cycle {
+  return montage.cycles.find((c) => c.id === montage.activeId) ?? montage.cycles[0]!
+}
+
+/** Total: an edit naming a missing cycle returns the montage unchanged. */
+export function applyMontageEdit(montage: Montage, edit: MontageEdit): Montage {
+  const { cycles } = montage
+  switch (edit.op) {
+    case 'select':
+      return cycles.some((c) => c.id === edit.id) ? { ...montage, activeId: edit.id } : montage
+
+    case 'create': {
+      if (cycles.length >= MAX_CYCLES) return montage
+      const neuf: Cycle = {
+        id: nextCycleId(cycles),
+        name: uniqueName(edit.name, cycles),
+        blocks: [makeBlock(edit.seed)],
+      }
+      return { activeId: neuf.id, cycles: [...cycles, neuf] }
+    }
+
+    case 'rename': {
+      if (!cycles.some((c) => c.id === edit.id)) return montage
+      const name = uniqueName(
+        edit.name,
+        cycles.filter((c) => c.id !== edit.id),
+      )
+      return {
+        ...montage,
+        cycles: cycles.map((c) => (c.id === edit.id ? { ...c, name } : c)),
+      }
+    }
+
+    case 'remove': {
+      if (cycles.length < 2 || !cycles.some((c) => c.id === edit.id)) return montage
+      const reste = cycles.filter((c) => c.id !== edit.id)
+      return {
+        activeId: montage.activeId === edit.id ? reste[0]!.id : montage.activeId,
+        cycles: reste,
+      }
+    }
+
+    case 'set-blocks': {
+      if (!edit.blocks.length || !cycles.some((c) => c.id === edit.id)) return montage
+      const blocks = edit.blocks.slice(0, MAX_BLOCS)
+      return {
+        ...montage,
+        cycles: cycles.map((c) => (c.id === edit.id ? { ...c, blocks } : c)),
+      }
+    }
+
+    case 'append': {
+      const active = activeCycleOf(montage)
+      return {
+        ...montage,
+        cycles: cycles.map((c) =>
+          c.id === active.id ? { ...c, blocks: blocksWith(c.blocks, edit.state) } : c,
+        ),
+      }
+    }
+  }
+}
+
 function parseBlock(raw: unknown): Block | null {
   if (typeof raw !== 'object' || raw === null) return null
   const { state, duration } = raw as { state?: unknown; duration?: unknown }

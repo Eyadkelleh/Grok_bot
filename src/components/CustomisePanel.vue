@@ -257,6 +257,6 @@ svg {
   width: 78%;
   aspect-ratio: 1;
   border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(var(--wash) / 0.1);
 }
 </style>

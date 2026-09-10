@@ -9,6 +9,14 @@ export const BANNER_REF_H = 5400
 export type BannerId = 'banner-01' | 'banner-2' | 'banner-3'
 export type SlotId = 'welcome' | 'logo' | 'event' | 'presentedBy' | 'wordmark'
 
+/** Event copy poured into the banner's text slots. */
+export interface BannerCopy {
+  welcome: string
+  event1: string
+  event2: string
+  presentedBy: string
+}
+
 export const BANNER_IDS: readonly BannerId[] = ['banner-01', 'banner-2', 'banner-3']
 
 export function isBannerId(value: string): value is BannerId {

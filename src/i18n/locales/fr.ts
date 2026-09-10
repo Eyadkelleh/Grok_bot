@@ -2,28 +2,25 @@ export default {
   app: {
     name: 'Grok_bot',
     title: "Grok_bot — studio d'avatar SVG",
-    tagline: 'Trois étapes : le look, le mouvement, puis la vidéo.',
+    tagline: 'Composez votre bot, puis emportez-le en image ou en vidéo.',
     botAria: 'Avatar Grok_bot',
   },
 
   nav: {
     label: 'Navigation',
-    studio: 'Studio',
-    customise: 'Personnaliser',
+    rollup: 'Kakémono',
     settings: 'Réglages',
     about: 'À propos',
   },
 
-  flow: {
-    stepsLabel: 'Étapes pour créer une vidéo',
-    look: 'Look',
-    motion: 'Mouvement',
+  dock: {
+    label: 'Sorties',
+    image: 'Image',
     video: 'Vidéo',
-    lookTitle: '1. Choisissez le look',
-    motionTitle: '2. Choisissez le mouvement',
-    videoTitle: '3. Téléchargez la vidéo',
-    summary: 'Prêt : {pose}',
-    advancedTimeline: 'Avancé : monter une séquence',
+    imageHint: 'PNG · SVG',
+    videoHint: 'GIF · MP4',
+    imageAria: 'Plan de travail Image',
+    videoAria: 'Plan de travail Vidéo',
   },
 
   panel: {
@@ -39,9 +36,13 @@ export default {
     shape: 'Forme',
     face: 'Visage',
     aura: 'Aura',
-    fond: 'Fond',
     motion: 'Mouvement',
     shapeLocked: 'Cette pose garde son propre contour.',
+  },
+
+  rollup: {
+    title: 'Kakémono',
+    lead: 'Mise en page de la bannière d’événement, pas du bot.',
   },
 
   fond: {
@@ -133,10 +134,12 @@ export default {
     moveRight: 'Déplacer {state} vers la droite',
   },
 
+  video: {
+    timeline: 'Montage',
+  },
+
   dialog: {
     cancel: 'Annuler',
-    nameCreateTitle: 'Nouveau cycle',
-    nameRenameTitle: 'Renommer le cycle',
     nameField: 'Nom du cycle',
     nameCreate: 'Créer',
     nameRename: 'Renommer',
@@ -160,21 +163,11 @@ export default {
 
   export: {
     title: 'Exporter',
-    stills: 'Image fixe',
-    video: 'Vidéo',
-    primaryVideo: 'Télécharger {format} · {name}',
-    moreOptions: 'Avancé : cycle de la timeline',
+    primary: 'Télécharger {format} · {name}',
     png: 'Télécharger le PNG',
     svg: 'Télécharger le SVG',
     gif: 'Télécharger le GIF',
     mp4: 'Télécharger le MP4',
-    gifPose: 'GIF de {name}',
-    gifCycle: 'GIF du cycle',
-    mp4Pose: 'MP4 de {name}',
-    mp4Cycle: 'MP4 du cycle',
-    sourceLabel: 'Source de la vidéo',
-    sourcePose: 'Cette pose · {name}',
-    sourceCycle: 'Cycle · {name}',
     metaPose: '{name} · {duration} · court clip de cette pose',
     metaCycle: '{name} · {duration} · {count} animations',
     busy: 'Export en cours…',
@@ -191,6 +184,10 @@ export default {
   settings: {
     title: 'Réglages',
     language: 'Langue',
+    theme: 'Thème',
+    themeLight: 'Clair',
+    themeDark: 'Sombre',
+    themeSystem: 'Système',
     about: 'À propos',
     credits: 'Recréation indépendante de {name} (MIT).',
     creditsAria: 'bloub sur GitHub, dans un nouvel onglet',

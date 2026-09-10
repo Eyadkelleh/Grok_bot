@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { BannerCopy } from '../fond'
 import { t, type Cle } from '../i18n'
 import { PLATES } from '../ui/plates'
-import { type BannerId } from '../ui/scene'
+import { type BannerCopy, type BannerId } from '../ui/scene'
 
 const bannerId = defineModel<BannerId | null>('bannerId', { required: true })
 const copy = defineModel<BannerCopy>('copy', { required: true })

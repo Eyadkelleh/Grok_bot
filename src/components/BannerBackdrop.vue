@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { BannerCopy } from '../fond'
 import { plateDe } from '../ui/plates'
 import {
   BANNER_REF_H,
@@ -9,6 +8,7 @@ import {
   mesureScene,
   sceneBanniere,
   type BannerId,
+  type BannerCopy,
 } from '../ui/scene'
 import { styleSlot } from '../ui/toile'
 

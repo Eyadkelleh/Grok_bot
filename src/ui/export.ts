@@ -18,7 +18,6 @@ export const SVG_TAILLE = VIEW_SIZE
 
 export type ActionId = 'png' | 'svg' | 'gif' | 'mp4'
 export type ModeExport = 'telecharge' | 'montage'
-export type EtatExport = 'pret' | 'occupe' | 'exporte' | 'erreur'
 export type FormatCycle = 'mp4' | 'gif'
 export type FondGif = 'blanc' | 'transparent'
 

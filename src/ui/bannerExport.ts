@@ -3,7 +3,6 @@
  */
 
 import { totalDuration, type Cycle } from '../engine'
-import type { BannerCopy } from '../fond'
 import {
   dessine,
   ouvreCycle,
@@ -18,6 +17,7 @@ import {
   CADRE_BANNER_PNG,
   sceneBanniere,
   type BannerId,
+  type BannerCopy,
 } from './scene'
 import { peintScene } from './toile'
 

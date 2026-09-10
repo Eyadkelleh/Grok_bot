@@ -4,28 +4,25 @@ const en: typeof fr = {
   app: {
     name: 'Grok_bot',
     title: 'Grok_bot — SVG avatar studio',
-    tagline: 'Three steps: pick a look, pick a motion, download the video.',
+    tagline: 'Design your bot, then take it away as an image or a video.',
     botAria: 'Grok_bot avatar',
   },
 
   nav: {
     label: 'Navigation',
-    studio: 'Studio',
-    customise: 'Customise',
+    rollup: 'Rollup',
     settings: 'Settings',
     about: 'About',
   },
 
-  flow: {
-    stepsLabel: 'Steps to create a video',
-    look: 'Look',
-    motion: 'Motion',
+  dock: {
+    label: 'Outputs',
+    image: 'Image',
     video: 'Video',
-    lookTitle: '1. Choose the look',
-    motionTitle: '2. Choose the motion',
-    videoTitle: '3. Download the video',
-    summary: 'Ready: {pose}',
-    advancedTimeline: 'Advanced: build a sequence',
+    imageHint: 'PNG · SVG',
+    videoHint: 'GIF · MP4',
+    imageAria: 'Image desk',
+    videoAria: 'Video desk',
   },
 
   panel: {
@@ -41,9 +38,13 @@ const en: typeof fr = {
     shape: 'Shape',
     face: 'Face',
     aura: 'Aura',
-    fond: 'Backdrop',
     motion: 'Motion',
     shapeLocked: 'This pose keeps its own outline.',
+  },
+
+  rollup: {
+    title: 'Rollup',
+    lead: 'Event banner layout, not the bot.',
   },
 
   fond: {
@@ -135,10 +136,12 @@ const en: typeof fr = {
     moveRight: 'Move {state} right',
   },
 
+  video: {
+    timeline: 'Timeline',
+  },
+
   dialog: {
     cancel: 'Cancel',
-    nameCreateTitle: 'New cycle',
-    nameRenameTitle: 'Rename cycle',
     nameField: 'Cycle name',
     nameCreate: 'Create',
     nameRename: 'Rename',
@@ -162,21 +165,11 @@ const en: typeof fr = {
 
   export: {
     title: 'Export',
-    stills: 'Still image',
-    video: 'Video',
-    primaryVideo: 'Download {format} · {name}',
-    moreOptions: 'Advanced: timeline cycle',
+    primary: 'Download {format} · {name}',
     png: 'Download PNG',
     svg: 'Download SVG',
     gif: 'Download GIF',
     mp4: 'Download MP4',
-    gifPose: 'GIF of {name}',
-    gifCycle: 'GIF of cycle',
-    mp4Pose: 'MP4 of {name}',
-    mp4Cycle: 'MP4 of cycle',
-    sourceLabel: 'Video source',
-    sourcePose: 'This pose · {name}',
-    sourceCycle: 'Timeline cycle · {name}',
     metaPose: '{name} · {duration} · short clip of this pose',
     metaCycle: '{name} · {duration} · {count} animations in the timeline',
     busy: 'Exporting…',
@@ -193,6 +186,10 @@ const en: typeof fr = {
   settings: {
     title: 'Settings',
     language: 'Language',
+    theme: 'Theme',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeSystem: 'System',
     about: 'About',
     credits: 'Independent recreation of {name} (MIT).',
     creditsAria: 'bloub on GitHub, in a new tab',

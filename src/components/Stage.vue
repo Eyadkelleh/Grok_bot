@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, type WritableComputedRef } from 'vue'
 import {
   DEFAULT_MORPH_MS,
   isAnimationState,
@@ -8,81 +8,67 @@ import {
   sampleAvatar,
   viewBoxAttr,
   type AnimationState,
-  type Block,
   type ColorId,
   type ExpressionId,
   type ShapeId,
 } from '../engine'
-import type { BannerCopy } from '../fond'
 import { t } from '../i18n'
+import type {
+  BannerCopy,
+  FormatFor,
+  ImageDesk,
+  LookFacet,
+  PickerBand,
+  VideoDesk,
+} from '../studio'
 import { useStageGeometry } from '../ui/useStageGeometry'
-import {
-  CADRE_BANNER_PNG,
-  mesureScene,
-  sceneBanniere,
-  type BannerId,
-} from '../ui/scene'
+import { CADRE_BANNER_PNG, mesureScene, sceneBanniere } from '../ui/scene'
 import AnimationsPalette from './AnimationsPalette.vue'
 import Avatar from './Avatar.vue'
 import BannerBackdrop from './BannerBackdrop.vue'
 import CustomisePanel from './CustomisePanel.vue'
 import ExportBar from './ExportBar.vue'
-import FondPanel from './FondPanel.vue'
-import type { ActionId, EtatExport } from '../ui/export'
-import type { VideoSourceKind } from '../ui/intent'
-
-type FieldId = 'shape' | 'expression' | 'colour' | 'state' | 'fond'
-
-const shape = defineModel<ShapeId>('shape', { required: true })
-const expression = defineModel<ExpressionId>('expression', { required: true })
-const colour = defineModel<ColorId>('colour', { required: true })
-const animationState = defineModel<AnimationState>('state', { required: true })
-const bannerId = defineModel<BannerId | null>('bannerId', { required: true })
-const bannerCopy = defineModel<BannerCopy>('bannerCopy', { required: true })
 
 const props = defineProps<{
+  desk: ImageDesk | VideoDesk
+  bannerCopy: BannerCopy
   label: string
-  etatExport: EtatExport
-  cycleName: string
-  cycleDuration: number
-  cycleBlockCount: number
-  progress?: number | null
-  playing?: boolean
-  playhead?: number | null
-  blocks?: Block[]
-}>()
-
-const emit = defineEmits<{
-  exporter: [
-    payload: {
-      action: ActionId | 'banner-png' | 'banner-mp4'
-      videoSource: VideoSourceKind
-    },
-  ]
-  annuler: []
-  'stop-playing': []
+  cycleName?: string
+  cycleDuration?: number
+  cycleBlockCount?: number
+  poseDuration: number
 }>()
 
 const stage = ref<HTMLElement | null>(null)
 const { size } = useStageGeometry(stage)
-const field = ref<FieldId | null>(null)
-const previewShape = ref<ShapeId | null>(null)
-const previewExpression = ref<ExpressionId | null>(null)
-const previewState = ref<AnimationState | null>(null)
 
-const shownShape = computed(() => previewShape.value ?? shape.value)
-const shownExpression = computed(() => previewExpression.value ?? expression.value)
-const shownState = computed(() => previewState.value ?? animationState.value)
+const frame = computed(() => props.desk.frame.value)
+const band = computed(() => props.desk.band.value)
+const status = computed(() => props.desk.delivery.value)
+
+/** Pickers show the committed value; the hero shows the preview. */
+function facet<T>(read: () => T, field: LookFacet['field']): WritableComputedRef<T> {
+  return computed({
+    get: read,
+    set: (value) => props.desk.commit({ field, value } as LookFacet),
+  })
+}
+
+const shape = facet<ShapeId>(() => props.desk.config.value.look.shape, 'shape')
+const expression = facet<ExpressionId>(() => props.desk.config.value.look.expression, 'expression')
+const colour = facet<ColorId>(() => props.desk.config.value.look.colour, 'colour')
+const pose = facet<AnimationState>(() => props.desk.config.value.pose, 'pose')
+
 const morphMs = computed(() =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
     ? 0
     : DEFAULT_MORPH_MS,
 )
-const hasBanner = computed(() => bannerId.value !== null)
+const hasBanner = computed(() => frame.value.banner !== null)
 
 const logoSlot = computed(() => {
-  if (!bannerId.value) return null
-  const scene = sceneBanniere(bannerId.value, CADRE_BANNER_PNG, bannerCopy.value)
+  if (!frame.value.banner) return null
+  const scene = sceneBanniere(frame.value.banner, CADRE_BANNER_PNG, props.bannerCopy)
   return mesureScene(scene).logo
 })
 
@@ -96,18 +82,18 @@ const avatarSize = computed(() => {
 
 const hero = computed(() =>
   sampleAvatar({
-    shape: shownShape.value,
-    expression: shownExpression.value,
-    colour: colour.value,
-    state: shownState.value,
+    shape: frame.value.shape,
+    expression: frame.value.expression,
+    colour: frame.value.colour,
+    state: frame.value.pose,
   }),
 )
 
 const cavity = computed(() =>
   sampleAvatar({
-    shape: shownShape.value,
-    expression: shownExpression.value,
-    colour: colour.value,
+    shape: frame.value.shape,
+    expression: frame.value.expression,
+    colour: frame.value.colour,
     state: 'Idle',
   }),
 )
@@ -117,48 +103,44 @@ const skinLimited = computed(
   () => hero.value.geometryKind === 'wearable' && hero.value.eyes.length === 0,
 )
 const appearanceOpen = computed(
-  () =>
-    field.value === 'shape' ||
-    field.value === 'expression' ||
-    field.value === 'colour',
+  () => band.value === 'shape' || band.value === 'expression' || band.value === 'colour',
 )
 
-function clearPreviews() {
-  previewShape.value = null
-  previewExpression.value = null
-  previewState.value = null
-}
-
-function setField(next: FieldId) {
-  clearPreviews()
-  field.value = field.value === next ? null : next
+function setField(next: PickerBand) {
+  props.desk.openBand(next)
 }
 
 function onChooserPointer(event: PointerEvent) {
   const node = event.target as HTMLElement | null
-  if (field.value === 'shape') {
+  const open = band.value
+  if (open === 'shape') {
     const id = node?.closest('[data-shape]')?.getAttribute('data-shape')
-    previewShape.value = id && isShapeId(id) ? id : null
+    props.desk.preview(id && isShapeId(id) ? { field: 'shape', value: id } : null)
     return
   }
-  if (field.value === 'expression') {
+  if (open === 'expression') {
     const id = node?.closest('[data-expression]')?.getAttribute('data-expression')
-    previewExpression.value = id && isExpressionId(id) ? id : null
+    props.desk.preview(id && isExpressionId(id) ? { field: 'expression', value: id } : null)
     return
   }
-  if (field.value === 'state') {
-    if (props.playing) return
+  if (open === 'pose') {
     const id = node?.closest('[data-state]')?.getAttribute('data-state')
-    previewState.value = id && isAnimationState(id) ? id : null
+    props.desk.preview(id && isAnimationState(id) ? { field: 'pose', value: id } : null)
   }
 }
 
-function commitMotion() {
-  emit('stop-playing')
+function clearPreviews() {
+  props.desk.preview(null)
 }
 
-function commitFace() {
-  emit('stop-playing')
+/**
+ * The offers came from this desk, so the format is legal by construction; a
+ * union of two `deliver` signatures has no way to say so.
+ */
+function deliver(format: string) {
+  const desk = props.desk
+  if (desk.kind === 'image') void desk.deliver(format as FormatFor<'image'>)
+  else void desk.deliver(format as FormatFor<'video'>)
 }
 
 function svgCourant(): SVGSVGElement | null {
@@ -166,18 +148,21 @@ function svgCourant(): SVGSVGElement | null {
   return el instanceof SVGSVGElement ? el : null
 }
 
-defineExpose({ svgCourant })
+let detach: (() => void) | null = null
+onMounted(() => {
+  detach = props.desk.attachStage(svgCourant)
+})
+onBeforeUnmount(() => {
+  detach?.()
+  detach = null
+})
 </script>
 
 <template>
   <div class="phantom" data-phantom-studio :data-has-banner="hasBanner ? '' : undefined">
-    <section id="studio" ref="stage" class="stage">
+    <section id="studio" ref="stage" class="stage" :data-desk="desk.kind">
       <div class="hero-wrap" :class="{ bannered: hasBanner }">
-        <BannerBackdrop
-          v-if="bannerId"
-          :banner-id="bannerId"
-          :copy="bannerCopy"
-        />
+        <BannerBackdrop v-if="frame.banner" :banner-id="frame.banner" :copy="bannerCopy" />
         <svg
           v-if="showCavity && !hasBanner"
           class="cavity"
@@ -186,22 +171,22 @@ defineExpose({ svgCourant })
           :viewBox="viewBoxAttr()"
           aria-hidden="true"
           focusable="false"
-          :data-cavity-shape="shownShape"
+          :data-cavity-shape="frame.shape"
           data-shape-applied="false"
         >
           <path :d="cavity.path" fill="none" stroke="currentColor" stroke-width="1.2" />
         </svg>
         <Avatar
           class="hero-avatar"
-          :state="shownState"
+          :state="frame.pose"
           :size="avatarSize"
-          :shape="shownShape"
-          :expression="shownExpression"
-          :colour="colour"
+          :shape="frame.shape"
+          :expression="frame.expression"
+          :colour="frame.colour"
           :label="label"
           :duration-ms="morphMs"
-          :playhead="props.playhead ?? null"
-          :blocks="props.blocks ?? []"
+          :playhead="frame.playhead"
+          :blocks="[...frame.blocks]"
         />
         <p v-if="showCavity && !hasBanner" class="lock" role="status">{{ t('studio.shapeLocked') }}</p>
         <p v-else-if="skinLimited" class="lock" data-skin-limited role="status">
@@ -213,8 +198,8 @@ defineExpose({ svgCourant })
         <button
           type="button"
           data-mode="shape"
-          :aria-pressed="field === 'shape'"
-          :class="{ on: field === 'shape' }"
+          :aria-pressed="band === 'shape'"
+          :class="{ on: band === 'shape' }"
           @click="setField('shape')"
         >
           {{ t('studio.shape') }}
@@ -222,8 +207,8 @@ defineExpose({ svgCourant })
         <button
           type="button"
           data-mode="expression"
-          :aria-pressed="field === 'expression'"
-          :class="{ on: field === 'expression' }"
+          :aria-pressed="band === 'expression'"
+          :class="{ on: band === 'expression' }"
           @click="setField('expression')"
         >
           {{ t('studio.face') }}
@@ -231,27 +216,18 @@ defineExpose({ svgCourant })
         <button
           type="button"
           data-mode="colour"
-          :aria-pressed="field === 'colour'"
-          :class="{ on: field === 'colour' }"
+          :aria-pressed="band === 'colour'"
+          :class="{ on: band === 'colour' }"
           @click="setField('colour')"
         >
           {{ t('studio.aura') }}
         </button>
         <button
           type="button"
-          data-mode="fond"
-          :aria-pressed="field === 'fond'"
-          :class="{ on: field === 'fond' }"
-          @click="setField('fond')"
-        >
-          {{ t('studio.fond') }}
-        </button>
-        <button
-          type="button"
           data-mode="state"
-          :aria-pressed="field === 'state'"
-          :class="{ on: field === 'state' }"
-          @click="setField('state')"
+          :aria-pressed="band === 'pose'"
+          :class="{ on: band === 'pose' }"
+          @click="setField('pose')"
         >
           {{ t('studio.motion') }}
         </button>
@@ -261,11 +237,11 @@ defineExpose({ svgCourant })
         class="field customise"
         :class="{
           open: appearanceOpen,
-          orbital: field === 'shape' || field === 'expression',
-          skins: field === 'shape',
-          faces: field === 'expression',
+          orbital: band === 'shape' || band === 'expression',
+          skins: band === 'shape',
+          faces: band === 'expression',
         }"
-        :data-open-band="appearanceOpen ? field : null"
+        :data-open-band="appearanceOpen ? band : null"
         @pointerover="onChooserPointer"
         @pointerleave="clearPreviews"
       >
@@ -274,39 +250,31 @@ defineExpose({ svgCourant })
           v-model:shape="shape"
           v-model:expression="expression"
           v-model:colour="colour"
-          @update:expression="commitFace"
         />
-      </div>
-
-      <div class="field fond" :class="{ open: field === 'fond' }">
-        <FondPanel v-model:banner-id="bannerId" v-model:copy="bannerCopy" />
       </div>
 
       <div
         class="field motion"
-        :class="{ open: field === 'state', orbital: field === 'state', orbits: field === 'state' }"
+        :class="{ open: band === 'pose', orbital: band === 'pose', orbits: band === 'pose' }"
         @pointerover="onChooserPointer"
         @pointerleave="clearPreviews"
       >
-        <AnimationsPalette
-          id="animations"
-          v-model="animationState"
-          @update:modelValue="commitMotion"
-        />
+        <AnimationsPalette id="animations" v-model="pose" :colour="frame.colour" />
       </div>
 
-      <h1>{{ t('app.name') }}</h1>
       <p class="tagline">{{ t('app.tagline') }}</p>
       <ExportBar
-        :etat="props.etatExport"
-        :pose="animationState"
-        :cycle-name="props.cycleName"
-        :cycle-duration="props.cycleDuration"
-        :cycle-block-count="props.cycleBlockCount"
-        :progress="props.progress"
-        :banner-id="bannerId"
-        @exporter="emit('exporter', $event)"
-        @annuler="emit('annuler')"
+        :kind="desk.kind"
+        :formats="status.formats"
+        :state="status.state"
+        :progress="status.progress"
+        :pose="frame.pose"
+        :pose-duration="poseDuration"
+        :cycle-name="cycleName"
+        :cycle-duration="cycleDuration"
+        :cycle-block-count="cycleBlockCount"
+        @deliver="deliver"
+        @annuler="desk.cancelDelivery()"
       />
     </section>
   </div>
@@ -336,6 +304,9 @@ defineExpose({ svgCourant })
   flex: 1 1 auto;
   width: min(100%, 36rem);
   min-height: 16rem;
+  border-radius: 1.75rem;
+  background: var(--stage);
+  color: var(--stage-ink);
 }
 
 .hero-wrap :deep(.avatar) {
@@ -356,36 +327,12 @@ defineExpose({ svgCourant })
   z-index: 2;
 }
 
-.field.fond {
-  left: 0;
-  top: 4.5rem;
-}
-
-.field.fond :deep([data-fond-panel]) {
-  max-width: none;
-  border-color: color-mix(in srgb, var(--line) 70%, transparent);
-  background: color-mix(in srgb, var(--paper) 82%, transparent);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 12px 40px rgb(0 0 0 / 0.06);
-}
-
-@media (max-width: 40rem) {
-  .field.fond {
-    left: 50%;
-    right: auto;
-    top: auto;
-    bottom: 7.5rem;
-    width: min(100% - 1rem, 22rem);
-    translate: -50% 0;
-  }
-}
-
 .cavity {
   position: absolute;
   inset: 50%;
   translate: -50% -50%;
   z-index: 1;
-  color: color-mix(in srgb, var(--muted) 55%, transparent);
+  color: color-mix(in srgb, var(--stage-muted) 55%, transparent);
   pointer-events: none;
   opacity: 0.55;
 }
@@ -397,8 +344,8 @@ defineExpose({ svgCourant })
   margin: 0;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--paper) 88%, transparent);
-  color: var(--muted);
+  background: color-mix(in srgb, #ffffff 88%, var(--stage));
+  color: var(--stage-muted);
   font-size: 0.75rem;
   line-height: 1.3;
 }
@@ -465,7 +412,7 @@ defineExpose({ svgCourant })
   border-color: color-mix(in srgb, var(--line) 70%, transparent);
   background: color-mix(in srgb, var(--paper) 82%, transparent);
   backdrop-filter: blur(10px);
-  box-shadow: 0 12px 40px rgb(0 0 0 / 0.06);
+  box-shadow: 0 12px 40px rgb(var(--wash) / 0.06);
 }
 
 .field.customise[data-open-band='shape'] :deep(#customise-expression),
@@ -729,13 +676,6 @@ defineExpose({ svgCourant })
     width: min(100% - 1rem, 22rem);
     translate: -50% 0;
   }
-}
-
-h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.03em;
 }
 
 .tagline {

@@ -1,6 +1,6 @@
 import type { VueWrapper } from '@vue/test-utils'
 import { defaultCycle, totalDuration } from '../engine'
-import { ACTIONS, videoPossible } from './export'
+import { videoPossible } from './export'
 import { type FrictionFlags } from './friction'
 
 const MONTAGE_HINT =
@@ -54,8 +54,13 @@ export function probeFriction(wrapper: VueWrapper): FrictionFlags {
     (bar.find('[data-export-meta]').exists() &&
       /default cycle|cycle par d[eé]faut|默认循环|默认序列/i.test(barText))
 
+  /**
+   * `data-cycle-new` counts because it seeds the new cycle from the standing
+   * pose, which is the same one-click pose-to-video route the removed
+   * pose-vs-cycle radio offered. `newCycleFromPose` proves it actually does.
+   */
   const poseVideoPath =
-    wrapper.find('[data-export-pose], [data-use-pose], [data-loop-pose]').exists() ||
+    wrapper.find('[data-export-pose], [data-use-pose], [data-loop-pose], [data-cycle-new]').exists() ||
     /this (pose|animation)|cette (pose|animation)|当前动作/i.test(barText)
 
   const montageLabeled =
@@ -128,8 +133,4 @@ export async function probeNewCycleFromPose(
   const option = wrapper.find(`[data-cycle="${selectedId}"]`)
   const first = wrapper.find('[data-timeline] [data-block="0"]').attributes('data-state')
   return Boolean(option.exists() && first === 'Comet')
-}
-
-export function montageActionCount(): number {
-  return ACTIONS.filter((a) => a.mode === 'montage').length
 }

@@ -1,14 +1,14 @@
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../App.vue'
 import { brand } from '../brand'
-import { rechargerApparence } from '../customise'
 import { ANIMATION_STATES, COLORS, EXPRESSIONS, SHAPES, type Cycle } from '../engine'
 import { cle, langue, rechargerLangue } from '../i18n'
 import en from '../i18n/locales/en'
 import fr from '../i18n/locales/fr'
 import zh from '../i18n/locales/zh'
 import { ecris } from '../i18n/stockage'
+import { parseStudioDoc, saveDoc, defaultStudioDoc } from '../studio'
 import { Abandon } from '../ui/export'
 import Timeline from '../components/Timeline.vue'
 
@@ -31,12 +31,21 @@ vi.mock('../ui/capture', async (importOriginal) => {
   return { ...actual, exporte, exporteMontage }
 })
 
+function stored() {
+  return parseStudioDoc(window.localStorage.getItem(cle('studio')))
+}
+
+async function toVideo(wrapper: VueWrapper) {
+  await wrapper.get('[data-output-dock] [data-desk="video"]').trigger('click')
+  await flushPromises()
+}
+
 describe('App', () => {
   beforeEach(() => {
     history.replaceState(null, '', '/')
     window.localStorage.clear()
+    document.documentElement.removeAttribute('data-theme')
     rechargerLangue()
-    rechargerApparence()
     langue.value = 'en'
     exporte.mockClear()
     exporteMontage.mockClear()
@@ -95,10 +104,10 @@ describe('App', () => {
     const tile = wrapper.get('[data-customise-panel] [data-shape="hexagon"]')
     await tile.trigger('pointerover')
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-shape')).toBe('hexagon')
-    expect(window.localStorage.getItem(cle('forme'))).not.toBe('hexagon')
+    expect(stored()?.image.look.shape).not.toBe('hexagon')
 
     await tile.trigger('click')
-    expect(window.localStorage.getItem(cle('forme'))).toBe('hexagon')
+    expect(stored()?.image.look.shape).toBe('hexagon')
   })
 
   it('previews a face on pointer hover without writing storage', async () => {
@@ -107,10 +116,10 @@ describe('App', () => {
     const tile = wrapper.get('[data-customise-panel] [data-expression="happy"]')
     await tile.trigger('pointerover')
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-expression')).toBe('happy')
-    expect(window.localStorage.getItem(cle('expression'))).not.toBe('happy')
+    expect(stored()?.image.look.expression).not.toBe('happy')
 
     await tile.trigger('click')
-    expect(window.localStorage.getItem(cle('expression'))).toBe('happy')
+    expect(stored()?.image.look.expression).toBe('happy')
   })
 
   it('previews a motion pose on pointer hover without committing', async () => {
@@ -119,15 +128,15 @@ describe('App', () => {
     const tile = wrapper.get('[data-animations-palette] [data-state="Comet"]')
     await tile.trigger('pointerover')
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Comet')
-    expect(wrapper.get('[data-animations-palette] [data-state="Idle"]').attributes('aria-checked')).toBe(
-      'true',
-    )
+    expect(
+      wrapper.get('[data-animations-palette] [data-state="Idle"]').attributes('aria-checked'),
+    ).toBe('true')
     expect(location.hash).toBe('#etat=idle&stop')
 
     await tile.trigger('click')
-    expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
-      'true',
-    )
+    expect(
+      wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked'),
+    ).toBe('true')
     expect(location.hash).toBe('#etat=comet&stop')
   })
 
@@ -157,40 +166,48 @@ describe('App', () => {
     )
     await wrapper.get('[data-expression="happy"]').trigger('click')
     await wrapper.get('[data-mode="colour"]').trigger('click')
-    expect(wrapper.get('[data-customise-panel]').findAll('[data-colour]')).toHaveLength(COLORS.length)
+    expect(wrapper.get('[data-customise-panel]').findAll('[data-colour]')).toHaveLength(
+      COLORS.length,
+    )
     await wrapper.get('[data-colour="blue"]').trigger('click')
 
     const svg = wrapper.get('#studio svg[role="img"]')
     expect(svg.attributes('data-shape')).toBe('hexagon')
     expect(svg.attributes('data-expression')).toBe('happy')
     expect(svg.attributes('data-colour')).toBe('blue')
-    expect(window.localStorage.getItem(cle('forme'))).toBe('hexagon')
-    expect(window.localStorage.getItem(cle('expression'))).toBe('happy')
-    expect(window.localStorage.getItem(cle('couleur'))).toBe('blue')
+    expect(stored()?.image.look).toMatchObject({
+      shape: 'hexagon',
+      expression: 'happy',
+      colour: 'blue',
+    })
   })
 
   it('restores stored shape, expression, and colour on load', async () => {
-    ecris('forme', 'droplet')
-    ecris('expression', 'sleepy')
-    ecris('couleur', 'cream')
-    rechargerApparence()
+    const doc = defaultStudioDoc()
+    saveDoc({
+      ...doc,
+      image: {
+        ...doc.image,
+        look: { ...doc.image.look, shape: 'droplet', expression: 'sleepy', colour: 'cream' },
+      },
+    })
     const wrapper = mount(App)
     const svg = wrapper.get('#studio svg[role="img"]')
     expect(svg.attributes('data-shape')).toBe('droplet')
     expect(svg.attributes('data-expression')).toBe('sleepy')
     expect(svg.attributes('data-colour')).toBe('cream')
     await wrapper.get('[data-mode="shape"]').trigger('click')
-    expect(wrapper.get('[data-customise-panel] [data-shape="droplet"]').attributes('aria-checked')).toBe(
-      'true',
-    )
+    expect(
+      wrapper.get('[data-customise-panel] [data-shape="droplet"]').attributes('aria-checked'),
+    ).toBe('true')
     await wrapper.get('[data-mode="expression"]').trigger('click')
     expect(
       wrapper.get('[data-customise-panel] [data-expression="sleepy"]').attributes('aria-checked'),
     ).toBe('true')
     await wrapper.get('[data-mode="colour"]').trigger('click')
-    expect(wrapper.get('[data-customise-panel] [data-colour="cream"]').attributes('aria-checked')).toBe(
-      'true',
-    )
+    expect(
+      wrapper.get('[data-customise-panel] [data-colour="cream"]').attributes('aria-checked'),
+    ).toBe('true')
   })
 
   it('morphs Idle to Thinking from the animations palette', async () => {
@@ -203,32 +220,26 @@ describe('App', () => {
     await wrapper.get('[data-animations-palette] [data-state="Thinking"]').trigger('click')
 
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Thinking')
-    expect(wrapper.get('[data-animations-palette] [data-state="Thinking"]').attributes('aria-checked')).toBe(
-      'true',
-    )
+    expect(
+      wrapper.get('[data-animations-palette] [data-state="Thinking"]').attributes('aria-checked'),
+    ).toBe('true')
     expect(location.hash).toBe('#etat=thinking&stop')
   })
 
-  it('drives the avatar morph to Comet from the palette', async () => {
+  it('renders English nav, dock, and settings strings by default', () => {
     const wrapper = mount(App)
-    await wrapper.get('[data-mode="state"]').trigger('click')
-    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
-    expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Comet')
-    expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
-      'true',
-    )
-  })
-
-  it('renders English nav and settings strings by default', () => {
-    const wrapper = mount(App)
-    expect(wrapper.get('[data-nav="studio"]').text()).toBe(en.nav.studio)
-    expect(wrapper.get('[data-nav="customise"]').text()).toBe(en.nav.customise)
+    expect(wrapper.get('[data-output-dock] [data-desk="image"]').text()).toContain(en.dock.image)
+    expect(wrapper.get('[data-output-dock] [data-desk="video"]').text()).toContain(en.dock.video)
+    expect(wrapper.get('[data-nav="rollup"]').text()).toBe(en.nav.rollup)
     expect(wrapper.get('[data-nav="settings"]').text()).toBe(en.nav.settings)
     expect(wrapper.get('[data-nav="about"]').text()).toBe(en.nav.about)
+    expect(wrapper.text()).toContain(en.rollup.title)
+    expect(wrapper.text()).toContain(en.rollup.lead)
     expect(wrapper.text()).toContain(en.panel.shape)
     expect(wrapper.text()).toContain(en.animations.title)
     expect(wrapper.text()).toContain(en.settings.title)
     expect(wrapper.text()).toContain(en.settings.language)
+    expect(wrapper.text()).toContain(en.settings.theme)
     expect(wrapper.get('[data-locale="en"]').text()).toContain('English')
     expect(wrapper.get('[data-locale="fr"]').text()).toContain('Français')
     expect(wrapper.get('[data-locale="zh"]').text()).toContain('简体中文')
@@ -238,9 +249,10 @@ describe('App', () => {
     const wrapper = mount(App)
     await wrapper.get('[data-locale="fr"]').trigger('click')
 
-    expect(wrapper.get('[data-nav="customise"]').text()).toBe(fr.nav.customise)
+    expect(wrapper.get('[data-nav="rollup"]').text()).toBe(fr.nav.rollup)
     expect(wrapper.get('[data-nav="settings"]').text()).toBe(fr.nav.settings)
     expect(wrapper.get('[data-nav="about"]').text()).toBe(fr.nav.about)
+    expect(wrapper.get('[data-output-dock] [data-desk="video"]').text()).toContain(fr.dock.video)
     expect(wrapper.text()).toContain(fr.panel.shape)
     expect(wrapper.text()).toContain(fr.animations.title)
     expect(wrapper.text()).toContain(fr.settings.language)
@@ -252,7 +264,7 @@ describe('App', () => {
     const wrapper = mount(App)
     await wrapper.get('[data-locale="zh"]').trigger('click')
 
-    expect(wrapper.get('[data-nav="customise"]').text()).toBe(zh.nav.customise)
+    expect(wrapper.get('[data-nav="rollup"]').text()).toBe(zh.nav.rollup)
     expect(wrapper.get('[data-nav="settings"]').text()).toBe(zh.nav.settings)
     expect(wrapper.get('[data-nav="about"]').text()).toBe(zh.nav.about)
     expect(wrapper.text()).toContain(zh.panel.shape)
@@ -270,47 +282,6 @@ describe('App', () => {
     expect(document.documentElement.lang).toBe('fr')
   })
 
-  it('plays a timeline block onto the avatar and still lets the palette preview', async () => {
-    const wrapper = mount(App)
-    expect(wrapper.find('[data-timeline]').exists()).toBe(true)
-    expect(wrapper.get('[data-timeline] [data-block="0"]').attributes('data-state')).toBe('Idle')
-
-    await wrapper.get('[data-mode="state"]').trigger('click')
-    await wrapper.get('[data-animations-palette] [data-state="Thinking"]').trigger('click')
-    await wrapper.get('[data-add]').trigger('click')
-    await wrapper.get('[data-timeline] [data-block="1"] [data-carte]').trigger('click')
-    expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Thinking')
-
-    await wrapper.get('[data-play]').trigger('click')
-    expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('true')
-    expect(location.hash).toBe('#etat=thinking')
-
-    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
-    expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('false')
-    expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Comet')
-    expect(wrapper.get('[data-animations-palette] [data-state="Comet"]').attributes('aria-checked')).toBe(
-      'true',
-    )
-    expect(location.hash).toBe('#etat=comet&stop')
-  })
-
-  it('keeps playing when the timeline advances onto the next block', async () => {
-    const wrapper = mount(App)
-    await wrapper.get('[data-mode="state"]').trigger('click')
-    await wrapper.get('[data-animations-palette] [data-state="Thinking"]').trigger('click')
-    await wrapper.get('[data-add]').trigger('click')
-    await wrapper.get('[data-play]').trigger('click')
-    expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('true')
-
-    wrapper.getComponent(Timeline).vm.sample(2.1)
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.get('[data-play]').attributes('aria-pressed')).toBe('true')
-    expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Thinking')
-    expect(location.hash).toBe('#etat=thinking')
-    wrapper.unmount()
-  })
-
   it('shows about/credits for Grok_bot, bloub MIT, and no xAI affiliation', () => {
     const wrapper = mount(App)
     expect(wrapper.text()).toContain('Grok_bot')
@@ -320,6 +291,190 @@ describe('App', () => {
     expect(wrapper.get('[data-disclaimer]').text().toLowerCase()).toMatch(
       /not affiliated|sans affiliation|没有任何/,
     )
+  })
+})
+
+describe('rollup', () => {
+  beforeEach(() => {
+    history.replaceState(null, '', '/')
+    window.localStorage.clear()
+    rechargerLangue()
+    langue.value = 'en'
+  })
+
+  afterEach(() => {
+    history.replaceState(null, '', '/')
+  })
+
+  it('hosts the backdrop picker in a page section, not on the stage toolbar', () => {
+    const wrapper = mount(App)
+    expect(wrapper.find('[data-mode="fond"]').exists()).toBe(false)
+    expect(wrapper.find('#studio [data-fond-panel]').exists()).toBe(false)
+    expect(wrapper.get('#rollup').attributes('data-rollup')).toBeDefined()
+    expect(wrapper.find('#rollup [data-fond-panel]').exists()).toBe(true)
+    expect(wrapper.findAll('#studio [data-mode]').map((n) => n.attributes('data-mode'))).toEqual([
+      'shape',
+      'expression',
+      'colour',
+      'state',
+    ])
+    wrapper.unmount()
+  })
+
+  it('commits the plate on the focused desk and keeps copy shared', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('#rollup [data-fond="banner-2"]').trigger('click')
+    expect(wrapper.get('[data-banner-backdrop]').attributes('data-banner')).toBe('banner-2')
+    expect(stored()?.image.look.banner).toBe('banner-2')
+    expect(stored()?.video.look.banner).toBeNull()
+
+    await wrapper.get('#rollup [data-fond-welcome]').setValue('Hallo')
+    expect(stored()?.shared.bannerCopy.welcome).toBe('Hallo')
+
+    await toVideo(wrapper)
+    expect(wrapper.find('[data-banner-backdrop]').exists()).toBe(false)
+    await wrapper.get('#rollup [data-fond="banner-3"]').trigger('click')
+    expect(wrapper.get('[data-banner-backdrop]').attributes('data-banner')).toBe('banner-3')
+    expect((wrapper.get('#rollup [data-fond-welcome]').element as HTMLInputElement).value).toBe(
+      'Hallo',
+    )
+    expect(stored()?.image.look.banner).toBe('banner-2')
+    expect(stored()?.video.look.banner).toBe('banner-3')
+    expect(stored()?.shared.bannerCopy.welcome).toBe('Hallo')
+    wrapper.unmount()
+  })
+})
+
+describe('output dock', () => {
+  beforeEach(() => {
+    history.replaceState(null, '', '/')
+    window.localStorage.clear()
+    rechargerLangue()
+    langue.value = 'en'
+  })
+
+  afterEach(() => {
+    history.replaceState(null, '', '/')
+  })
+
+  it('opens on the image desk with no timeline and still-only exports', () => {
+    const wrapper = mount(App)
+    expect(wrapper.get('#studio').attributes('data-desk')).toBe('image')
+    expect(wrapper.find('[data-timeline]').exists()).toBe(false)
+    expect(wrapper.find('[data-export="png"]').exists()).toBe(true)
+    expect(wrapper.find('[data-export="svg"]').exists()).toBe(true)
+    expect(wrapper.find('[data-export="gif"]').exists()).toBe(false)
+    expect(location.search).toBe('?desk=image')
+    wrapper.unmount()
+  })
+
+  it('shows the timeline and motion exports only on the video desk', async () => {
+    const wrapper = mount(App)
+    await toVideo(wrapper)
+
+    expect(wrapper.get('#studio').attributes('data-desk')).toBe('video')
+    expect(wrapper.find('[data-timeline]').exists()).toBe(true)
+    expect(wrapper.find('[data-export="gif"]').exists()).toBe(true)
+    expect(wrapper.find('[data-export="png"]').exists()).toBe(false)
+    expect(location.search).toBe('?desk=video')
+    expect(wrapper.get('[data-desk="video"]').attributes('aria-current')).toBe('page')
+    wrapper.unmount()
+  })
+
+  it('keeps each desk look independent across a switch', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-mode="shape"]').trigger('click')
+    await wrapper.get('[data-customise-panel] [data-shape="hexagon"]').trigger('click')
+
+    await toVideo(wrapper)
+    expect(wrapper.get('#studio svg[role="img"]').attributes('data-shape')).toBe('circle')
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    await wrapper.get('[data-customise-panel] [data-colour="blue"]').trigger('click')
+
+    await wrapper.get('[data-output-dock] [data-desk="image"]').trigger('click')
+    await flushPromises()
+    const svg = wrapper.get('#studio svg[role="img"]')
+    expect(svg.attributes('data-shape')).toBe('hexagon')
+    expect(svg.attributes('data-colour')).toBe('ink')
+
+    expect(stored()?.image.look).toMatchObject({ shape: 'hexagon', colour: 'ink' })
+    expect(stored()?.video.look).toMatchObject({ shape: 'circle', colour: 'blue' })
+    wrapper.unmount()
+  })
+
+  it('leaves a history entry so Back returns to the previous desk', async () => {
+    const wrapper = mount(App)
+    await toVideo(wrapper)
+    expect(location.search).toBe('?desk=video')
+
+    // jsdom applies history traversal and fires popstate on a later task.
+    const popped = new Promise<void>((r) =>
+      window.addEventListener('popstate', () => r(), { once: true }),
+    )
+    history.back()
+    await popped
+    await flushPromises()
+
+    expect(location.search).toBe('?desk=image')
+    expect(wrapper.get('#studio').attributes('data-desk')).toBe('image')
+    wrapper.unmount()
+  })
+
+  it('restores the focused desk from ?desk= on load', () => {
+    history.replaceState(null, '', '/?desk=video')
+    const wrapper = mount(App)
+    expect(wrapper.get('#studio').attributes('data-desk')).toBe('video')
+    expect(wrapper.find('[data-timeline]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+})
+
+describe('theme', () => {
+  beforeEach(() => {
+    history.replaceState(null, '', '/')
+    window.localStorage.clear()
+    document.documentElement.removeAttribute('data-theme')
+    rechargerLangue()
+    langue.value = 'en'
+  })
+
+  it('paints the chrome and persists an explicit choice', async () => {
+    const wrapper = mount(App)
+    await wrapper.get('[data-theme-choice="dark"]').trigger('click')
+
+    expect(document.documentElement.dataset.theme).toBe('dark')
+    expect(stored()?.theme).toBe('dark')
+    expect(wrapper.get('[data-theme-choice="dark"]').attributes('aria-checked')).toBe('true')
+
+    await wrapper.get('[data-theme-choice="light"]').trigger('click')
+    expect(document.documentElement.dataset.theme).toBe('light')
+    expect(stored()?.theme).toBe('light')
+    wrapper.unmount()
+  })
+
+  it('restores a stored theme on load and leaves the avatar paper alone', () => {
+    const doc = defaultStudioDoc()
+    saveDoc({ ...doc, theme: 'dark' })
+    const wrapper = mount(App)
+    expect(document.documentElement.dataset.theme).toBe('dark')
+    // The eye cut-outs reveal this paper, so it stays canonical light in dark mode.
+    expect(wrapper.get('#studio [data-body-paper]').attributes('fill')).toBe('#f5f5f4')
+    wrapper.unmount()
+  })
+})
+
+describe('delivery', () => {
+  beforeEach(() => {
+    history.replaceState(null, '', '/')
+    window.localStorage.clear()
+    rechargerLangue()
+    langue.value = 'en'
+    exporte.mockClear()
+    exporteMontage.mockClear()
+  })
+
+  afterEach(() => {
+    history.replaceState(null, '', '/')
   })
 
   it('exports the current avatar frame as SVG', async () => {
@@ -352,36 +507,36 @@ describe('App', () => {
     wrapper.unmount()
   })
 
-  it('exports the selected pose as a short GIF by default', async () => {
+  it('exports the video desk montage as a GIF', async () => {
     const wrapper = mount(App)
-    await wrapper.get('[data-mode="state"]').trigger('click')
-    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
+    await toVideo(wrapper)
     await wrapper.get('[data-export="gif"]').trigger('click')
     await flushPromises()
+
     expect(exporteMontage).toHaveBeenCalledOnce()
     expect(exporte).not.toHaveBeenCalled()
     const [format, cycle, reglages, nom] = exporteMontage.mock.calls[0]!
     expect(format).toBe('gif')
-    expect(cycle.blocks).toEqual([
-      { state: 'Idle', duration: 0.4 },
-      { state: 'Comet', duration: 1.2 },
-      { state: 'Idle', duration: 0.4 },
-    ])
+    expect(cycle.blocks).toEqual([{ state: 'Idle', duration: 2 }])
     expect(reglages).toMatchObject({ shape: 'circle', colour: 'ink', expression: 'neutral' })
-    expect(nom).toBe('Comet')
+    expect(nom).toBe(en.cycles.defaultName)
     expect(wrapper.get('[data-export-status]').text()).toBe(en.export.done)
     wrapper.unmount()
   })
 
-  it('exports the timeline cycle when that video source is chosen', async () => {
+  it('exports a single-pose cycle seeded from the palette', async () => {
     const wrapper = mount(App)
-    await wrapper.get('[data-export-source="cycle"]').trigger('click')
-    await wrapper.get('[data-export-more] [data-export="gif"]').trigger('click')
+    await toVideo(wrapper)
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
+    await wrapper.get('[data-cycle-new]').trigger('click')
+    await wrapper.get('[data-cycle-form]').trigger('submit')
     await flushPromises()
-    expect(exporteMontage).toHaveBeenCalledOnce()
-    const [, cycle, , nom] = exporteMontage.mock.calls[0]!
-    expect(cycle.blocks).toEqual([{ state: 'Idle', duration: 2 }])
-    expect(nom).toBe(en.cycles.defaultName)
+    await wrapper.get('[data-export="gif"]').trigger('click')
+    await flushPromises()
+
+    const [, cycle] = exporteMontage.mock.calls[0]!
+    expect(cycle.blocks.map((b) => b.state)).toEqual(['Comet'])
     wrapper.unmount()
   })
 
@@ -394,6 +549,7 @@ describe('App', () => {
         }),
     )
     const wrapper = mount(App)
+    await toVideo(wrapper)
     await wrapper.get('[data-export="gif"]').trigger('click')
     await flushPromises()
     expect(wrapper.get('[data-export-status]').text()).toContain('50%')
@@ -406,7 +562,7 @@ describe('App', () => {
   it('gates MP4 when the browser cannot encode video', async () => {
     const { videoPossible } = await import('../ui/export')
     const wrapper = mount(App)
-    await flushPromises()
+    await toVideo(wrapper)
     const mp4 = wrapper.get('[data-export="mp4"]')
     if (videoPossible()) {
       expect(mp4.attributes('disabled')).toBeUndefined()
@@ -414,6 +570,19 @@ describe('App', () => {
       expect(mp4.attributes('disabled')).toBeDefined()
     }
     wrapper.unmount()
+  })
+})
+
+describe('pose sharing', () => {
+  beforeEach(() => {
+    history.replaceState(null, '', '/')
+    window.localStorage.clear()
+    rechargerLangue()
+    langue.value = 'en'
+  })
+
+  afterEach(() => {
+    history.replaceState(null, '', '/')
   })
 
   it('writes #etat=idle&stop on load so the pose is shareable', () => {
@@ -426,9 +595,9 @@ describe('App', () => {
     history.replaceState(null, '', '#etat=thinking&stop')
     const wrapper = mount(App)
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Thinking')
-    expect(wrapper.get('[data-animations-palette] [data-state="Thinking"]').attributes('aria-checked')).toBe(
-      'true',
-    )
+    expect(
+      wrapper.get('[data-animations-palette] [data-state="Thinking"]').attributes('aria-checked'),
+    ).toBe('true')
     expect(location.hash).toBe('#etat=thinking&stop')
     wrapper.unmount()
   })
@@ -441,18 +610,38 @@ describe('App', () => {
     wrapper.unmount()
   })
 
-  it('applies a later #etat= change without clobbering it from the nav', async () => {
+  it('applies a later #etat= change without the desk switcher clobbering it', async () => {
     const wrapper = mount(App)
 
-    history.replaceState(null, '', '#etat=orbit&stop')
+    history.replaceState(null, '', '?desk=image#etat=orbit&stop')
     window.dispatchEvent(new HashChangeEvent('hashchange'))
     await flushPromises()
 
     expect(wrapper.get('#studio svg[role="img"]').attributes('data-target')).toBe('Orbit')
     expect(location.hash).toBe('#etat=orbit&stop')
 
-    await wrapper.get('[data-nav="customise"]').trigger('click')
+    await toVideo(wrapper)
+    expect(location.search).toBe('?desk=video')
+    expect(location.hash).toBe('#etat=idle&stop')
+
+    await wrapper.get('[data-output-dock] [data-desk="image"]').trigger('click')
+    await flushPromises()
     expect(location.hash).toBe('#etat=orbit&stop')
+    wrapper.unmount()
+  })
+
+  it('shares the video desk pose while the transport is stopped', async () => {
+    const wrapper = mount(App)
+    await toVideo(wrapper)
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    await wrapper.get('[data-animations-palette] [data-state="Comet"]').trigger('click')
+    expect(location.hash).toBe('#etat=comet&stop')
+
+    await wrapper.get('[data-play]').trigger('click')
+    expect(location.hash).toBe('#etat=comet')
+
+    const desk = wrapper.getComponent(Timeline).props('desk')
+    expect(desk.transport.playing.value).toBe(true)
     wrapper.unmount()
   })
 })
