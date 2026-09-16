@@ -22,6 +22,8 @@ import {
   serializeMontage,
   totalDuration,
   uniqueName,
+  applyMontageEdit,
+  activeCycleOf,
 } from '../cycles'
 
 describe('cycles', () => {
@@ -56,6 +58,26 @@ describe('cycles', () => {
     expect(blockAt(blocks, -0.6).elapsed).toBeCloseTo(1.4)
     expect(blockAt([], 1)).toEqual({ index: 0, elapsed: 0 })
     expect(offsetOf(blocks, 2)).toBe(3)
+  })
+
+  it('keeps colour when append carries a look snapshot', () => {
+    const next = blocksWith([makeBlock('Idle')], 'Thinking', { colour: 'red' })
+    expect(next[1]).toEqual({
+      state: 'Thinking',
+      duration: DEFAULT_BLOCK_DURATION,
+      colour: 'red',
+    })
+
+    const montage = applyMontageEdit(defaultMontage(), {
+      op: 'append',
+      state: 'Comet',
+      colour: 'blue',
+    })
+    expect(activeCycleOf(montage).blocks.at(-1)).toEqual({
+      state: 'Comet',
+      duration: DEFAULT_BLOCK_DURATION,
+      colour: 'blue',
+    })
   })
 
   it('reorders, appends, and refuses a last-block overflow', () => {
