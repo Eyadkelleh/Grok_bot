@@ -368,6 +368,34 @@ describe('output dock', () => {
     wrapper.unmount()
   })
 
+  it('seeking a timeline card paints the hero fill from that block', async () => {
+    const wrapper = mount(App)
+    await toVideo(wrapper)
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    await wrapper.get('[data-customise-panel] [data-colour="red"]').trigger('click')
+    await wrapper.get('[data-mode="shape"]').trigger('click')
+    await wrapper.get('[data-customise-panel] [data-shape="hexagon"]').trigger('click')
+    await wrapper.get('[data-mode="expression"]').trigger('click')
+    await wrapper.get('[data-customise-panel] [data-expression="happy"]').trigger('click')
+    await wrapper.get('[data-mode="state"]').trigger('click')
+    await wrapper.get('[data-animations-palette] [data-state="Thinking"]').trigger('click')
+    await wrapper.get('[data-add]').trigger('click')
+
+    await wrapper.get('[data-mode="colour"]').trigger('click')
+    await wrapper.get('[data-customise-panel] [data-colour="blue"]').trigger('click')
+    await wrapper.get('[data-block="1"] [data-carte]').trigger('click')
+    await flushPromises()
+
+    const svg = wrapper.get('#studio svg[role="img"]')
+    expect(svg.attributes('data-shape')).toBe('hexagon')
+    expect(svg.attributes('data-colour')).toBe('red')
+    expect(svg.attributes('data-expression')).toBe('happy')
+    expect(svg.attributes('data-target')).toBe('Thinking')
+    expect(wrapper.get('#studio [data-body]').attributes('fill')).toBe('#e8483f')
+    expect(wrapper.findAll('#studio svg[role="img"]')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
   it('shows the timeline and motion exports only on the video desk', async () => {
     const wrapper = mount(App)
     await toVideo(wrapper)
@@ -457,7 +485,6 @@ describe('theme', () => {
     saveDoc({ ...doc, theme: 'dark' })
     const wrapper = mount(App)
     expect(document.documentElement.dataset.theme).toBe('dark')
-    // The eye cut-outs reveal this paper, so it stays canonical light in dark mode.
     expect(wrapper.get('#studio [data-body-paper]').attributes('fill')).toBe('#f5f5f4')
     wrapper.unmount()
   })
