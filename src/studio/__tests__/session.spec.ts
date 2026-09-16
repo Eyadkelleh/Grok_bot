@@ -136,6 +136,40 @@ describe('video transport', () => {
     })
   })
 
+  it('applies snapshot look while playing, not only after a paused card click', () => {
+    const s = open()
+    s.video.commit({ field: 'colour', value: 'red' })
+    s.video.commit({ field: 'shape', value: 'hexagon' })
+    s.video.commit({ field: 'expression', value: 'happy' })
+    s.video.editMontage({ op: 'append', state: 'Thinking' })
+    s.video.commit({ field: 'colour', value: 'blue' })
+    s.video.commit({ field: 'shape', value: 'cloud' })
+
+    s.video.transport.play()
+    s.video.transport.seek(2.1)
+
+    expect(s.video.transport.playing.value).toBe(true)
+    expect(s.video.frame.value.colour).toBe('red')
+    expect(s.video.frame.value.shape).toBe('hexagon')
+    expect(s.video.frame.value.expression).toBe('happy')
+    expect(s.video.frame.value.pose).toBe('Thinking')
+  })
+
+  it('applies snapshot look on any seek, including a programmatic one', () => {
+    const s = open()
+    s.video.commit({ field: 'colour', value: 'red' })
+    s.video.commit({ field: 'shape', value: 'hexagon' })
+    s.video.editMontage({ op: 'append', state: 'Thinking' })
+    s.video.commit({ field: 'colour', value: 'blue' })
+
+    s.video.transport.seek(2)
+
+    expect(s.video.transport.playing.value).toBe(false)
+    expect(s.video.frame.value.colour).toBe('red')
+    expect(s.video.frame.value.shape).toBe('hexagon')
+    expect(s.video.frame.value.pose).toBe('Thinking')
+  })
+
   it('derives the rendered pose from the playhead instead of writing it', () => {
     const s = open()
     s.video.commit({ field: 'pose', value: 'Comet' })
