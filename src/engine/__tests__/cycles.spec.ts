@@ -73,7 +73,8 @@ describe('cycles', () => {
       state: 'Comet',
       colour: 'blue',
     })
-    expect(activeCycleOf(montage).blocks.at(-1)).toEqual({
+    const blocks = activeCycleOf(montage).blocks
+    expect(blocks[blocks.length - 1]).toEqual({
       state: 'Comet',
       duration: DEFAULT_BLOCK_DURATION,
       colour: 'blue',
@@ -111,6 +112,64 @@ describe('cycles', () => {
     expect(montage.activeId).toBe('c1')
     expect(montage.cycles).toHaveLength(1)
     expect(montage.cycles[0]?.blocks[0]?.state).toBe('Idle')
+  })
+
+  it('round-trips look fields through serializeMontage', () => {
+    const montage = {
+      activeId: 'c1',
+      cycles: [
+        {
+          id: 'c1',
+          name: 'A',
+          blocks: [
+            {
+              state: 'Idle' as const,
+              duration: 2,
+              shape: 'hexagon' as const,
+              colour: 'red' as const,
+              expression: 'happy' as const,
+            },
+          ],
+        },
+      ],
+    }
+    const raw = serializeMontage(montage)
+    expect(parseMontage(raw)).toEqual(montage)
+    expect(parseCycles(raw)[0]?.blocks[0]).toEqual({
+      state: 'Idle',
+      duration: 2,
+      shape: 'hexagon',
+      colour: 'red',
+      expression: 'happy',
+    })
+  })
+
+  it('parses legacy blocks that have no look fields', () => {
+    const montage = parseMontage(
+      '{"activeId":"c1","cycles":[{"id":"c1","name":"A","blocks":[{"state":"Idle","duration":2}]}]}',
+    )
+    expect(montage.cycles[0]?.blocks[0]).toEqual({ state: 'Idle', duration: 2 })
+  })
+
+  it('drops invalid look ids and still plays the block', () => {
+    const montage = parseMontage(
+      JSON.stringify({
+        activeId: 'c1',
+        cycles: [
+          {
+            id: 'c1',
+            name: 'A',
+            blocks: [
+              { state: 'Idle', duration: 2, colour: 'nope', shape: 'hexagon' },
+              { state: 'Nope', duration: 2 },
+            ],
+          },
+        ],
+      }),
+    )
+    expect(montage.cycles[0]?.blocks).toEqual([
+      { state: 'Idle', duration: 2, shape: 'hexagon' },
+    ])
   })
 
   it('falls back to the default montage when storage is empty', () => {
