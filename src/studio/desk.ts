@@ -14,6 +14,7 @@ import {
   applyMontageEdit,
   blockAt,
   totalDuration,
+  type Block,
   type Cycle,
   type Montage,
   type MontageEdit,
@@ -31,9 +32,33 @@ import type {
   ConfigFor,
   DeskFrame,
   DeskKind,
+  Look,
   LookFacet,
   PickerBand,
 } from './types'
+
+function snapshotLook(edit: MontageEdit, look: Look): MontageEdit {
+  if (edit.op !== 'append') return edit
+  return {
+    ...edit,
+    shape: edit.shape ?? look.shape,
+    colour: edit.colour ?? look.colour,
+    expression: edit.expression ?? look.expression,
+  }
+}
+
+function appearanceOf(
+  desk: Look,
+  block: Block | undefined,
+  peek: LookFacet | null,
+): Pick<DeskFrame, 'shape' | 'colour' | 'expression' | 'banner'> {
+  return {
+    shape: peek?.field === 'shape' ? peek.value : (block?.shape ?? desk.shape),
+    colour: peek?.field === 'colour' ? peek.value : (block?.colour ?? desk.colour),
+    expression: peek?.field === 'expression' ? peek.value : (block?.expression ?? desk.expression),
+    banner: peek?.field === 'banner' ? peek.value : desk.banner,
+  }
+}
 
 const CONFIRMATION_MS = 1800
 
@@ -96,6 +121,7 @@ export function createDesk<K extends DeskKind>(kind: K, port: DeskPort<K>): Desk
   let confirmation: ReturnType<typeof setTimeout> | undefined
 
   const playing = ref(false)
+  const pinPlayhead = ref(false)
   const rawAt = ref(0)
   let raf = 0
   let originWall = 0
@@ -146,6 +172,7 @@ export function createDesk<K extends DeskKind>(kind: K, port: DeskPort<K>): Desk
       else transport.play()
     },
     seek(seconds) {
+      pinPlayhead.value = kind === 'video'
       originClock = seconds
       originWall = performance.now()
       rawAt.value = seconds
@@ -156,19 +183,18 @@ export function createDesk<K extends DeskKind>(kind: K, port: DeskPort<K>): Desk
     const config = port.config.value
     const shown = peek.value
     const live = kind === 'video' && playing.value
-    const blocks = live ? activeCycle.value.blocks : []
+    const fromPlayhead = live || pinPlayhead.value
+    const montageBlocks = kind === 'video' ? activeCycle.value.blocks : []
+    const hit = fromPlayhead ? montageBlocks[blockAt(montageBlocks, at.value).index] : undefined
     return {
-      shape: shown?.field === 'shape' ? shown.value : config.look.shape,
-      colour: shown?.field === 'colour' ? shown.value : config.look.colour,
-      expression: shown?.field === 'expression' ? shown.value : config.look.expression,
-      banner: shown?.field === 'banner' ? shown.value : config.look.banner,
-      pose: live
-        ? (blocks[blockAt(blocks, at.value).index]?.state ?? config.pose)
+      ...appearanceOf(config.look, hit, shown),
+      pose: fromPlayhead
+        ? (hit?.state ?? config.pose)
         : shown?.field === 'pose'
           ? shown.value
           : config.pose,
       playhead: live ? at.value : null,
-      blocks,
+      blocks: live ? montageBlocks : [],
     }
   })
 
@@ -200,6 +226,7 @@ export function createDesk<K extends DeskKind>(kind: K, port: DeskPort<K>): Desk
 
     commit(facet: LookFacet) {
       peek.value = null
+      pinPlayhead.value = false
       if (facet.field === 'pose' && kind === 'video') transport.pause()
       port.write(withFacet(port.config.value, facet))
     },
@@ -255,7 +282,7 @@ export function createDesk<K extends DeskKind>(kind: K, port: DeskPort<K>): Desk
 
     editMontage(edit: MontageEdit) {
       const config = port.config.value as ConfigFor<'video'>
-      const next = applyMontageEdit(config.montage, edit)
+      const next = applyMontageEdit(config.montage, snapshotLook(edit, config.look))
       if (next === config.montage) return
       if (next.activeId !== config.montage.activeId) {
         transport.pause()

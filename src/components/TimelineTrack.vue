@@ -9,12 +9,14 @@ import {
   clampZoom,
   moveBlock,
   offsetOf,
+  resolveColour,
   sampleMorph,
   ticksFor,
   totalDuration,
   viewBoxAttr,
   type AnimationState,
   type Block,
+  type ColorId,
 } from '../engine'
 import { secondes, secondesCourtes, t, type Cle } from '../i18n'
 
@@ -22,6 +24,7 @@ const props = defineProps<{
   blocks: Block[]
   elapsed: number
   addState: AnimationState
+  inheritColour: ColorId
 }>()
 
 const emit = defineEmits<{
@@ -64,6 +67,10 @@ const addAria = computed(() =>
 
 function frameOf(state: AnimationState) {
   return sampleMorph(state, state, 1)
+}
+
+function colourOf(b: Block): ColorId {
+  return b.colour ?? props.inheritColour
 }
 
 function onWheel(e: WheelEvent) {
@@ -199,6 +206,7 @@ function pick(state: AnimationState) {
             :style="{ width: `${b.duration * scale}px` }"
             :data-block="i"
             :data-state="b.state"
+            :data-colour="colourOf(b)"
           >
             <button
               type="button"
@@ -214,14 +222,14 @@ function pick(state: AnimationState) {
               @keydown.right="onCardKey(i, $event)"
             >
               <svg :viewBox="viewBoxAttr()" aria-hidden="true">
-                <path :d="frameOf(b.state).path" fill="currentColor" />
+                <path :d="frameOf(b.state).path" :fill="resolveColour(colourOf(b))" />
                 <circle
                   v-for="(dot, di) in frameOf(b.state).dots"
                   :key="di"
                   :cx="dot.x * BODY_RADIUS"
                   :cy="dot.y * BODY_RADIUS"
                   :r="dot.r * BODY_RADIUS"
-                  fill="currentColor"
+                  :fill="resolveColour(colourOf(b))"
                   :opacity="dot.opacity"
                 />
               </svg>

@@ -73,7 +73,8 @@ function onBlocks(next: Block[]) {
 }
 
 function addBlock(state: AnimationState) {
-  props.desk.editMontage({ op: 'append', state })
+  const { shape, colour, expression } = props.desk.config.value.look
+  props.desk.editMontage({ op: 'append', state, shape, colour, expression })
 }
 </script>
 
@@ -173,6 +174,7 @@ function addBlock(state: AnimationState) {
       :blocks="[...blocks]"
       :elapsed="elapsed"
       :add-state="desk.config.value.pose"
+      :inherit-colour="desk.config.value.look.colour"
       @update:blocks="onBlocks"
       @add="addBlock"
       @seek="seek"
