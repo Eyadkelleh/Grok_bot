@@ -2,16 +2,16 @@ import { isExpressionId, type ExpressionId } from './expressions'
 import { isColorId, isShapeId, type ColorId, type ShapeId } from './skins'
 import { DEFAULT_MORPH_MS, isAnimationState, type AnimationState } from './states'
 
-/**
- * A cycle is a montage: a list of blocks, each a state held for a chosen duration.
- * Pure data — no clock, no Vue. The same cycle is read by tests, the player, and the timeline.
- */
 export interface BlockLook {
   shape?: ShapeId
   colour?: ColorId
   expression?: ExpressionId
 }
 
+/**
+ * A cycle is a montage: a list of blocks, each a state held for a chosen duration.
+ * Pure data — no clock, no Vue. The same cycle is read by tests, the player, and the timeline.
+ */
 export interface Block {
   state: AnimationState
   duration: number
