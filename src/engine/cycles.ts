@@ -1,3 +1,5 @@
+import { isExpressionId, type ExpressionId } from './expressions'
+import { isColorId, isShapeId, type ColorId, type ShapeId } from './skins'
 import { DEFAULT_MORPH_MS, isAnimationState, type AnimationState } from './states'
 
 /**
@@ -7,7 +9,12 @@ import { DEFAULT_MORPH_MS, isAnimationState, type AnimationState } from './state
 export interface Block {
   state: AnimationState
   duration: number
+  shape?: ShapeId
+  colour?: ColorId
+  expression?: ExpressionId
 }
+
+export type BlockLook = Pick<Block, 'shape' | 'colour' | 'expression'>
 
 export interface Cycle {
   id: string
@@ -71,8 +78,16 @@ export function clampDuration(state: AnimationState, seconds: number): number {
   return Math.round(bounded * 100) / 100
 }
 
-export function makeBlock(state: AnimationState, duration = DEFAULT_BLOCK_DURATION): Block {
-  return { state, duration: clampDuration(state, duration) }
+export function makeBlock(
+  state: AnimationState,
+  duration = DEFAULT_BLOCK_DURATION,
+  look?: BlockLook,
+): Block {
+  const block: Block = { state, duration: clampDuration(state, duration) }
+  if (look?.shape !== undefined) block.shape = look.shape
+  if (look?.colour !== undefined) block.colour = look.colour
+  if (look?.expression !== undefined) block.expression = look.expression
+  return block
 }
 
 export function defaultCycle(): Cycle {
@@ -115,9 +130,9 @@ export function blockAt(blocks: Block[], t: number): { index: number; elapsed: n
   return { index: blocks.length - 1, elapsed: 0 }
 }
 
-export function blocksWith(blocks: Block[], state: AnimationState): Block[] {
+export function blocksWith(blocks: Block[], state: AnimationState, look?: BlockLook): Block[] {
   if (blocks.length >= MAX_BLOCS) return blocks
-  return [...blocks, makeBlock(state)]
+  return [...blocks, makeBlock(state, DEFAULT_BLOCK_DURATION, look)]
 }
 
 export function moveBlock(blocks: Block[], from: number, to: number): Block[] {
@@ -153,7 +168,7 @@ export type MontageEdit =
   | { op: 'rename'; id: string; name: string }
   | { op: 'remove'; id: string }
   | { op: 'set-blocks'; id: string; blocks: Block[] }
-  | { op: 'append'; state: AnimationState }
+  | ({ op: 'append'; state: AnimationState } & BlockLook)
 
 export function activeCycleOf(montage: Montage): Cycle {
   return montage.cycles.find((c) => c.id === montage.activeId) ?? montage.cycles[0]!
@@ -211,7 +226,16 @@ export function applyMontageEdit(montage: Montage, edit: MontageEdit): Montage {
       return {
         ...montage,
         cycles: cycles.map((c) =>
-          c.id === active.id ? { ...c, blocks: blocksWith(c.blocks, edit.state) } : c,
+          c.id === active.id
+            ? {
+                ...c,
+                blocks: blocksWith(c.blocks, edit.state, {
+                  shape: edit.shape,
+                  colour: edit.colour,
+                  expression: edit.expression,
+                }),
+              }
+            : c,
         ),
       }
     }
@@ -220,10 +244,20 @@ export function applyMontageEdit(montage: Montage, edit: MontageEdit): Montage {
 
 function parseBlock(raw: unknown): Block | null {
   if (typeof raw !== 'object' || raw === null) return null
-  const { state, duration } = raw as { state?: unknown; duration?: unknown }
+  const { state, duration, shape, colour, expression } = raw as {
+    state?: unknown
+    duration?: unknown
+    shape?: unknown
+    colour?: unknown
+    expression?: unknown
+  }
   if (typeof state !== 'string' || !isAnimationState(state)) return null
   if (typeof duration !== 'number' || !Number.isFinite(duration)) return null
-  return { state, duration: clampDuration(state, duration) }
+  return makeBlock(state, duration, {
+    ...(typeof shape === 'string' && isShapeId(shape) ? { shape } : {}),
+    ...(typeof colour === 'string' && isColorId(colour) ? { colour } : {}),
+    ...(typeof expression === 'string' && isExpressionId(expression) ? { expression } : {}),
+  })
 }
 
 function parseCycle(raw: unknown, seen: Cycle[]): Cycle | null {

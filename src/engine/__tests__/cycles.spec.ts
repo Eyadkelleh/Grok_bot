@@ -22,6 +22,8 @@ import {
   serializeMontage,
   totalDuration,
   uniqueName,
+  applyMontageEdit,
+  activeCycleOf,
 } from '../cycles'
 
 describe('cycles', () => {
@@ -58,6 +60,27 @@ describe('cycles', () => {
     expect(offsetOf(blocks, 2)).toBe(3)
   })
 
+  it('keeps colour when append carries a look snapshot', () => {
+    const next = blocksWith([makeBlock('Idle')], 'Thinking', { colour: 'red' })
+    expect(next[1]).toEqual({
+      state: 'Thinking',
+      duration: DEFAULT_BLOCK_DURATION,
+      colour: 'red',
+    })
+
+    const montage = applyMontageEdit(defaultMontage(), {
+      op: 'append',
+      state: 'Comet',
+      colour: 'blue',
+    })
+    const blocks = activeCycleOf(montage).blocks
+    expect(blocks[blocks.length - 1]).toEqual({
+      state: 'Comet',
+      duration: DEFAULT_BLOCK_DURATION,
+      colour: 'blue',
+    })
+  })
+
   it('reorders, appends, and refuses a last-block overflow', () => {
     const blocks = [makeBlock('Idle'), makeBlock('Thinking'), makeBlock('Comet')]
     expect(moveBlock(blocks, 0, 2).map((b) => b.state)).toEqual(['Thinking', 'Comet', 'Idle'])
@@ -89,6 +112,76 @@ describe('cycles', () => {
     expect(montage.activeId).toBe('c1')
     expect(montage.cycles).toHaveLength(1)
     expect(montage.cycles[0]?.blocks[0]?.state).toBe('Idle')
+  })
+
+  it('round-trips look fields through serializeMontage', () => {
+    const montage = {
+      activeId: 'c1',
+      cycles: [
+        {
+          id: 'c1',
+          name: 'A',
+          blocks: [
+            {
+              state: 'Idle' as const,
+              duration: 2,
+              shape: 'hexagon' as const,
+              colour: 'red' as const,
+              expression: 'happy' as const,
+            },
+          ],
+        },
+      ],
+    }
+    const raw = serializeMontage(montage)
+    expect(parseMontage(raw)).toEqual(montage)
+    expect(parseCycles(raw)[0]?.blocks[0]).toEqual({
+      state: 'Idle',
+      duration: 2,
+      shape: 'hexagon',
+      colour: 'red',
+      expression: 'happy',
+    })
+  })
+
+  it('parses legacy blocks that have no look fields', () => {
+    const montage = parseMontage(
+      '{"activeId":"c1","cycles":[{"id":"c1","name":"A","blocks":[{"state":"Idle","duration":2}]}]}',
+    )
+    expect(montage.cycles[0]?.blocks[0]).toEqual({ state: 'Idle', duration: 2 })
+  })
+
+  it('omits look keys from stored JSON when unset', () => {
+    expect(Object.keys(makeBlock('Idle'))).toEqual(['state', 'duration'])
+    expect(
+      serializeMontage({
+        activeId: 'c1',
+        cycles: [{ id: 'c1', name: 'A', blocks: [makeBlock('Idle')] }],
+      }),
+    ).toBe(
+      '{"activeId":"c1","cycles":[{"id":"c1","name":"A","blocks":[{"state":"Idle","duration":2}]}]}',
+    )
+  })
+
+  it('drops invalid look ids and still plays the block', () => {
+    const montage = parseMontage(
+      JSON.stringify({
+        activeId: 'c1',
+        cycles: [
+          {
+            id: 'c1',
+            name: 'A',
+            blocks: [
+              { state: 'Idle', duration: 2, colour: 'nope', shape: 'hexagon' },
+              { state: 'Nope', duration: 2 },
+            ],
+          },
+        ],
+      }),
+    )
+    expect(montage.cycles[0]?.blocks).toEqual([
+      { state: 'Idle', duration: 2, shape: 'hexagon' },
+    ])
   })
 
   it('falls back to the default montage when storage is empty', () => {
