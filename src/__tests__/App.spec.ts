@@ -485,7 +485,6 @@ describe('theme', () => {
     saveDoc({ ...doc, theme: 'dark' })
     const wrapper = mount(App)
     expect(document.documentElement.dataset.theme).toBe('dark')
-    // The eye cut-outs reveal this paper, so it stays canonical light in dark mode.
     expect(wrapper.get('#studio [data-body-paper]').attributes('fill')).toBe('#f5f5f4')
     wrapper.unmount()
   })

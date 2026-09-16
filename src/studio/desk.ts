@@ -1,13 +1,3 @@
-/**
- * One desk: the look, the pose, the artifact, and (on video) the montage and
- * its transport.
- *
- * The pose stomp that forced `stop-playing` on every picker click is gone by
- * construction. While the transport runs, the rendered pose is *derived* from
- * the playhead and nothing writes `config.pose`, so shape and pose arrive from
- * independent sources and changing one mid-playback cannot clobber the other.
- */
-
 import { computed, ref, type ComputedRef } from 'vue'
 import {
   activeCycleOf,

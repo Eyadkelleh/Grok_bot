@@ -21,7 +21,6 @@ const at = computed(() => transport.at.value)
 const hit = computed(() => blockAt(blocks.value, at.value))
 const elapsed = computed(() => hit.value.elapsed)
 
-/** The playhead is the source of truth; selecting a card seeks to it. */
 const block = computed({
   get: () => hit.value.index,
   set: (index: number) => transport.seek(offsetOf(blocks.value, index)),
