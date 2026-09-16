@@ -79,6 +79,49 @@ describe('Timeline', () => {
     expect(desk.config.value.pose).toBe('Comet')
   })
 
+  it('keeps colour when aura then shape then add', async () => {
+    const { wrapper, desk } = mountTimeline()
+    desk.commit({ field: 'colour', value: 'red' })
+    desk.commit({ field: 'shape', value: 'hexagon' })
+    desk.commit({ field: 'expression', value: 'happy' })
+    desk.commit({ field: 'pose', value: 'Thinking' })
+    await nextTick()
+    await wrapper.get('[data-add]').trigger('click')
+
+    expect(desk.activeCycle.value.blocks[1]).toEqual({
+      state: 'Thinking',
+      duration: 2,
+      shape: 'hexagon',
+      colour: 'red',
+      expression: 'happy',
+    })
+    expect(wrapper.get('[data-block="1"]').attributes('data-colour')).toBe('red')
+    expect(wrapper.get('[data-block="1"] [data-carte] path').attributes('fill')).toBe('#e8483f')
+  })
+
+  it('seeking a card drives look and pose from that block', async () => {
+    const { wrapper, desk } = mountTimeline()
+    desk.commit({ field: 'colour', value: 'red' })
+    desk.commit({ field: 'shape', value: 'hexagon' })
+    desk.commit({ field: 'expression', value: 'happy' })
+    desk.commit({ field: 'pose', value: 'Thinking' })
+    await nextTick()
+    await wrapper.get('[data-add]').trigger('click')
+
+    desk.commit({ field: 'colour', value: 'blue' })
+    desk.commit({ field: 'shape', value: 'cloud' })
+    desk.commit({ field: 'expression', value: 'sad' })
+    desk.commit({ field: 'pose', value: 'Comet' })
+    await nextTick()
+
+    await wrapper.get('[data-block="1"] [data-carte]').trigger('click')
+    await nextTick()
+    expect(desk.frame.value.shape).toBe('hexagon')
+    expect(desk.frame.value.colour).toBe('red')
+    expect(desk.frame.value.expression).toBe('happy')
+    expect(desk.frame.value.pose).toBe('Thinking')
+  })
+
   it('adds, reorders, retimes, and removes blocks', async () => {
     const { wrapper, desk } = mountTimeline()
     desk.commit({ field: 'pose', value: 'Thinking' })

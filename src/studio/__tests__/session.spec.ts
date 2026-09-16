@@ -120,6 +120,22 @@ describe('video transport', () => {
     history.replaceState(null, '', '/')
   })
 
+  it('snapshots desk look onto an append that only names state', () => {
+    const s = open()
+    s.video.commit({ field: 'colour', value: 'red' })
+    s.video.commit({ field: 'shape', value: 'hexagon' })
+    s.video.commit({ field: 'expression', value: 'happy' })
+    s.video.editMontage({ op: 'append', state: 'Thinking' })
+
+    expect(s.video.activeCycle.value.blocks[1]).toEqual({
+      state: 'Thinking',
+      duration: 2,
+      shape: 'hexagon',
+      colour: 'red',
+      expression: 'happy',
+    })
+  })
+
   it('derives the rendered pose from the playhead instead of writing it', () => {
     const s = open()
     s.video.commit({ field: 'pose', value: 'Comet' })
