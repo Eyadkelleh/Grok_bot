@@ -151,6 +151,18 @@ describe('cycles', () => {
     expect(montage.cycles[0]?.blocks[0]).toEqual({ state: 'Idle', duration: 2 })
   })
 
+  it('omits look keys from stored JSON when unset', () => {
+    expect(Object.keys(makeBlock('Idle'))).toEqual(['state', 'duration'])
+    expect(
+      serializeMontage({
+        activeId: 'c1',
+        cycles: [{ id: 'c1', name: 'A', blocks: [makeBlock('Idle')] }],
+      }),
+    ).toBe(
+      '{"activeId":"c1","cycles":[{"id":"c1","name":"A","blocks":[{"state":"Idle","duration":2}]}]}',
+    )
+  })
+
   it('drops invalid look ids and still plays the block', () => {
     const montage = parseMontage(
       JSON.stringify({
