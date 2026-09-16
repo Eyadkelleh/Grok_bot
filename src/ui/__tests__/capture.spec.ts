@@ -391,4 +391,21 @@ describe('ouvreCycle', () => {
       }
     }
   })
+
+  it('paints a blue fill on a dated sample inside a second block that carries colour blue', async () => {
+    const blocs = [makeBlock('Idle', 2), makeBlock('Comet', 2, { colour: 'blue' })]
+    const lecteur = await ouvreCycle(REGLAGES, blocs, 128)
+    try {
+      const first = await lecteur.rendre(1)
+      expect(first.querySelector('[data-body]')!.getAttribute('fill')).toBe('#0a0a0c')
+      expect(first.getAttribute('data-colour')).toBe('ink')
+
+      const second = await lecteur.rendre(3)
+      expect(second.getAttribute('data-state')).toBe('Comet')
+      expect(second.querySelector('[data-body]')!.getAttribute('fill')).toBe('#3b93f0')
+      expect(second.getAttribute('data-colour')).toBe('blue')
+    } finally {
+      lecteur.ferme()
+    }
+  })
 })
