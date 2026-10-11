@@ -213,9 +213,14 @@ h3 {
   cursor: pointer;
 }
 
-.primary:hover,
+.primary:hover {
+  filter: brightness(1.08);
+}
+
 .primary:focus-visible {
   filter: brightness(1.08);
+  outline: 2px solid var(--accent-display);
+  outline-offset: 2px;
 }
 
 .primary:disabled {
@@ -246,10 +251,16 @@ h3 {
 }
 
 .secondary-actions button:hover,
-.actions button:hover,
+.actions button:hover {
+  border-color: color-mix(in srgb, var(--accent-display) 48%, var(--line));
+  background: var(--accent-soft);
+}
+
 .secondary-actions button:focus-visible,
 .actions button:focus-visible {
-  border-color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent-display) 55%, var(--line));
+  outline: 2px solid var(--accent-display);
+  outline-offset: 2px;
 }
 
 button:disabled {
@@ -279,6 +290,23 @@ button:disabled {
   font-size: 0.75rem;
 }
 
+.status[data-export-busy] {
+  color: var(--accent-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.status[data-export-busy]::before {
+  content: '';
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-right: 0.4rem;
+  border-radius: 99px;
+  background: var(--accent-display);
+  box-shadow: 0 0 8px var(--accent-glow);
+  vertical-align: 0.05rem;
+}
+
 .cancel {
   border: 0;
   background: transparent;
@@ -287,5 +315,16 @@ button:disabled {
   font-size: 0.75rem;
   text-decoration: underline;
   cursor: pointer;
+}
+
+.cancel:focus-visible {
+  outline: 2px solid var(--accent-display);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status[data-export-busy]::before {
+    box-shadow: none;
+  }
 }
 </style>

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
 import ExportBar from '../components/ExportBar.vue'
@@ -108,7 +110,7 @@ describe('ExportBar', () => {
     const status = wrapper.get('[data-export-status]')
     expect(status.text()).toBe(en.export.busy)
     expect(status.attributes('data-export-progress')).toBeUndefined()
-    expect(wrapper.get('[data-export-cancel]').exists()).toBe(true)
+    expect(wrapper.find('[data-export-cancel]').exists()).toBe(true)
   })
 
   it('confirms a finished export', () => {
@@ -123,5 +125,13 @@ describe('ExportBar', () => {
     })
     expect(wrapper.get('[data-export-primary]').text()).toContain('MP4')
     expect(wrapper.get('[data-export="gif"]').text()).toBe(fr.export.gif)
+  })
+
+  it('tints busy status and focus rings with chrome accent tokens', () => {
+    const src = readFileSync(join(process.cwd(), 'src/components/ExportBar.vue'), 'utf8')
+    expect(src).toMatch(/\.status\[data-export-busy\]/)
+    expect(src).toMatch(/var\(--accent-display\)/)
+    expect(src).toMatch(/var\(--accent-soft\)/)
+    expect(src).toMatch(/var\(--accent-glow\)/)
   })
 })
