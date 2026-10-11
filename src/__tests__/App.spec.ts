@@ -340,12 +340,12 @@ describe('App', () => {
     const wrapper = mount(App)
     await wrapper.get('[data-locale="fr"]').trigger('click')
 
-    expect(wrapper.get('[data-lang-lead] [data-locale="en"]').exists()).toBe(true)
+    expect(wrapper.find('[data-lang-lead] [data-locale="en"]').exists()).toBe(true)
     expect(wrapper.get('[data-lang-lead] [data-locale="fr"]').attributes('aria-checked')).toBe(
       'true',
     )
     expect(wrapper.find('[data-lang-others] [data-locale="fr"]').exists()).toBe(false)
-    expect(wrapper.get('[data-lang-others] [data-locale="zh"]').exists()).toBe(true)
+    expect(wrapper.find('[data-lang-others] [data-locale="zh"]').exists()).toBe(true)
   })
 
   it('moves theme choice with arrow keys and wraps', async () => {
@@ -364,7 +364,7 @@ describe('App', () => {
     const wrapper = mount(App)
     await wrapper.get('[data-locale="en"]').trigger('keydown', { key: 'ArrowRight' })
     expect(wrapper.get('[data-locale="fr"]').attributes('aria-checked')).toBe('true')
-    expect(wrapper.get('[data-lang-lead] [data-locale="fr"]').exists()).toBe(true)
+    expect(wrapper.find('[data-lang-lead] [data-locale="fr"]').exists()).toBe(true)
     expect(window.localStorage.getItem(cle('langue'))).toBe('fr')
   })
 
@@ -381,7 +381,7 @@ describe('App', () => {
 
   it('marks the intersecting section on the nav', async () => {
     const seen: IntersectionObserverCallback[] = []
-    class FakeObserver implements IntersectionObserver {
+    class FakeObserver {
       readonly root = null
       readonly rootMargin = ''
       readonly thresholds: readonly number[] = []

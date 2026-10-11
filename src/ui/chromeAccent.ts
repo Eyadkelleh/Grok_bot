@@ -100,9 +100,8 @@ function contrastOn(rgb: Rgb): '#000000' | '#ffffff' {
   return luminance(rgb) > 0.179 ? '#000000' : '#ffffff'
 }
 
-function luminance(rgb: Rgb): number {
-  const [r, g, b] = rgb.map(channel) as Rgb
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+function luminance([r, g, b]: Rgb): number {
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
 }
 
 function channel(value: number): number {
