@@ -377,6 +377,51 @@ describe('App', () => {
     expect(location.hash).toBe('#etat=idle&stop')
     expect(wrapper.get('[data-nav="settings"]').attributes('aria-current')).toBe('location')
     expect(wrapper.get('[data-nav="rollup"]').attributes('aria-current')).toBeUndefined()
+    expect(wrapper.get('[data-settings-panel]').attributes('role')).toBe('dialog')
+    expect(wrapper.get('[data-settings-panel]').attributes('aria-modal')).toBe('true')
+  })
+
+  it('opens the settings sheet from nav without writing the pose hash', async () => {
+    const wrapper = mount(App, { attachTo: document.body })
+    expect(location.hash).toBe('#etat=idle&stop')
+
+    const settingsNav = wrapper.get('[data-nav="settings"]')
+    settingsNav.element.focus()
+    await settingsNav.trigger('click')
+    await flushPromises()
+
+    expect(location.hash).toBe('#etat=idle&stop')
+    expect(wrapper.get('[data-settings-sheet]').attributes('data-settings-sheet')).toBe('settings')
+    expect(wrapper.get('[data-nav="settings"]').attributes('aria-current')).toBe('location')
+    expect(document.activeElement).toBe(wrapper.get('[data-sheet-close]').element)
+
+    await wrapper.get('[data-settings-panel]').trigger('keydown', { key: 'Escape' })
+    await flushPromises()
+
+    expect(wrapper.find('[data-settings-sheet]').exists()).toBe(false)
+    expect(location.hash).toBe('#etat=idle&stop')
+    expect(document.activeElement).toBe(settingsNav.element)
+    wrapper.unmount()
+  })
+
+  it('opens about in the sheet and restores focus on close', async () => {
+    const wrapper = mount(App, { attachTo: document.body })
+    const aboutNav = wrapper.get('[data-nav="about"]')
+    aboutNav.element.focus()
+    await aboutNav.trigger('click')
+    await flushPromises()
+
+    expect(location.hash).toBe('#etat=idle&stop')
+    expect(wrapper.get('[data-settings-sheet]').attributes('data-settings-sheet')).toBe('about')
+    expect(wrapper.get('[data-nav="about"]').attributes('aria-current')).toBe('location')
+    expect(wrapper.get('#about').exists()).toBe(true)
+
+    await wrapper.get('[data-sheet-close]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-settings-sheet]').exists()).toBe(false)
+    expect(document.activeElement).toBe(aboutNav.element)
+    wrapper.unmount()
   })
 
   it('marks the intersecting section on the nav', async () => {
@@ -397,6 +442,9 @@ describe('App', () => {
     }
     vi.stubGlobal('IntersectionObserver', FakeObserver)
     const wrapper = mount(App)
+    await wrapper.get('[data-nav="settings"]').trigger('click')
+    await flushPromises()
+
     const about = wrapper.get('#about').element
     seen[0]!(
       [
@@ -412,6 +460,43 @@ describe('App', () => {
 
     expect(wrapper.get('[data-nav="about"]').attributes('aria-current')).toBe('location')
     expect(wrapper.get('[data-nav="settings"]').attributes('aria-current')).toBeUndefined()
+    wrapper.unmount()
+    vi.unstubAllGlobals()
+  })
+
+  it('keeps rollup as a page scroll target while the sheet is closed', async () => {
+    const seen: IntersectionObserverCallback[] = []
+    class FakeObserver {
+      readonly root = null
+      readonly rootMargin = ''
+      readonly thresholds: readonly number[] = []
+      constructor(cb: IntersectionObserverCallback) {
+        seen.push(cb)
+      }
+      disconnect() {}
+      observe() {}
+      unobserve() {}
+      takeRecords(): IntersectionObserverEntry[] {
+        return []
+      }
+    }
+    vi.stubGlobal('IntersectionObserver', FakeObserver)
+    const wrapper = mount(App)
+    const rollup = wrapper.get('#rollup').element
+    seen[0]!(
+      [
+        {
+          target: rollup,
+          isIntersecting: true,
+          intersectionRatio: 0.8,
+        } as IntersectionObserverEntry,
+      ],
+      {} as IntersectionObserver,
+    )
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('[data-nav="rollup"]').attributes('aria-current')).toBe('location')
+    expect(wrapper.find('[data-settings-sheet]').exists()).toBe(false)
     wrapper.unmount()
     vi.unstubAllGlobals()
   })

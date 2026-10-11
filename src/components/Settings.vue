@@ -253,7 +253,12 @@ function auClavierLangue(event: KeyboardEvent, id: Langue) {
 
 <style scoped>
 .settings {
-  max-width: 22rem;
+  max-width: none;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
   text-align: left;
 }
 

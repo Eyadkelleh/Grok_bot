@@ -196,6 +196,8 @@ const zh: typeof fr = {
     languageDefault: '默认界面语言',
     otherLanguages: '其他语言',
     about: '关于',
+    close: '关闭',
+    closeAria: '关闭设置',
     credits: '独立再创作自 {name}（MIT）。',
     creditsAria: 'bloub 的 GitHub 仓库，在新标签页中打开',
     github: '在 GitHub 上查看源码',

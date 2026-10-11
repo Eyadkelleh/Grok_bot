@@ -196,6 +196,8 @@ const en: typeof fr = {
     languageDefault: 'Default interface language',
     otherLanguages: 'Other languages',
     about: 'About',
+    close: 'Close',
+    closeAria: 'Close settings',
     credits: 'Independent recreation of {name} (MIT).',
     creditsAria: 'bloub on GitHub, in a new tab',
     github: 'View source on GitHub',
