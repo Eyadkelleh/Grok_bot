@@ -194,6 +194,8 @@ export default {
     languageDefault: "Langue d'interface par défaut",
     otherLanguages: 'Autres langues',
     about: 'À propos',
+    close: 'Fermer',
+    closeAria: 'Fermer les réglages',
     credits: 'Recréation indépendante de {name} (MIT).',
     creditsAria: 'bloub sur GitHub, dans un nouvel onglet',
     github: 'Voir le code source sur GitHub',
