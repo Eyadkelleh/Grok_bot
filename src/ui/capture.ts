@@ -16,7 +16,7 @@
 
 import { createApp, h, nextTick, ref } from 'vue'
 import Avatar from '../components/Avatar.vue'
-import { DEFAULT_MORPH_MS, totalDuration, type Block, type Cycle } from '../engine'
+import { DEFAULT_MORPH_MS, blockAt, totalDuration, type Block, type Cycle } from '../engine'
 import { gifIndexe, indexe, nouvellePalette, recense } from './gif'
 import { aplatitSurFond, poseFond, scelleMatte } from './matte'
 import {
@@ -145,6 +145,14 @@ export interface ReglagesBot {
   expression: string
 }
 
+function lookFor(block: Block | undefined, desk: ReglagesBot): ReglagesBot {
+  return {
+    shape: block?.shape ?? desk.shape,
+    colour: block?.colour ?? desk.colour,
+    expression: block?.expression ?? desk.expression,
+  }
+}
+
 export interface LecteurHorsEcran {
   rendre: (t: number) => Promise<SVGSVGElement>
   ferme: () => void
@@ -168,25 +176,27 @@ export async function ouvreCycle(
   hote.style.cssText = 'position:fixed;left:-99999px;top:0;width:0;height:0;overflow:hidden'
   document.body.appendChild(hote)
 
-  const bot = ref<{ rendAt: (t: number, blocks: Block[]) => void } | null>(null)
+  const look = ref(lookFor(blocs[0], reglages))
+  const at = ref(0)
   const app = createApp({
     render: () =>
       h(Avatar, {
         size: taille,
-        shape: reglages.shape,
-        expression: reglages.expression,
-        colour: reglages.colour,
+        shape: look.value.shape,
+        expression: look.value.expression,
+        colour: look.value.colour,
         state: blocs[0]?.state ?? 'Idle',
         durationMs: DEFAULT_MORPH_MS,
+        playhead: at.value,
+        blocks: blocs,
         ...(paper ? { paper } : {}),
-        ref: bot,
       }),
   })
   app.mount(hote)
   await nextTick()
 
   const svg = hote.querySelector('svg')
-  if (!(svg instanceof SVGSVGElement) || !bot.value) {
+  if (!(svg instanceof SVGSVGElement)) {
     app.unmount()
     hote.remove()
     throw new Error('off-screen bot did not render')
@@ -194,7 +204,8 @@ export async function ouvreCycle(
 
   return {
     rendre: async (t: number) => {
-      bot.value!.rendAt(t, blocs)
+      look.value = lookFor(blocs[blockAt(blocs, t).index], reglages)
+      at.value = t
       await nextTick()
       return svg
     },
