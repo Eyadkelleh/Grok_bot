@@ -21,7 +21,6 @@ const at = computed(() => transport.at.value)
 const hit = computed(() => blockAt(blocks.value, at.value))
 const elapsed = computed(() => hit.value.elapsed)
 
-/** The playhead is the source of truth; selecting a card seeks to it. */
 const block = computed({
   get: () => hit.value.index,
   set: (index: number) => transport.seek(offsetOf(blocks.value, index)),
@@ -73,7 +72,8 @@ function onBlocks(next: Block[]) {
 }
 
 function addBlock(state: AnimationState) {
-  props.desk.editMontage({ op: 'append', state })
+  const { shape, colour, expression } = props.desk.config.value.look
+  props.desk.editMontage({ op: 'append', state, shape, colour, expression })
 }
 </script>
 
@@ -173,6 +173,7 @@ function addBlock(state: AnimationState) {
       :blocks="[...blocks]"
       :elapsed="elapsed"
       :add-state="desk.config.value.pose"
+      :inherit-colour="desk.config.value.look.colour"
       @update:blocks="onBlocks"
       @add="addBlock"
       @seek="seek"

@@ -208,6 +208,7 @@ export {
   activeCycleOf,
   applyMontageEdit,
   type Block,
+  type BlockLook,
   type Cycle,
   type Montage,
   type MontageEdit,
