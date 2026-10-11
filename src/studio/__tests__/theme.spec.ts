@@ -103,4 +103,20 @@ describe('theme', () => {
     expect(declaring[0]![1]).not.toMatch(/data-theme/)
     expect(declaring[0]![2]).toContain(`--stage: ${DEFAULT_PAPER}`)
   })
+
+  it('declares chrome accent tokens in themed blocks only', () => {
+    const css = readFileSync(join(process.cwd(), 'src/assets/main.css'), 'utf8')
+    const blocks = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)]
+    const themed = blocks.filter(([, selector]) => /data-theme/.test(selector!))
+    expect(themed.length).toBeGreaterThanOrEqual(2)
+    for (const [, selector, body] of themed) {
+      expect(body, selector).toMatch(/--bot-accent\s*:/)
+      expect(body, selector).toMatch(/--bot-accent-rgb\s*:/)
+      expect(body, selector).toMatch(/--accent-contrast\s*:/)
+      expect(body, selector).toMatch(/--accent-display\s*:/)
+      expect(body, selector).toMatch(/--accent-soft\s*:/)
+      expect(body, selector).toMatch(/--accent-glow\s*:/)
+      expect(body, selector).not.toMatch(/--stage(-ink|-muted)?\s*:/)
+    }
+  })
 })
