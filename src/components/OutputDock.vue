@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { COLOR_BY_ID, type ColorId } from '../engine'
+import type { ColorId } from '../engine'
 import { secondesCourtes, t } from '../i18n'
 import { hrefForDesk, type DeskKind } from '../studio'
+import { resolveChromeAccent } from '../ui/chromeAccent'
 
 const props = defineProps<{
   focus: DeskKind
@@ -13,7 +14,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ focus: [kind: DeskKind] }>()
 
-const hex = (id: ColorId) => COLOR_BY_ID.get(id)?.hex ?? '#1c1917'
+const tint = (id: ColorId) => resolveChromeAccent(id).displayHex
 
 const desks = computed(() => [
   {
@@ -21,14 +22,14 @@ const desks = computed(() => [
     label: t('dock.image'),
     aria: t('dock.imageAria'),
     hint: t('dock.imageHint'),
-    tint: hex(props.imageColour),
+    tint: tint(props.imageColour),
   },
   {
     kind: 'video' as const,
     label: t('dock.video'),
     aria: t('dock.videoAria'),
     hint: `${t('dock.videoHint')} · ${secondesCourtes(props.videoDuration)}`,
-    tint: hex(props.videoColour),
+    tint: tint(props.videoColour),
   },
 ])
 </script>
@@ -85,17 +86,25 @@ const desks = computed(() => [
     transform 160ms ease;
 }
 
-.sheet:hover,
-.sheet:focus-visible {
+.sheet:hover {
   border-color: var(--muted);
   color: var(--ink);
   transform: translateY(-1px);
 }
 
-.sheet.on {
-  border-color: var(--ink);
-  background: var(--paper);
+.sheet:focus-visible {
   color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent-display) 55%, var(--line));
+  outline: 2px solid var(--accent-display);
+  outline-offset: 2px;
+  transform: translateY(-1px);
+}
+
+.sheet.on {
+  border-color: color-mix(in srgb, var(--accent-display) 55%, var(--line));
+  background: var(--accent-soft);
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--accent-display);
 }
 
 .leaf {

@@ -385,9 +385,9 @@ describe('App', () => {
     const wrapper = mount(App, { attachTo: document.body })
     expect(location.hash).toBe('#etat=idle&stop')
 
-    const settingsNav = wrapper.get('[data-nav="settings"]')
-    settingsNav.element.focus()
-    await settingsNav.trigger('click')
+    const settingsNav = wrapper.get('[data-nav="settings"]').element as HTMLElement
+    settingsNav.focus()
+    await wrapper.get('[data-nav="settings"]').trigger('click')
     await flushPromises()
 
     expect(location.hash).toBe('#etat=idle&stop')
@@ -400,27 +400,27 @@ describe('App', () => {
 
     expect(wrapper.find('[data-settings-sheet]').exists()).toBe(false)
     expect(location.hash).toBe('#etat=idle&stop')
-    expect(document.activeElement).toBe(settingsNav.element)
+    expect(document.activeElement).toBe(settingsNav)
     wrapper.unmount()
   })
 
   it('opens about in the sheet and restores focus on close', async () => {
     const wrapper = mount(App, { attachTo: document.body })
-    const aboutNav = wrapper.get('[data-nav="about"]')
-    aboutNav.element.focus()
-    await aboutNav.trigger('click')
+    const aboutNav = wrapper.get('[data-nav="about"]').element as HTMLElement
+    aboutNav.focus()
+    await wrapper.get('[data-nav="about"]').trigger('click')
     await flushPromises()
 
     expect(location.hash).toBe('#etat=idle&stop')
     expect(wrapper.get('[data-settings-sheet]').attributes('data-settings-sheet')).toBe('about')
     expect(wrapper.get('[data-nav="about"]').attributes('aria-current')).toBe('location')
-    expect(wrapper.get('#about').exists()).toBe(true)
+    expect(wrapper.find('#about').exists()).toBe(true)
 
     await wrapper.get('[data-sheet-close]').trigger('click')
     await flushPromises()
 
     expect(wrapper.find('[data-settings-sheet]').exists()).toBe(false)
-    expect(document.activeElement).toBe(aboutNav.element)
+    expect(document.activeElement).toBe(aboutNav)
     wrapper.unmount()
   })
 
