@@ -5,6 +5,11 @@ import { describe, expect, it } from 'vitest'
 import OutputDock from '../components/OutputDock.vue'
 import { resolveChromeAccent } from '../ui/chromeAccent'
 
+function cssRgb(hex: string) {
+  const n = Number.parseInt(hex.slice(1), 16)
+  return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`
+}
+
 describe('OutputDock', () => {
   it('tints desk icons through resolveChromeAccent display hex', () => {
     const wrapper = mount(OutputDock, {
@@ -21,8 +26,8 @@ describe('OutputDock', () => {
     expect(ink.displayHex).not.toBe('#0a0a0c')
     const imageTint = wrapper.get('[data-desk="image"] .tint').element as SVGCircleElement
     const videoTint = wrapper.get('[data-desk="video"] .tint').element as SVGCircleElement
-    expect(imageTint.style.fill).toBe(`rgb(${ink.rgb.join(', ')})`)
-    expect(videoTint.style.fill).toBe(`rgb(${blue.rgb.join(', ')})`)
+    expect(imageTint.style.fill).toBe(cssRgb(ink.displayHex))
+    expect(videoTint.style.fill).toBe(cssRgb(blue.displayHex))
     expect(wrapper.get('[data-desk="image"]').classes()).toContain('on')
   })
 
