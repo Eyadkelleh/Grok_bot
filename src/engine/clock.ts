@@ -1,0 +1,206 @@
+/**
+ * Clock-free avatar engine: `sample(t)` is a pure function of dated time.
+ *
+ * Pause, resume, and seek are different `t` inputs. Previous state and shape
+ * are never purged, so replaying a date during a morph still finds it.
+ *
+ * After the morph, `sample(t)` evaluates pose(t) at local time in the current
+ * state. Idle is identity. Thinking / Sleep / Orbit / Burst / Comet move.
+ * Notification pops its badge then settles.
+ */
+import { sampleAvatar, sampleLiveMorph, type AvatarFrame, type AvatarSpec } from './avatar'
+import { blockAt, type Block } from './cycles'
+import type { GazeInput } from './face'
+import { clamp } from './math'
+import { DEFAULT_SHAPE } from './skins'
+import {
+  DEFAULT_MORPH_MS,
+  isAnimationState,
+  morphMsOf,
+  morphSecondsOf,
+  type AnimationState,
+} from './states'
+
+export type ClockAppearance = Pick<
+  AvatarSpec,
+  'expression' | 'gaze' | 'colour' | 'paper' | 'wander' | 'blink' | 'float'
+>
+
+function resolveState(value: string | undefined): AnimationState {
+  if (value && isAnimationState(value)) return value
+  return 'Idle'
+}
+
+export class AvatarEngine {
+  /**
+   * Documented floor in seconds (`DEFAULT_MORPH_MS`).
+   * State arrivals use `morphSecondsOf(arriving)`; customiser shapes use `morphMs`.
+   */
+  static readonly MORPH = DEFAULT_MORPH_MS / 1000
+
+  morphMs: number
+
+  private cur: AnimationState
+  private prev: AnimationState | null = null
+  private tCur = 0
+  private tPrev = 0
+  private shape: string
+  private shapePrev: string | null = null
+  private shapeAt = Number.NEGATIVE_INFINITY
+  private expression: string | undefined
+  private gaze: GazeInput | undefined
+  private colour: string | undefined
+  private paper: string | undefined
+  private wander: number | undefined
+  private blink: boolean | undefined
+  private float: boolean | undefined
+
+  constructor(spec: AvatarSpec = {}, morphMs = DEFAULT_MORPH_MS) {
+    this.cur = resolveState(spec.state)
+    this.shape = spec.shape ?? DEFAULT_SHAPE
+    this.expression = spec.expression
+    this.gaze = spec.gaze
+    this.colour = spec.colour
+    this.paper = spec.paper
+    this.wander = spec.wander
+    this.blink = spec.blink
+    this.float = spec.float
+    this.morphMs = morphMs
+  }
+
+  get state(): AnimationState {
+    return this.cur
+  }
+
+  get shapeId(): string {
+    return this.shape
+  }
+
+  setAppearance(appearance: ClockAppearance) {
+    if (appearance.expression !== undefined) this.expression = appearance.expression
+    if (appearance.gaze !== undefined) this.gaze = appearance.gaze
+    if (appearance.colour !== undefined) this.colour = appearance.colour
+    if (appearance.paper !== undefined) this.paper = appearance.paper
+    if (appearance.wander !== undefined) this.wander = appearance.wander
+    if (appearance.blink !== undefined) this.blink = appearance.blink
+    if (appearance.float !== undefined) this.float = appearance.float
+  }
+
+  setState(id: AnimationState, now: number) {
+    if (id === this.cur) return
+    this.prev = this.cur
+    this.tPrev = this.tCur
+    this.cur = id
+    this.tCur = now
+  }
+
+  setShape(shape: string, now: number) {
+    if (shape === this.shape) return
+    this.shapePrev = this.shape
+    this.shape = shape
+    this.shapeAt = now
+  }
+
+  /**
+   * Land on `id` with no previous state, as a fresh engine posed there.
+   * Seek to the start of a sequence must use this: `setState` keeps the
+   * outgoing state for blending, which would mix the first block with the last.
+   */
+  reset(id: AnimationState, now: number) {
+    this.cur = id
+    this.prev = null
+    this.tCur = now
+    this.tPrev = now
+  }
+
+  morphingAt(t: number): boolean {
+    const stateMorphing = this.prev !== null && t - this.tCur < this.stateMorphSeconds()
+    const shapeMorphing = this.shapePrev !== null && t - this.shapeAt < this.shapeMorphSeconds()
+    return stateMorphing || shapeMorphing
+  }
+
+  shownState(t: number): AnimationState {
+    if (this.prev !== null && t - this.tCur < this.stateMorphSeconds()) return this.prev
+    return this.cur
+  }
+
+  /**
+   * Pose the engine on the montage block that contains `t` and return the
+   * dated sample time for that local transition. Later blocks are not kept as
+   * history: export calls this per frame, and a single prev pointer cannot
+   * replay an earlier joint after a later `setState`.
+   */
+  seek(t: number, blocks: Block[]): number {
+    this.shapePrev = null
+    const hit = blockAt(blocks, t)
+    const current = blocks[hit.index]?.state ?? 'Idle'
+    const prev = hit.index > 0 ? (blocks[hit.index - 1]?.state ?? current) : current
+    const morphDone = hit.index === 0 || hit.elapsed * 1000 + 1e-6 >= this.morphMsFor(current)
+    if (morphDone) {
+      this.reset(current, 0)
+      return hit.elapsed
+    }
+    this.reset(prev, 0)
+    this.setState(current, 0)
+    return hit.elapsed
+  }
+
+  sample(t: number, appearance: ClockAppearance = {}): AvatarFrame {
+    const spec = this.specAt(appearance)
+    const stateMorphSec = this.stateMorphSeconds()
+    const shapeMorphSec = this.shapeMorphSeconds()
+    const sinceState = t - this.tCur
+    const sinceShape = t - this.shapeAt
+    const stateMorphing = this.prev !== null && sinceState < stateMorphSec
+    const shapeMorphing = this.shapePrev !== null && sinceShape < shapeMorphSec
+
+    if (!stateMorphing && !shapeMorphing) {
+      return sampleAvatar({ ...spec, state: this.cur, shape: this.shape, t: Math.max(0, sinceState) })
+    }
+
+    const linear = stateMorphing
+      ? clamp(sinceState / Math.max(stateMorphSec, 1e-12))
+      : clamp(sinceShape / Math.max(shapeMorphSec, 1e-12))
+
+    return sampleLiveMorph({
+      ...spec,
+      from: stateMorphing ? this.prev! : this.cur,
+      to: this.cur,
+      fromShape: shapeMorphing ? this.shapePrev! : this.shape,
+      toShape: this.shape,
+      t: linear,
+    })
+  }
+
+  /** Instant when `morphMs` is 0; otherwise the arriving state's catalogue length. */
+  private stateMorphSeconds(): number {
+    if (this.morphMs <= 0) return 0
+    return morphSecondsOf(this.cur)
+  }
+
+  private shapeMorphSeconds(): number {
+    return this.morphMs <= 0 ? 0 : this.morphMs / 1000
+  }
+
+  private morphMsFor(state: AnimationState): number {
+    if (this.morphMs <= 0) return 0
+    return morphMsOf(state)
+  }
+
+  private specAt(appearance: ClockAppearance): AvatarSpec {
+    return {
+      expression: appearance.expression ?? this.expression,
+      gaze: appearance.gaze ?? this.gaze,
+      colour: appearance.colour ?? this.colour,
+      paper: appearance.paper ?? this.paper,
+      wander: appearance.wander ?? this.wander,
+      blink: appearance.blink ?? this.blink,
+      float: appearance.float ?? this.float,
+    }
+  }
+}
+
+/** Throwaway engine: settled or morphing sample at dated `t` with no setters. */
+export function sampleAt(t: number, spec: AvatarSpec = {}, morphMs = DEFAULT_MORPH_MS): AvatarFrame {
+  return new AvatarEngine(spec, morphMs).sample(t)
+}

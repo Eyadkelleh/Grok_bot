@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { VIEW_SIZE, viewBoxAttr } from '../../engine'
+import { BODY_RADIUS, SHAPES, VIEW_SIZE, viewBoxAttr } from '../../engine'
 import {
   ACTION_BY_ID,
   ACTION_DEFAUT,
@@ -7,8 +7,11 @@ import {
   BLANC,
   CYCLE_FPS,
   CYCLE_TAILLE,
+  DEMI_CADRE,
+  DEMI_ECRAN,
   FOND_GIF_DEFAUT,
   PNG_TAILLE,
+  RAYON_MAX,
   SVG_TAILLE,
   couleurDeFond,
   cycleImages,
@@ -16,6 +19,7 @@ import {
   nomFichier,
   sansCommentaires,
   videoPossible,
+  viewBoxCycle,
   viewBoxExport,
 } from '../export'
 
@@ -42,6 +46,31 @@ describe('export catalogue', () => {
     expect(viewBoxExport()).toBe('-72.68 -72.68 145.36 145.36')
     expect(SVG_TAILLE).toBe(VIEW_SIZE)
     expect(ACTION_BY_ID.get('svg')?.taille).toBe(SVG_TAILLE)
+  })
+
+  /**
+   * G4 keep-stage-box: stills keep the stage, not bloub's tight DEMI_CADRE.
+   * Cycles take the screen box so décor rings are not cropped. The two stay
+   * distinct even while G4 holds the still default on the stage.
+   */
+  it('keeps stills on the stage box and cycles on the screen box', () => {
+    const RAYON_ARCS = 1.4 * BODY_RADIUS
+    expect(viewBoxExport()).toBe(viewBoxAttr())
+    expect(viewBoxExport()).not.toBe(viewBoxExport(DEMI_CADRE))
+    expect(viewBoxCycle()).toBe(viewBoxExport(DEMI_ECRAN))
+    expect(viewBoxCycle()).toBe(viewBoxAttr())
+    expect(DEMI_ECRAN).toBeGreaterThan(RAYON_ARCS)
+    expect(DEMI_CADRE).toBeLessThan(RAYON_ARCS)
+    expect(viewBoxExport(125)).toBe('-125 -125 250 250')
+  })
+
+  it('fits every customiser shape inside the tight cadre', () => {
+    expect(RAYON_MAX).toBe(Math.max(...SHAPES.map((forme) => Math.max(...forme.radii))))
+    expect(RAYON_MAX).toBeGreaterThan(1)
+    for (const forme of SHAPES) {
+      const rayon = Math.max(...forme.radii) * BODY_RADIUS
+      expect(rayon, forme.id).toBeLessThan(DEMI_CADRE)
+    }
   })
 
   it('keeps GIF cheap and MP4 sharp', () => {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
+  AvatarEngine,
   BODY_RADIUS,
   DEFAULT_COLOR,
   DEFAULT_EXPRESSION,
@@ -10,12 +11,8 @@ import {
   DEFAULT_SIZE,
   VIEW_HALF,
   VIEW_SIZE,
-  blockAt,
   colourIdOf,
   gazeAttr,
-  morphProgress,
-  sampleAvatar,
-  sampleMorph,
   type AnimationState,
   type Block,
   type GazeInput,
@@ -32,6 +29,8 @@ const props = withDefaults(
     paper?: string
     label?: string
     durationMs?: number
+    playhead?: number | null
+    blocks?: Block[]
   }>(),
   {
     size: DEFAULT_SIZE,
@@ -42,39 +41,87 @@ const props = withDefaults(
     paper: DEFAULT_PAPER,
     label: 'Grok_bot',
     durationMs: DEFAULT_MORPH_MS,
+    playhead: null,
+    blocks: () => [],
   },
 )
 
 const uid = `avatar-mask-${Math.random().toString(36).slice(2, 10)}`
-const initial = (props.state as AnimationState) ?? 'Idle'
-const from = ref<AnimationState>(initial)
-const to = ref<AnimationState>(initial)
-const startedAt = ref(0)
-const now = ref(0)
+const engine = new AvatarEngine(
+  {
+    state: (props.state as AnimationState) ?? 'Idle',
+    shape: props.shape,
+    expression: props.expression,
+    gaze: props.gaze,
+    colour: props.colour,
+    paper: props.paper,
+  },
+  props.durationMs,
+)
+const clockT = ref(0)
+const stamp = ref(0)
 let raf = 0
 
-function tick(ts: number) {
-  now.value = ts
-  if (morphProgress(ts - startedAt.value, props.durationMs) < 1) {
-    raf = requestAnimationFrame(tick)
+function bump() {
+  stamp.value += 1
+}
+
+function appearance() {
+  return {
+    expression: props.expression,
+    gaze: props.gaze,
+    colour: props.colour,
+    paper: props.paper,
   }
 }
 
-function morphTo(next: AnimationState) {
-  if (next === to.value) return
-  from.value = to.value
-  to.value = next
-  const t = performance.now()
-  startedAt.value = t
-  now.value = t
+function dating() {
+  return props.playhead != null && props.blocks.length > 0
+}
+
+function tick(ts: number) {
+  if (dating()) return
+  clockT.value = ts / 1000
+  if (engine.morphingAt(clockT.value)) raf = requestAnimationFrame(tick)
+}
+
+function morphTo(nextState: AnimationState, nextShape: string) {
+  if (dating()) return
+  if (nextState === engine.state && nextShape === engine.shapeId) return
+  engine.morphMs = props.durationMs
+  const t = performance.now() / 1000
+  engine.setState(nextState, t)
+  engine.setShape(nextShape, t)
+  clockT.value = t
+  bump()
   cancelAnimationFrame(raf)
-  if (props.durationMs > 0) raf = requestAnimationFrame(tick)
+  if (props.durationMs > 0 && engine.morphingAt(t)) raf = requestAnimationFrame(tick)
 }
 
 watch(
   () => props.state,
   (next) => {
-    if (typeof next === 'string') morphTo(next as AnimationState)
+    if (dating()) return
+    if (typeof next === 'string') morphTo(next as AnimationState, engine.shapeId)
+  },
+)
+
+watch(
+  () => props.shape,
+  (next) => {
+    if (dating()) {
+      engine.setShape(next, clockT.value)
+      bump()
+      return
+    }
+    morphTo(engine.state, next)
+  },
+)
+
+watch(
+  () => props.durationMs,
+  (ms) => {
+    engine.morphMs = ms
   },
 )
 
@@ -82,24 +129,34 @@ watch(
  * Seek the bot to an absolute date on a montage. Cancels the live rAF loop so
  * export can step frame by frame. The first block is already settled: previous
  * is itself, so t=0 does not morph in from a state that was never shown.
+ *
+ * Live Play uses this same path on each playhead tick so pose(t) keeps dating
+ * after the arrival morph would have stopped wall-clock rAF.
  */
 function rendAt(t: number, blocks: Block[]) {
   cancelAnimationFrame(raf)
   raf = 0
-  const hit = blockAt(blocks, t)
-  const current = blocks[hit.index]?.state ?? 'Idle'
-  const prev = hit.index > 0 ? (blocks[hit.index - 1]?.state ?? current) : current
-  const morphDone = hit.index === 0 || hit.elapsed * 1000 + 1e-6 >= props.durationMs
-  from.value = morphDone ? current : prev
-  to.value = current
-  startedAt.value = 0
-  now.value = morphDone ? props.durationMs : hit.elapsed * 1000
+  engine.morphMs = props.durationMs
+  clockT.value = engine.seek(t, blocks)
+  if (engine.shapeId !== props.shape) engine.setShape(props.shape, clockT.value)
+  bump()
 }
 
+watch(
+  () => [props.playhead, props.blocks] as const,
+  () => {
+    if (props.playhead != null && props.blocks.length > 0) rendAt(props.playhead, props.blocks)
+  },
+)
+
 onMounted(() => {
-  const t = performance.now()
-  now.value = t
-  startedAt.value = t
+  if (props.playhead != null && props.blocks.length > 0) {
+    rendAt(props.playhead, props.blocks)
+    return
+  }
+  const now = performance.now() / 1000
+  engine.reset(engine.state, now)
+  clockT.value = now
 })
 
 onUnmounted(() => {
@@ -108,35 +165,21 @@ onUnmounted(() => {
 
 defineExpose({ rendAt })
 
-const progress = computed(() => {
-  if (from.value === to.value) return 1
-  return morphProgress(now.value - startedAt.value, props.durationMs)
+const frame = computed(() => {
+  void stamp.value
+  return engine.sample(clockT.value, appearance())
 })
 
-const rest = computed(() =>
-  sampleAvatar({
-    shape: props.shape,
-    expression: props.expression,
-    gaze: props.gaze,
-    colour: props.colour,
-    state: to.value,
-    paper: props.paper,
-  }),
-)
-
-const frame = computed(() => {
-  if (progress.value >= 1) return rest.value
-  const morph = sampleMorph(from.value, to.value, progress.value)
-  return {
-    ...rest.value,
-    path: morph.path,
-    dots: morph.dots,
-    eyes: [] as typeof rest.value.eyes,
-  }
+const toState = computed(() => {
+  void stamp.value
+  return engine.state
 })
 
 const colourAttr = computed(() => colourIdOf(props.colour, frame.value.colour))
-const shownState = computed(() => (progress.value >= 1 ? to.value : from.value))
+const shownState = computed(() => {
+  void stamp.value
+  return engine.shownState(clockT.value)
+})
 </script>
 
 <template>
@@ -153,7 +196,9 @@ const shownState = computed(() => (progress.value >= 1 ? to.value : from.value))
     :data-colour="colourAttr"
     :data-gaze="gazeAttr(frame.gaze)"
     :data-state="shownState"
-    :data-target="to"
+    :data-target="toState"
+    :data-shape-applied="frame.shapeApplied ? 'true' : 'false'"
+    :data-geometry-kind="frame.geometryKind"
   >
     <defs>
       <mask
@@ -178,7 +223,48 @@ const shownState = computed(() => (progress.value >= 1 ? to.value : from.value))
           :transform="`translate(${eye.x} ${eye.y}) matrix(${eye.a} ${eye.b} ${eye.c} ${eye.d} 0 0) rotate(${eye.tilt})`"
         />
       </mask>
+      <linearGradient
+        v-for="arc in frame.arcs"
+        :id="`${uid}-${arc.id}`"
+        :key="arc.id"
+        gradientUnits="userSpaceOnUse"
+        :x1="arc.grad.x1"
+        :y1="arc.grad.y1"
+        :x2="arc.grad.x2"
+        :y2="arc.grad.y2"
+      >
+        <stop
+          v-for="(c, i) in arc.grad.stops"
+          :key="i"
+          :offset="i / (arc.grad.stops.length - 1)"
+          :stop-color="c"
+        />
+      </linearGradient>
     </defs>
+    <g v-if="frame.arcs.length" fill="none" stroke-linecap="round">
+      <path
+        v-for="arc in frame.arcs"
+        :key="`b${arc.id}`"
+        data-arc-back
+        :d="arc.back"
+        :stroke="`url(#${uid}-${arc.id})`"
+        :stroke-width="arc.width"
+        :opacity="arc.opacity"
+      />
+    </g>
+    <template v-if="frame.dotsBehind">
+      <circle
+        v-for="(dot, i) in frame.dots"
+        :key="`dot-b-${i}`"
+        data-dot
+        data-dot-behind
+        :cx="dot.x * BODY_RADIUS"
+        :cy="dot.y * BODY_RADIUS"
+        :r="dot.r * BODY_RADIUS"
+        :fill="frame.fill"
+        :opacity="dot.opacity"
+      />
+    </template>
     <path data-body-paper :d="frame.path" :fill="frame.paper" />
     <g :mask="`url(#${uid})`">
       <rect
@@ -190,16 +276,29 @@ const shownState = computed(() => (progress.value >= 1 ? to.value : from.value))
         :fill="frame.fill"
       />
     </g>
-    <circle
-      v-for="(dot, i) in frame.dots"
-      :key="`dot-${i}`"
-      data-dot
-      :cx="dot.x * BODY_RADIUS"
-      :cy="dot.y * BODY_RADIUS"
-      :r="dot.r * BODY_RADIUS"
-      :fill="frame.fill"
-      :opacity="dot.opacity"
-    />
+    <template v-if="!frame.dotsBehind">
+      <circle
+        v-for="(dot, i) in frame.dots"
+        :key="`dot-${i}`"
+        data-dot
+        :cx="dot.x * BODY_RADIUS"
+        :cy="dot.y * BODY_RADIUS"
+        :r="dot.r * BODY_RADIUS"
+        :fill="frame.fill"
+        :opacity="dot.opacity"
+      />
+    </template>
+    <g v-if="frame.arcs.length" fill="none" stroke-linecap="round">
+      <path
+        v-for="arc in frame.arcs"
+        :key="`f${arc.id}`"
+        data-arc-front
+        :d="arc.front"
+        :stroke="`url(#${uid}-${arc.id})`"
+        :stroke-width="arc.width"
+        :opacity="arc.opacity"
+      />
+    </g>
   </svg>
 </template>
 

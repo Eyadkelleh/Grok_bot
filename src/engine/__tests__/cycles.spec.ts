@@ -18,19 +18,23 @@ import {
   offsetOf,
   parseCycles,
   parseMontage,
+  poseCycle,
   serializeMontage,
   totalDuration,
   uniqueName,
 } from '../cycles'
 
 describe('cycles', () => {
-  it('builds a default montage of every catalogue state', () => {
+  it('builds a short default montage (Idle only)', () => {
     const cycle = defaultCycle()
     expect(cycle.id).toBe(DEFAULT_CYCLE_ID)
     expect(cycle.name).toBe('')
-    expect(cycle.blocks.map((b) => b.state)).toEqual([...ANIMATION_STATES])
-    expect(cycle.blocks.every((b) => b.duration === DEFAULT_BLOCK_DURATION)).toBe(true)
-    expect(totalDuration(cycle.blocks)).toBe(ANIMATION_STATES.length * DEFAULT_BLOCK_DURATION)
+    expect(cycle.blocks).toEqual([makeBlock('Idle')])
+    expect(totalDuration(cycle.blocks)).toBe(DEFAULT_BLOCK_DURATION)
+  })
+
+  it('still exposes the full catalogue via ANIMATION_STATES for builders', () => {
+    expect(ANIMATION_STATES.length).toBeGreaterThan(1)
   })
 
   it('clamps durations onto the step between the morph floor and the editor ceiling', () => {
@@ -90,5 +94,15 @@ describe('cycles', () => {
   it('falls back to the default montage when storage is empty', () => {
     const montage = parseMontage(null)
     expect(montage).toEqual(defaultMontage())
+  })
+
+  it('builds a morphing pose cycle for video export', () => {
+    expect(poseCycle('Idle').blocks).toEqual([{ state: 'Idle', duration: 2 }])
+    expect(poseCycle('Comet').blocks).toEqual([
+      { state: 'Idle', duration: 0.4 },
+      { state: 'Comet', duration: 1.2 },
+      { state: 'Idle', duration: 0.4 },
+    ])
+    expect(totalDuration(poseCycle('Comet').blocks)).toBe(2)
   })
 })

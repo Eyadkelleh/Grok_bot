@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Split-Flap Rail — OutputDock candidate 4</title>
+  <style>
+    :root {
+      --ink: #1c1917;
+      --muted: #57534e;
+      --line: #d6d3d1;
+      --paper: #ffffff;
+      --canvas: #f5f5f4;
+      --wash: 0 0 0;
+      --image-tint: #f97316;
+      --video-tint: #0ea5e9;
+      --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --flap-dur: 320ms;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      background: var(--canvas);
+      color: var(--ink);
+    }
+
+    .page {
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 6rem;
+    }
+
+    h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.35rem;
+    }
+
+    .lede {
+      margin: 0 0 1.5rem;
+      color: var(--muted);
+      font-size: 0.875rem;
+      line-height: 1.45;
+    }
+
+    .chrome-mock {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.65rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      background: var(--paper);
+      margin-bottom: 1.25rem;
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: -0.03em;
+    }
+
+    .chrome-links {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+
+    .hero-placeholder {
+      aspect-ratio: 1;
+      max-width: 18rem;
+      margin: 0 auto 1rem;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--ink) 6%, var(--paper));
+      border: 1px dashed var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .note {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .panel-label {
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin: 0 0 0.5rem;
+    }
+
+    /* ── Split-Flap Rail ─────────────────────────────────── */
+
+    .flap-rail {
+      --hinge: 72deg;
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      gap: 0;
+      width: min(100%, 13.5rem);
+      height: 3.35rem;
+      padding: 0.2rem;
+      border-radius: 0.75rem;
+      background: color-mix(in srgb, var(--line) 35%, var(--paper));
+      box-shadow:
+        inset 0 1px 2px rgb(var(--wash) / 0.06),
+        inset 0 -1px 0 rgb(var(--wash) / 0.04);
+      perspective: 520px;
+      transform-style: preserve-3d;
+    }
+
+    .flap-rail::before {
+      content: '';
+      position: absolute;
+      inset-block: 0.35rem;
+      left: 50%;
+      width: 1px;
+      transform: translateX(-50%);
+      background: var(--line);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .flap {
+      position: relative;
+      flex: 1 1 50%;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto auto;
+      align-items: center;
+      gap: 0 0.45rem;
+      padding: 0.35rem 0.5rem 0.35rem 0.4rem;
+      border: none;
+      border-radius: 0.55rem;
+      background: var(--paper);
+      color: var(--muted);
+      text-decoration: none;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition:
+        transform var(--flap-dur) var(--spring),
+        color 180ms ease,
+        box-shadow 180ms ease,
+        flex-basis var(--flap-dur) var(--spring);
+      transform-origin: right center;
+      z-index: 1;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .flap[data-desk='video'] {
+      transform-origin: left center;
+    }
+
+    .flap::before {
+      content: '';
+      position: absolute;
+      inset-block: 0;
+      left: 0;
+      width: 3px;
+      background: var(--flap-tint, var(--ink));
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+
+    .flap.is-forward::before {
+      opacity: 1;
+    }
+
+    .flap.is-edge {
+      flex: 0 0 2.1rem;
+      padding-inline: 0.25rem;
+      color: color-mix(in srgb, var(--muted) 70%, transparent);
+      box-shadow: none;
+    }
+
+    .flap.is-edge .name,
+    .flap.is-edge .hint {
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+
+    .flap.is-edge .glyph-wrap {
+      margin: 0 auto;
+    }
+
+    .flap[data-desk='image'].is-edge {
+      transform: rotateY(calc(var(--hinge) * -1));
+    }
+
+    .flap[data-desk='video'].is-edge {
+      transform: rotateY(var(--hinge));
+    }
+
+    .flap.is-forward {
+      flex: 1 1 68%;
+      color: var(--ink);
+      box-shadow:
+        0 4px 14px rgb(var(--wash) / 0.08),
+        0 1px 0 rgb(var(--wash) / 0.04);
+      transform: rotateY(0deg);
+      z-index: 2;
+    }
+
+    .flap:hover,
+    .flap:focus-visible {
+      color: var(--ink);
+    }
+
+    .flap:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+    }
+
+    .glyph-wrap {
+      grid-row: 1 / 3;
+      width: 1.65rem;
+      height: 1.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .glyph-wrap svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .name {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+
+    .hint {
+      font-size: 0.625rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+
+    /* Motion glyph scrub */
+    @keyframes scrub {
+      0% { transform: translateX(-30%); }
+      100% { transform: translateX(130%); }
+    }
+
+    .scrub-bar {
+      transform: translateX(-30%);
+    }
+
+    .flap.is-forward[data-desk='video'] .scrub-bar {
+      animation: scrub 1.4s ease-in-out infinite;
+    }
+
+    /* Mobile bottom bar demo */
+    .mobile-frame {
+      margin-top: 2rem;
+      border: 1px solid var(--line);
+      border-radius: 1.25rem;
+      overflow: hidden;
+      background: var(--paper);
+      max-width: 22rem;
+    }
+
+    .mobile-screen {
+      padding: 1rem 1rem 0;
+      min-height: 10rem;
+      background: var(--canvas);
+    }
+
+    .mobile-bar {
+      position: relative;
+      padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--line);
+      background: var(--paper);
+      display: flex;
+      justify-content: center;
+    }
+
+    .mobile-bar .flap-rail {
+      width: 100%;
+      max-width: none;
+      height: 3.6rem;
+      --hinge: 68deg;
+      perspective: 400px;
+    }
+
+    .mobile-bar .flap {
+      transform-origin: center bottom;
+    }
+
+    .mobile-bar .flap[data-desk='video'] {
+      transform-origin: center bottom;
+    }
+
+    .mobile-bar .flap[data-desk='image'].is-edge {
+      transform: rotateX(var(--hinge));
+    }
+
+    .mobile-bar .flap[data-desk='video'].is-edge {
+      transform: rotateX(calc(var(--hinge) * -1));
+    }
+
+    .mobile-bar .flap.is-forward {
+      transform: rotateX(0deg);
+    }
+
+    .mobile-bar .flap-rail::before {
+      inset-inline: 0.5rem;
+      inset-block: auto;
+      top: 50%;
+      left: 0.5rem;
+      right: 0.5rem;
+      width: auto;
+      height: 1px;
+      transform: translateY(-50%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flap {
+        transition: none;
+      }
+      .scrub-bar {
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Split-Flap Rail</h1>
+    <p class="lede">
+      Candidate 4 — two hinged desks on one monochrome trough. Click a flap; the inactive folds edge-on.
+      Image = crop frame; Video = sprocket cell with scrub when forward.
+    </p>
+
+    <p class="panel-label">Desktop topbar (~52rem)</p>
+    <header class="chrome-mock">
+      <span class="brand">Grok bot</span>
+      <nav class="flap-rail" data-output-dock aria-label="Outputs" id="dock-desktop">
+        <a class="flap is-forward" data-desk="image" href="#image" aria-current="page" aria-label="Image desk" style="--flap-tint: var(--image-tint)">
+          <span class="glyph-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M6 16v2a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M9 6v12M15 6v12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.5"/>
+              <rect x="9" y="9" width="6" height="6" rx="0.5" fill="var(--image-tint)" opacity="0.85"/>
+            </svg>
+          </span>
+          <span class="name">Image</span>
+          <span class="hint">PNG · SVG</span>
+        </a>
+        <a class="flap is-edge" data-desk="video" href="#video" aria-label="Video desk" style="--flap-tint: var(--video-tint)">
+          <span class="glyph-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="5" width="18" height="14" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+              <circle cx="5.5" cy="7" r="0.7" fill="currentColor" opacity="0.35"/>
+              <circle cx="5.5" cy="17" r="0.7" fill="currentColor" opacity="0.35"/>
+              <circle cx="18.5" cy="7" r="0.7" fill="currentColor" opacity="0.35"/>
+              <circle cx="18.5" cy="17" r="0.7" fill="currentColor" opacity="0.35"/>
+              <rect x="7" y="8" width="10" height="8" rx="0.5" fill="color-mix(in srgb, var(--video-tint) 25%, var(--paper))"/>
+              <rect class="scrub-bar" x="7" y="11" width="3" height="2" rx="0.3" fill="var(--video-tint)"/>
+            </svg>
+          </span>
+          <span class="name">Video</span>
+          <span class="hint">GIF · MP4 · 3 s</span>
+        </a>
+      </nav>
+      <div class="chrome-links"><span>Settings</span><span>About</span></div>
+    </header>
+
+    <div class="hero-placeholder">Hero avatar (unchanged)</div>
+    <p class="note">Dock stays compact; bot preview remains the visual centre.</p>
+
+    <p class="panel-label">Mobile bottom bar</p>
+    <div class="mobile-frame">
+      <div class="mobile-screen">
+        <div class="hero-placeholder" style="max-width: 10rem">Avatar</div>
+      </div>
+      <div class="mobile-bar">
+        <nav class="flap-rail" data-output-dock aria-label="Outputs" id="dock-mobile">
+          <a class="flap is-forward" data-desk="image" href="#image" aria-current="page" aria-label="Image desk" style="--flap-tint: var(--image-tint)">
+            <span class="glyph-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M6 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <path d="M6 16v2a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <rect x="9" y="9" width="6" height="6" rx="0.5" fill="var(--image-tint)" opacity="0.85"/>
+              </svg>
+            </span>
+            <span class="name">Image</span>
+            <span class="hint">PNG · SVG</span>
+          </a>
+          <a class="flap is-edge" data-desk="video" href="#video" aria-label="Video desk" style="--flap-tint: var(--video-tint)">
+            <span class="glyph-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="14" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+                <rect x="7" y="8" width="10" height="8" rx="0.5" fill="color-mix(in srgb, var(--video-tint) 25%, var(--paper))"/>
+                <rect class="scrub-bar" x="7" y="11" width="3" height="2" rx="0.3" fill="var(--video-tint)"/>
+              </svg>
+            </span>
+            <span class="name">Video</span>
+            <span class="hint">GIF · MP4 · 3 s</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function wireDock(nav) {
+      if (!nav) return
+      const flaps = [...nav.querySelectorAll('.flap')]
+      flaps.forEach((flap) => {
+        flap.addEventListener('click', (e) => {
+          e.preventDefault()
+          const kind = flap.dataset.desk
+          flaps.forEach((f) => {
+            const on = f.dataset.desk === kind
+            f.classList.toggle('is-forward', on)
+            f.classList.toggle('is-edge', !on)
+            if (on) f.setAttribute('aria-current', 'page')
+            else f.removeAttribute('aria-current')
+          })
+        })
+      })
+    }
+    wireDock(document.getElementById('dock-desktop'))
+    wireDock(document.getElementById('dock-mobile'))
+  </script>
+</body>
+</html>

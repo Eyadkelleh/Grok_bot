@@ -1,4 +1,4 @@
-import { ANIMATION_STATES, DEFAULT_MORPH_MS, isAnimationState, type AnimationState } from './states'
+import { DEFAULT_MORPH_MS, isAnimationState, type AnimationState } from './states'
 
 /**
  * A cycle is a montage: a list of blocks, each a state held for a chosen duration.
@@ -32,6 +32,35 @@ export const STEP = 0.1
 export const DEFAULT_BLOCK_DURATION = 2
 export const DEFAULT_CYCLE_ID = 'defaut'
 
+/** Lead-in / return so a pose export morphs instead of freezing on block 0. */
+export const POSE_LEAD = MIN_BLOCK
+export const POSE_HOLD = 1.2
+export const POSE_CYCLE_ID = 'pose'
+
+/**
+ * Smallest cycle where `state` reads as motion under `rendAt`.
+ * Block 0 is always settled, so a lone pose block is a still frame.
+ * Idle alone stays one block. Anything else: Idle → pose → Idle (2s, seamless loop).
+ */
+export function poseCycle(state: AnimationState): Cycle {
+  if (state === 'Idle') {
+    return {
+      id: POSE_CYCLE_ID,
+      name: state,
+      blocks: [makeBlock('Idle', POSE_LEAD + POSE_HOLD + POSE_LEAD)],
+    }
+  }
+  return {
+    id: POSE_CYCLE_ID,
+    name: state,
+    blocks: [
+      makeBlock('Idle', POSE_LEAD),
+      makeBlock(state, POSE_HOLD),
+      makeBlock('Idle', POSE_LEAD),
+    ],
+  }
+}
+
 export function minDurationOf(_state: AnimationState): number {
   return MIN_BLOCK
 }
@@ -50,7 +79,7 @@ export function defaultCycle(): Cycle {
   return {
     name: '',
     id: DEFAULT_CYCLE_ID,
-    blocks: ANIMATION_STATES.map((state) => makeBlock(state)),
+    blocks: [makeBlock('Idle')],
   }
 }
 
@@ -112,6 +141,81 @@ export function nextCycleId(cycles: Cycle[]): string {
   let n = 1
   while (taken.has(`c${n}`)) n++
   return `c${n}`
+}
+
+/**
+ * One edit to a montage. The UI emits these and stays a view; nothing outside
+ * this reducer mutates a cycle.
+ */
+export type MontageEdit =
+  | { op: 'select'; id: string }
+  | { op: 'create'; name: string; seed: AnimationState }
+  | { op: 'rename'; id: string; name: string }
+  | { op: 'remove'; id: string }
+  | { op: 'set-blocks'; id: string; blocks: Block[] }
+  | { op: 'append'; state: AnimationState }
+
+export function activeCycleOf(montage: Montage): Cycle {
+  return montage.cycles.find((c) => c.id === montage.activeId) ?? montage.cycles[0]!
+}
+
+/** Total: an edit naming a missing cycle returns the montage unchanged. */
+export function applyMontageEdit(montage: Montage, edit: MontageEdit): Montage {
+  const { cycles } = montage
+  switch (edit.op) {
+    case 'select':
+      return cycles.some((c) => c.id === edit.id) ? { ...montage, activeId: edit.id } : montage
+
+    case 'create': {
+      if (cycles.length >= MAX_CYCLES) return montage
+      const neuf: Cycle = {
+        id: nextCycleId(cycles),
+        name: uniqueName(edit.name, cycles),
+        blocks: [makeBlock(edit.seed)],
+      }
+      return { activeId: neuf.id, cycles: [...cycles, neuf] }
+    }
+
+    case 'rename': {
+      if (!cycles.some((c) => c.id === edit.id)) return montage
+      const name = uniqueName(
+        edit.name,
+        cycles.filter((c) => c.id !== edit.id),
+      )
+      return {
+        ...montage,
+        cycles: cycles.map((c) => (c.id === edit.id ? { ...c, name } : c)),
+      }
+    }
+
+    case 'remove': {
+      if (cycles.length < 2 || !cycles.some((c) => c.id === edit.id)) return montage
+      const reste = cycles.filter((c) => c.id !== edit.id)
+      return {
+        activeId: montage.activeId === edit.id ? reste[0]!.id : montage.activeId,
+        cycles: reste,
+      }
+    }
+
+    case 'set-blocks': {
+      if (!edit.blocks.length || !cycles.some((c) => c.id === edit.id)) return montage
+      const blocks = edit.blocks.slice(0, MAX_BLOCS)
+      return {
+        ...montage,
+        cycles: cycles.map((c) => (c.id === edit.id ? { ...c, blocks } : c)),
+      }
+    }
+
+    case 'append': {
+      const active = activeCycleOf(montage)
+      return {
+        ...montage,
+        cycles: cycles.map((c) =>
+          c.id === active.id ? { ...c, blocks: blocksWith(c.blocks, edit.state) } : c,
+        ),
+      }
+    }
+  }
 }
 
 function parseBlock(raw: unknown): Block | null {

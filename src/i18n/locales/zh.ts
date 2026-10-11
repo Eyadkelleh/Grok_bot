@@ -4,23 +4,59 @@ const zh: typeof fr = {
   app: {
     name: 'Grok_bot',
     title: 'Grok_bot — SVG 头像工作室',
-    tagline: '自定义、制作动画并导出 SVG 头像。',
+    tagline: '设计你的机器人，然后导出为图片或视频。',
     botAria: 'Grok_bot 头像',
   },
 
   nav: {
     label: '导航',
-    studio: '工作室',
-    customise: '个性化',
+    rollup: '易拉宝',
     settings: '设置',
     about: '关于',
   },
 
+  dock: {
+    label: '输出',
+    image: '图片',
+    video: '视频',
+    imageHint: 'PNG · SVG',
+    videoHint: 'GIF · MP4',
+    imageAria: '图片工作台',
+    videoAria: '视频工作台',
+  },
+
   panel: {
     title: '个性化',
-    shape: '形状',
+    shape: '外形',
     expression: '表情',
     colour: '颜色',
+    skinLimited: '外形和表情可能不适用于此状态。',
+  },
+
+  studio: {
+    modes: '工作室模式',
+    shape: '外形',
+    face: '表情',
+    aura: '光晕',
+    motion: '动作',
+    shapeLocked: '该姿势保留自己的轮廓。',
+  },
+
+  rollup: {
+    title: '易拉宝',
+    lead: '活动横幅排版，不是机器人外观。',
+  },
+
+  fond: {
+    title: '背景',
+    none: '无',
+    banner01: '浅色横幅',
+    banner2: '蓝色横幅',
+    banner3: '深色横幅',
+    welcome: '欢迎',
+    event1: '活动名称',
+    event2: '第二行',
+    eventPlaceholder: '活动名称',
   },
 
   shapes: {
@@ -82,7 +118,7 @@ const zh: typeof fr = {
     Egg: '蛋形',
     Hexagon: '六边形',
     Play: '播放',
-    Orbit: '轨道',
+    Orbit: '环绕',
     Burst: '爆发',
     Comet: '彗星',
   },
@@ -91,6 +127,7 @@ const zh: typeof fr = {
     play: '开始播放',
     pause: '停止播放',
     addAnimation: '添加动画',
+    addAnimationNamed: '添加 {state}',
     cycles: '序列',
     blockAria: '{state}，{duration}',
     blockDurationAria: '{state} 的时长，{duration}',
@@ -99,10 +136,12 @@ const zh: typeof fr = {
     moveRight: '将 {state} 右移',
   },
 
+  video: {
+    timeline: '时间轴',
+  },
+
   dialog: {
     cancel: '取消',
-    nameCreateTitle: '新建序列',
-    nameRenameTitle: '重命名序列',
     nameField: '序列名称',
     nameCreate: '创建',
     nameRename: '重命名',
@@ -126,17 +165,31 @@ const zh: typeof fr = {
 
   export: {
     title: '导出',
+    primary: '下载 {format} · {name}',
     png: '下载 PNG',
     svg: '下载 SVG',
     gif: '下载 GIF',
     mp4: '下载 MP4',
+    metaPose: '{name} · {duration} · 当前动作短片',
+    metaCycle: '{name} · {duration} · {count} 个动画',
+    busy: '正在导出…',
+    progress: '正在导出… {percent}%',
+    cancel: '取消导出',
+    mp4Unavailable: '此浏览器无法编码 MP4',
     done: '已导出',
     failed: '导出失败',
+    banner: '2×6 横幅',
+    bannerPng: '横幅 PNG',
+    bannerMp4: '横幅 MP4',
   },
 
   settings: {
     title: '设置',
     language: '语言',
+    theme: '主题',
+    themeLight: '浅色',
+    themeDark: '深色',
+    themeSystem: '跟随系统',
     about: '关于',
     credits: '独立再创作自 {name}（MIT）。',
     creditsAria: 'bloub 的 GitHub 仓库，在新标签页中打开',

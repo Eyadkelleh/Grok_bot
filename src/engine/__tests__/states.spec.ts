@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { BODY_RADIUS, PROFILE_SAMPLES, toPoints, viewBoxAttr } from '../morph'
+import { BODY_RADIUS, PROFILE_SAMPLES, circle, silhouettePath, toPoints, viewBoxAttr } from '../morph'
 import {
   ANIMATION_STATES,
   STATE_REGISTRY,
   STATE_SILHOUETTES,
+  blinksIn,
   isAnimationState,
+  morphMsOf,
+  morphSecondsOf,
   pathForState,
   type AnimationState,
 } from '../states'
@@ -45,8 +48,46 @@ describe('ANIMATION_STATES', () => {
     }
   })
 
-  it.each(['Alert', 'Exclamation'] as const)('draws a period below the %s bar', (state) => {
+  it.each(['Alert', 'Exclamation', 'Notification'] as const)('draws a period or badge on %s', (state) => {
     expect(STATE_REGISTRY[state].dots.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('does not use squashed-circle shortcuts for Alert or Exclamation', () => {
+    const alertShortcut = circle(1, { sx: 0.22, sy: 1.02, rot: 0.28, cy: -0.22 })
+    const exclaimShortcut = circle(1, { sx: 0.22, sy: 1.02, cy: -0.22 })
+    expect(pathForState('Alert')).not.toBe(silhouettePath(alertShortcut))
+    expect(pathForState('Exclamation')).not.toBe(silhouettePath(exclaimShortcut))
+    expect(new Set(STATE_REGISTRY.Alert.silhouette.radii).size).toBeGreaterThan(1)
+    expect(new Set(STATE_REGISTRY.Exclamation.silhouette.radii).size).toBeGreaterThan(1)
+  })
+
+  it('uses a tapered upright bar and a round period for Exclamation', () => {
+    const sil = STATE_REGISTRY.Exclamation.silhouette
+    const up = Math.round((3 / 4) * PROFILE_SAMPLES) % PROFILE_SAMPLES
+    const down = Math.round((1 / 4) * PROFILE_SAMPLES) % PROFILE_SAMPLES
+    expect(sil.radii[up]!).toBeGreaterThan(sil.radii[down]!)
+    expect(sil.sx).toBe(1)
+    expect(sil.sy).toBe(1)
+    const period = STATE_REGISTRY.Exclamation.dots[0]!
+    expect(period.d).toBeUndefined()
+    expect(period.r).toBeCloseTo(0.113)
+    expect(period.y).toBeGreaterThan(sil.cy)
+  })
+
+  it('uses a capsule bar and a teardrop italic period for Alert', () => {
+    const sil = STATE_REGISTRY.Alert.silhouette
+    const right = 0
+    const up = Math.round((3 / 4) * PROFILE_SAMPLES) % PROFILE_SAMPLES
+    const down = Math.round((1 / 4) * PROFILE_SAMPLES) % PROFILE_SAMPLES
+    expect(sil.radii[up]!).toBeGreaterThan(sil.radii[right]! * 2)
+    expect(Math.abs(sil.radii[up]! - sil.radii[down]!)).toBeLessThan(0.02)
+    expect(sil.rot).toBeCloseTo((17.7 * Math.PI) / 180)
+    const period = STATE_REGISTRY.Alert.dots[0]!
+    expect(period.d).toMatch(/^M/)
+    expect(period.d).toMatch(/Z$/)
+    expect(period.d).toContain('L')
+    expect(period.rot).toBeCloseTo(17.7)
+    expect(period.r).toBeCloseTo(0.118)
   })
 
   it('fits every state silhouette inside the render frame', () => {
@@ -63,5 +104,54 @@ describe('ANIMATION_STATES', () => {
         expect(point.y, `${state} y=${point.y}`).toBeLessThanOrEqual(maxY + epsilon)
       }
     }
+  })
+
+  it('uses measured radii for Egg, Hexagon, and Play', () => {
+    expect(STATE_REGISTRY.Egg.silhouette.radii[0]).toBe(0.8369)
+    expect(STATE_REGISTRY.Hexagon.silhouette.radii[0]).toBe(0.921)
+    expect(STATE_REGISTRY.Play.silhouette.radii[0]).toBe(0.7819)
+    expect(pathForState('Egg')).toMatch(/^M38\.5 /)
+    expect(pathForState('Hexagon')).toMatch(/^M42\.37 /)
+    expect(pathForState('Play')).toMatch(/^M35\.97 /)
+  })
+
+  it('flags blinkIn on the arriving states that hide a shape morph', () => {
+    const masked: AnimationState[] = [
+      'Thinking',
+      'Wink',
+      'WideEyes',
+      'Notification',
+      'Egg',
+      'Hexagon',
+      'Play',
+    ]
+    const open: AnimationState[] = ['Idle', 'Alert', 'Exclamation', 'Sleep', 'Orbit', 'Burst', 'Comet']
+    for (const state of masked) expect(blinksIn(state), state).toBe(true)
+    for (const state of open) expect(blinksIn(state), state).toBe(false)
+  })
+
+  it('uses per-state catalogue morph lengths, with a documented default', () => {
+    const catalogue: Record<AnimationState, number> = {
+      Idle: 0.45,
+      Thinking: 0.4,
+      Wink: 0.3,
+      WideEyes: 0.55,
+      Alert: 0.45,
+      Notification: 0.5,
+      Exclamation: 0.45,
+      Sleep: 0.5,
+      Egg: 0.4,
+      Hexagon: 0.4,
+      Play: 0.5,
+      Orbit: 0.6,
+      Burst: 0.4,
+      Comet: 0.45,
+    }
+    for (const state of ANIMATION_STATES) {
+      expect(STATE_REGISTRY[state].morph, state).toBe(catalogue[state])
+      expect(morphSecondsOf(state)).toBe(catalogue[state])
+      expect(morphMsOf(state)).toBe(catalogue[state] * 1000)
+    }
+    expect(morphSecondsOf('Wink')).toBeLessThan(morphSecondsOf('WideEyes'))
   })
 })

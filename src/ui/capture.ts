@@ -2,9 +2,13 @@
  * DOM layer of export: serialise the live SVG, rasterise stills, replay the
  * montage off-screen for GIF/MP4. Framing and naming live in export.ts.
  *
- * Stills serialise the on-screen node. The montage is a different problem: the
- * on-screen bot is at an arbitrary clock date, so cycle export drives a second
- * Avatar instance with rendAt(t) — the same component, dated, no rAF.
+ * Stills serialise the on-screen node on the stage viewBox (G4 keep-stage-box).
+ * Cycle GIF/MP4 pass viewBoxCycle() — the screen box — so décor rings are not
+ * cropped the way a tight DEMI_CADRE still would crop them.
+ *
+ * The montage is a different problem: the on-screen bot is at an arbitrary
+ * clock date, so cycle export drives a second Avatar instance with rendAt(t) —
+ * the same component, dated, no rAF.
  *
  * video.ts is loaded only inside cycleVersMp4. A static import would pull
  * mediabunny into the entry chunk.
@@ -14,6 +18,7 @@ import { createApp, h, nextTick, ref } from 'vue'
 import Avatar from '../components/Avatar.vue'
 import { DEFAULT_MORPH_MS, totalDuration, type Block, type Cycle } from '../engine'
 import { gifIndexe, indexe, nouvellePalette, recense } from './gif'
+import { aplatitSurFond, poseFond, scelleMatte } from './matte'
 import {
   ACTION_BY_ID,
   BLANC,
@@ -25,6 +30,7 @@ import {
   cyclePas,
   nomFichier,
   sansCommentaires,
+  viewBoxCycle,
   viewBoxExport,
   type ActionId,
   type FormatCycle,
@@ -69,7 +75,7 @@ export function svgAutonome(svg: SVGSVGElement, taille: number, viewBox = viewBo
   return sansCommentaires(new XMLSerializer().serializeToString(clone))
 }
 
-async function dessine(
+export async function dessine(
   markup: string,
   taille: number,
   canvas: HTMLCanvasElement,
@@ -84,12 +90,9 @@ async function dessine(
     canvas.height = taille
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('canvas unavailable')
-    ctx.clearRect(0, 0, taille, taille)
-    if (fond) {
-      ctx.fillStyle = fond
-      ctx.fillRect(0, 0, taille, taille)
-    }
+    poseFond(ctx, taille, fond)
     ctx.drawImage(img, 0, 0, taille, taille)
+    scelleMatte(ctx, taille, fond)
     return ctx
   } finally {
     URL.revokeObjectURL(url)
@@ -228,7 +231,7 @@ export async function cycleVersMp4(
       Math.round(1 / pas),
       async (i) => {
         const svg = await lecteur.rendre(i * pas)
-        await dessine(svgAutonome(svg, taille), taille, canvas, fond)
+        await dessine(svgAutonome(svg, taille, viewBoxCycle()), taille, canvas, fond)
       },
       avance,
       signal,
@@ -256,14 +259,17 @@ export async function cycleVersGif(
   signal?: AbortSignal,
 ): Promise<Blob> {
   const canvas = document.createElement('canvas')
+  const vue = viewBoxCycle()
   const lecteur = await ouvreCycle(reglages, blocs, taille, fond ?? undefined)
 
   const passe = async (lis: (index: number, pixels: Uint8ClampedArray) => void) => {
     for (let i = 0; i < images; i++) {
       arrete(signal)
       const svg = await lecteur.rendre(i * pas)
-      const ctx = await dessine(svgAutonome(svg, taille), taille, canvas, fond)
-      lis(i, ctx.getImageData(0, 0, taille, taille).data)
+      const ctx = await dessine(svgAutonome(svg, taille, vue), taille, canvas, fond)
+      const pixels = ctx.getImageData(0, 0, taille, taille).data
+      aplatitSurFond(pixels, fond)
+      lis(i, pixels)
     }
   }
 
@@ -294,6 +300,8 @@ export async function exporteMontage(
   cycle: Cycle,
   reglages: ReglagesBot,
   nom: string,
+  avance?: Avancement,
+  signal?: AbortSignal,
 ) {
   const duree = totalDuration(cycle.blocks)
   const images = cycleImages(duree, format)
@@ -301,7 +309,7 @@ export async function exporteMontage(
   const taille = CYCLE_TAILLE[format]
   const blob =
     format === 'mp4'
-      ? await cycleVersMp4(reglages, cycle.blocks, taille, images, pas, BLANC)
+      ? await cycleVersMp4(reglages, cycle.blocks, taille, images, pas, BLANC, avance, signal)
       : await cycleVersGif(
           reglages,
           cycle.blocks,
@@ -309,6 +317,8 @@ export async function exporteMontage(
           images,
           pas,
           couleurDeFond(FOND_GIF_DEFAUT),
+          avance,
+          signal,
         )
   telecharge(blob, nomFichier(nom, format))
 }

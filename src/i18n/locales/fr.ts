@@ -2,16 +2,25 @@ export default {
   app: {
     name: 'Grok_bot',
     title: "Grok_bot — studio d'avatar SVG",
-    tagline: 'Personnalisez, animez et exportez un avatar SVG.',
+    tagline: 'Composez votre bot, puis emportez-le en image ou en vidéo.',
     botAria: 'Avatar Grok_bot',
   },
 
   nav: {
     label: 'Navigation',
-    studio: 'Studio',
-    customise: 'Personnaliser',
+    rollup: 'Kakémono',
     settings: 'Réglages',
     about: 'À propos',
+  },
+
+  dock: {
+    label: 'Sorties',
+    image: 'Image',
+    video: 'Vidéo',
+    imageHint: 'PNG · SVG',
+    videoHint: 'GIF · MP4',
+    imageAria: 'Plan de travail Image',
+    videoAria: 'Plan de travail Vidéo',
   },
 
   panel: {
@@ -19,6 +28,33 @@ export default {
     shape: 'Forme',
     expression: 'Expression',
     colour: 'Couleur',
+    skinLimited: 'La forme et l’expression peuvent ne pas s’appliquer à cet état.',
+  },
+
+  studio: {
+    modes: 'Modes du studio',
+    shape: 'Forme',
+    face: 'Visage',
+    aura: 'Aura',
+    motion: 'Mouvement',
+    shapeLocked: 'Cette pose garde son propre contour.',
+  },
+
+  rollup: {
+    title: 'Kakémono',
+    lead: 'Mise en page de la bannière d’événement, pas du bot.',
+  },
+
+  fond: {
+    title: 'Fond',
+    none: 'Aucun',
+    banner01: 'Bannière claire',
+    banner2: 'Bannière bleue',
+    banner3: 'Bannière sombre',
+    welcome: 'Accueil',
+    event1: 'Nom de l’événement',
+    event2: 'Ligne 2',
+    eventPlaceholder: 'Event name',
   },
 
   shapes: {
@@ -89,6 +125,7 @@ export default {
     play: 'Lancer la lecture',
     pause: 'Arrêter la lecture',
     addAnimation: 'Ajouter une animation',
+    addAnimationNamed: 'Ajouter {state}',
     cycles: 'Montages',
     blockAria: '{state}, {duration}',
     blockDurationAria: 'Durée de {state}, {duration}',
@@ -97,10 +134,12 @@ export default {
     moveRight: 'Déplacer {state} vers la droite',
   },
 
+  video: {
+    timeline: 'Montage',
+  },
+
   dialog: {
     cancel: 'Annuler',
-    nameCreateTitle: 'Nouveau cycle',
-    nameRenameTitle: 'Renommer le cycle',
     nameField: 'Nom du cycle',
     nameCreate: 'Créer',
     nameRename: 'Renommer',
@@ -124,17 +163,31 @@ export default {
 
   export: {
     title: 'Exporter',
+    primary: 'Télécharger {format} · {name}',
     png: 'Télécharger le PNG',
     svg: 'Télécharger le SVG',
     gif: 'Télécharger le GIF',
     mp4: 'Télécharger le MP4',
+    metaPose: '{name} · {duration} · court clip de cette pose',
+    metaCycle: '{name} · {duration} · {count} animations',
+    busy: 'Export en cours…',
+    progress: 'Export en cours… {percent} %',
+    cancel: 'Annuler l’export',
+    mp4Unavailable: 'Ce navigateur ne peut pas encoder le MP4',
     done: 'Exporté',
     failed: "Échec de l'export",
+    banner: 'Bannière 2×6',
+    bannerPng: 'PNG bannière',
+    bannerMp4: 'MP4 bannière',
   },
 
   settings: {
     title: 'Réglages',
     language: 'Langue',
+    theme: 'Thème',
+    themeLight: 'Clair',
+    themeDark: 'Sombre',
+    themeSystem: 'Système',
     about: 'À propos',
     credits: 'Recréation indépendante de {name} (MIT).',
     creditsAria: 'bloub sur GitHub, dans un nouvel onglet',

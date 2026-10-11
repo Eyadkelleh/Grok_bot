@@ -56,6 +56,12 @@ function label(index: number) {
   return t(`animations.${props.blocks[index]!.state}` as Cle)
 }
 
+const addAria = computed(() =>
+  t('timeline.addAnimationNamed', {
+    state: t(`animations.${props.addState}` as Cle),
+  }),
+)
+
 function frameOf(state: AnimationState) {
   return sampleMorph(state, state, 1)
 }
@@ -273,7 +279,7 @@ function pick(state: AnimationState) {
               type="button"
               data-add
               :data-add-state="addState"
-              :aria-label="t('timeline.addAnimation')"
+              :aria-label="addAria"
               @click="emit('add', addState)"
             >
               +
@@ -396,7 +402,7 @@ function pick(state: AnimationState) {
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: 0.5rem;
-  background: rgb(0 0 0 / 0.045);
+  background: rgb(var(--wash) / 0.045);
   color: var(--muted);
   font: inherit;
   cursor: pointer;
@@ -457,7 +463,7 @@ function pick(state: AnimationState) {
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: rgb(0 0 0 / 0.1);
+  background: rgb(var(--wash) / 0.1);
   color: var(--ink);
   font: inherit;
   font-size: 0.75rem;
@@ -519,7 +525,7 @@ function pick(state: AnimationState) {
   border: 1px solid var(--line);
   border-radius: 0.75rem;
   background: var(--paper);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.08);
+  box-shadow: 0 8px 24px rgb(var(--wash) / 0.08);
 }
 
 .picker button {
@@ -535,7 +541,7 @@ function pick(state: AnimationState) {
 }
 
 .picker button:hover {
-  background: rgb(0 0 0 / 0.06);
+  background: rgb(var(--wash) / 0.06);
 }
 
 .playhead {

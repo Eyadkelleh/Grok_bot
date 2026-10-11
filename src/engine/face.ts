@@ -1,4 +1,4 @@
-import { clamp } from './math'
+import { clamp, createRng, loopNoise } from './math'
 
 type Vec3 = [number, number, number]
 
@@ -28,6 +28,14 @@ export interface EyePose {
   c: number
   d: number
   depth: number
+}
+
+/** Projected 2×2: tangent frame, then per-eye tilt, then optional screen-Y lid squash. */
+export interface EyeAxes {
+  a: number
+  b: number
+  c: number
+  d: number
 }
 
 export type GazeInput = number | Partial<HeadGaze>
@@ -74,6 +82,38 @@ export function eyePoses(gaze: HeadGaze, scale: number, split = EYE_SPLIT): [Eye
   return [build(-1), build(1)]
 }
 
+/**
+ * Capsule inclination: compose the sphere tangent with a rotation in the eye
+ * plane (Basis × Rot). Mirror tilts between the two eyes live here, not as a
+ * leftover SVG rotate after an axis-aligned ellipse.
+ */
+export function eyeAxes(frame: Pick<EyePose, 'a' | 'b' | 'c' | 'd'>, tiltDeg: number): EyeAxes {
+  const phi = deg(tiltDeg)
+  const cp = Math.cos(phi)
+  const sp = Math.sin(phi)
+  return {
+    a: frame.a * cp + frame.c * sp,
+    b: frame.b * cp + frame.d * sp,
+    c: -frame.a * sp + frame.c * cp,
+    d: -frame.b * sp + frame.d * cp,
+  }
+}
+
+/**
+ * Rendered eye matrix. Lid squash is vertical on screen after inclination,
+ * so a rolled gaze keeps bbox width and drops height — not a shrink along
+ * the capsule axis.
+ */
+export function projectEye(
+  frame: Pick<EyePose, 'a' | 'b' | 'c' | 'd'>,
+  tiltDeg: number,
+  lid = 1,
+): EyeAxes {
+  const axes = eyeAxes(frame, tiltDeg)
+  const k = blinkScale(lid)
+  return { a: axes.a, b: axes.b * k, c: axes.c, d: axes.d * k }
+}
+
 export function resolveGaze(base: HeadGaze, gaze?: GazeInput): HeadGaze {
   if (gaze == null) return { ...base }
   if (typeof gaze === 'number') return { ...base, yaw: gaze }
@@ -86,4 +126,106 @@ export function resolveGaze(base: HeadGaze, gaze?: GazeInput): HeadGaze {
 
 export function blinkScale(lid: number): number {
   return 0.06 + 0.94 * clamp(lid)
+}
+
+/**
+ * Forced blink that masks a blinkIn morph. Same triangle as bloub (`elapsed / 0.2`):
+ * open at the ends, shut at mid-phase. Grok feeds morph progress so the lids
+ * cover the silhouette change at the morph midpoint.
+ */
+export function forcedBlinkLid(phase: number): number {
+  const k = clamp(phase)
+  return k < 1 ? Math.abs(k * 2 - 1) : 1
+}
+
+/**
+ * Eye opacity during a state morph. Faced↔eyeless fades only opacity;
+ * both-faced stays opaque; neither stays hidden.
+ */
+export function eyeFadeOpacity(fromFaced: boolean, toFaced: boolean, eased: number): number {
+  if (fromFaced === toFaced) return fromFaced ? 1 : 0
+  return toFaced ? eased : 1 - eased
+}
+
+/**
+ * Rest-face life: gaze drift, blinks, and a tiny body float.
+ *
+ * Pure in t — pause, resume, and seek to the same date yield the same frame.
+ * Deltas are added to the current state's rest pose. Default wander/blink/float
+ * at the avatar layer stay off so L0 Idle dumps remain the still frame.
+ */
+export interface Liveliness {
+  dYaw: number
+  dPitch: number
+  dRoll: number
+  /** 1 = open, 0 = shut. Applied as vertical squash after the tangent frame. */
+  lid: number
+  driftX: number
+  driftY: number
+  breath: number
+}
+
+export interface LivelinessOptions {
+  wander?: number
+  blink?: boolean
+  float?: boolean
+}
+
+export const STILL_LIFE: Liveliness = {
+  dYaw: 0,
+  dPitch: 0,
+  dRoll: 0,
+  lid: 1,
+  driftX: 0,
+  driftY: 0,
+  breath: 1,
+}
+
+const BLINK_RNG = createRng(0x5eed)
+/** Pre-rolled blink starts: deterministic, no runtime state. First blink at 1.4 s. */
+const BLINKS: number[] = (() => {
+  const out: number[] = []
+  let t = 1.4
+  while (t < 900) {
+    out.push(t)
+    t += 1.9 + BLINK_RNG() * 2.7
+    if (BLINK_RNG() < 0.18) {
+      out.push(t)
+      t += 0.24
+    }
+  }
+  return out
+})()
+
+/** About one to two frames at 10 fps. */
+const BLINK_DUR = 0.18
+
+/** Peak body float in rest-ball radii. Matches the bloub rest envelope. */
+export const LIFE_DRIFT_X = 0.006
+export const LIFE_DRIFT_Y = 0.007
+
+function blinkLid(t: number): number {
+  for (let i = 0; i < BLINKS.length; i++) {
+    const start = BLINKS[i]!
+    if (t < start) break
+    const k = (t - start) / BLINK_DUR
+    if (k >= 0 && k <= 1) {
+      return k < 0.45 ? 1 - k / 0.45 : (k - 0.45) / 0.55
+    }
+  }
+  return 1
+}
+
+export function liveliness(t: number, opt: LivelinessOptions = {}): Liveliness {
+  const { wander = 1, blink = true, float = true } = opt
+
+  return {
+    dYaw: wander === 0 ? 0 : (loopNoise(t, 11.3, 0.4) * 5.5 + loopNoise(t, 3.7, 2.1) * 1.6) * wander,
+    dPitch: wander === 0 ? 0 : (loopNoise(t, 9.1, 1.3) * 4.2 + loopNoise(t, 4.3, 0.7) * 1.3) * wander,
+    dRoll: wander === 0 ? 0 : loopNoise(t, 13.7, 3.2) * 2.2 * wander,
+    lid: blink ? blinkLid(t) : 1,
+    driftX: float ? loopNoise(t, 7.9, 1.9) * LIFE_DRIFT_X : 0,
+    driftY: float ? loopNoise(t, 5.3, 0.3) * LIFE_DRIFT_Y : 0,
+    breath: float ? 1 + Math.sin((t / 3.4) * Math.PI * 2) * 0.005 : 1,
+  }
 }

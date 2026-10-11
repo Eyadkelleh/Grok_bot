@@ -3,8 +3,9 @@
  * Every silhouette is r(θ) sampled at the same angles, so a morph is a lerp of radii.
  */
 import { TAU, lerp, r2 } from './math'
+import { PROFILE_SAMPLES } from './profiles'
 
-export const PROFILE_SAMPLES = 64
+export { PROFILE_SAMPLES }
 export const BODY_RADIUS = 46
 export const VIEW_SCALE = BODY_RADIUS
 export const VIEW_CX = 0
@@ -29,6 +30,16 @@ export interface Silhouette {
 const ANGLES = Array.from({ length: PROFILE_SAMPLES }, (_, i) => (i / PROFILE_SAMPLES) * TAU)
 const COS = ANGLES.map((a) => Math.cos(a))
 const SIN = ANGLES.map((a) => Math.sin(a))
+
+/** Linearly sample a radial profile at any angle. */
+export function radiusAtAngle(radii: number[], angle: number): number {
+  if (radii.length === 0) return 0
+  const turn = ((angle / TAU) % 1 + 1) % 1
+  const sample = turn * radii.length
+  const lo = Math.floor(sample)
+  const hi = (lo + 1) % radii.length
+  return lerp(radii[lo] ?? 0, radii[hi] ?? 0, sample - lo)
+}
 
 export function circle(radius = 1, pose: Partial<Silhouette> = {}): Silhouette {
   return {
@@ -209,6 +220,17 @@ export function closedPath(pts: Point[], tension = 1 / 6): string {
     const c2x = p2.x - (p3.x - p1.x) * tension
     const c2y = p2.y - (p3.y - p1.y) * tension
     d += `C${r2(c1x)} ${r2(c1y)} ${r2(c2x)} ${r2(c2y)} ${r2(p2.x)} ${r2(p2.y)}`
+  }
+  return `${d}Z`
+}
+
+/** Closed polyline with straight segments. The italic "!" period is a teardrop, not a disc. */
+export function polyPath(pts: Point[], scale = 1): string {
+  if (pts.length < 3) return ''
+  let d = ''
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i]!
+    d += `${i === 0 ? 'M' : 'L'}${r2(p.x * scale)} ${r2(p.y * scale)}`
   }
   return `${d}Z`
 }

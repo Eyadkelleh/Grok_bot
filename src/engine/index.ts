@@ -1,6 +1,6 @@
-export { TAU, clamp, lerp, easeOutQuint, r2 } from './math'
+export { TAU, clamp, lerp, easeOutCubic, easeInOutCubic, easeOutQuint, r2, loopNoise, createRng } from './math'
+export { PROFILE_SAMPLES, PROFILES, type ProfileName } from './profiles'
 export {
-  PROFILE_SAMPLES,
   circle,
   blend,
   blendSilhouettes,
@@ -10,6 +10,8 @@ export {
   superellipse,
   profileFromPolygon,
   hullOfCircles,
+  polyPath,
+  radiusAtAngle,
   silhouetteFromRadii,
   eggProfile,
   regularPolygonProfile,
@@ -25,11 +27,35 @@ export {
   type Silhouette,
 } from './morph'
 export {
+  ALERT_BAR_CY,
+  ALERT_DOT_ALONG,
+  ALERT_TILT,
+  BAR_ITALIC_RADII,
+  BAR_UPRIGHT_CY,
+  BAR_UPRIGHT_RADII,
+  TEAR_PATH,
+  barItalic,
+  barUpright,
+} from './glyphs'
+export {
   ANIMATION_STATES,
   STATE_REGISTRY,
   STATE_SILHOUETTES,
   DEFAULT_MORPH_MS,
+  blinksIn,
+  morphMsOf,
+  morphSecondsOf,
+  WINK_FACE,
+  WIDE_FACE,
+  NOTIFY_FACE,
+  NOTIF_ANGLE,
+  NOTIF_DIST,
+  NOTIF_R,
+  NOTIF_POP,
   isAnimationState,
+  measuredFace,
+  notifyBadge,
+  resolveVisage,
   silhouetteFor,
   morphSilhouette,
   morphPath,
@@ -37,10 +63,31 @@ export {
   pathForState,
   sampleMorph,
   type AnimationState,
+  type MeasuredFace,
   type MorphDot,
   type MorphFrame,
   type StateEntry,
 } from './states'
+export { poseAt } from './pose'
+export {
+  RINGS,
+  SWOOSH,
+  COMET_RIBBONS,
+  BURST_REST_T,
+  COMET_REST_T,
+  COMET_DOT,
+  arcRender,
+  rasterizeArcs,
+  particles,
+  burstParticles,
+  cometArcSpecs,
+  cometFade,
+  blendArcs,
+  type ArcSeed,
+  type ArcSpec,
+  type ArcRender,
+  type DecorDot,
+} from './decor'
 export {
   STATE_SLUGS,
   slugOf,
@@ -55,13 +102,24 @@ export {
   EYE_H,
   EYE_SPLIT,
   EYE_W,
+  LIFE_DRIFT_X,
+  LIFE_DRIFT_Y,
   REST_GAZE,
+  STILL_LIFE,
   blinkScale,
+  eyeAxes,
+  eyeFadeOpacity,
   eyePoses,
+  forcedBlinkLid,
+  liveliness,
+  projectEye,
   resolveGaze,
+  type EyeAxes,
   type EyePose,
   type GazeInput,
   type HeadGaze,
+  type Liveliness,
+  type LivelinessOptions,
 } from './face'
 export {
   SHAPES,
@@ -91,24 +149,38 @@ export {
   type BotExpression,
 } from './expressions'
 export {
+  STATE_GEOMETRY,
+  poseRadii,
+  resolveStateGeometry,
+  usesCustomiserShape,
+  type FacePolicy,
+  type PoseTransform,
+  type ResolvedGeometry,
+  type StateGeometry,
+} from './authority'
+export {
   DEFAULT_SIZE,
   DEFAULT_PAPER,
+  activeSilhouette,
+  lifeFromSpec,
   sampleAvatar,
+  sampleLiveMorph,
   gazeAttr,
   colourIdOf,
   type AvatarSpec,
   type AvatarEye,
   type AvatarFrame,
+  type LiveMorphSpec,
 } from './avatar'
 export {
-  FACE_STATES,
-  SHAPE_STATES,
-  STATE_CAPABILITIES,
-  honours,
-  type StateCapability,
-} from './gating'
-export { frameToSvg, type FrameToSvgOptions } from './frame'
-export { sampleAt, sampleSettled, type SampleSpec, type SampleResult } from './sample'
+  ZERO_EYE_OFFSET,
+  blendEyeOffset,
+  eyeClearance,
+  eyeOffset,
+  faceEyeCfgs,
+  type EyeOffset,
+} from './eyefit'
+export { AvatarEngine, sampleAt, type ClockAppearance } from './clock'
 export {
   MIN_BLOCK,
   MAX_BLOCK,
@@ -117,10 +189,12 @@ export {
   STEP,
   DEFAULT_BLOCK_DURATION,
   DEFAULT_CYCLE_ID,
+  POSE_HOLD,
   clampDuration,
   makeBlock,
   defaultCycle,
   defaultMontage,
+  poseCycle,
   totalDuration,
   offsetOf,
   blockAt,
@@ -131,8 +205,11 @@ export {
   parseCycles,
   parseMontage,
   serializeMontage,
+  activeCycleOf,
+  applyMontageEdit,
   type Block,
   type Cycle,
   type Montage,
+  type MontageEdit,
 } from './cycles'
 export { BASE_SCALE, MIN_ZOOM, MAX_ZOOM, clampZoom, mmss, ticksFor } from './timeline'

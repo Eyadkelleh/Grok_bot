@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ANIMATION_STATES,
   BODY_RADIUS,
-  DEFAULT_MORPH_MS,
+  morphMsOf,
   VIEW_HALF,
   sampleAvatar,
   sampleMorph,
@@ -73,10 +73,16 @@ describe('deterministic avatar visual loop', () => {
     }
   })
 
-  it('does not leak the custom hexagon silhouette into Alert', () => {
-    expect(sampleAvatar({ state: 'Idle', shape: 'hexagon' }).path).not.toBe(
-      sampleAvatar({ state: 'Alert', shape: 'hexagon' }).path,
-    )
+  it('wears custom shape on Sleep and ignores it on Alert and Play', () => {
+    const sleepHex = sampleAvatar({ state: 'Sleep', shape: 'hexagon' })
+    const sleepCircle = sampleAvatar({ state: 'Sleep', shape: 'circle' })
+    const alertHex = sampleAvatar({ state: 'Alert', shape: 'hexagon' })
+    const alertCircle = sampleAvatar({ state: 'Alert', shape: 'circle' })
+    const playHex = sampleAvatar({ state: 'Play', shape: 'hexagon' })
+    const playCircle = sampleAvatar({ state: 'Play', shape: 'circle' })
+    expect(sleepHex.path).not.toBe(sleepCircle.path)
+    expect(alertHex.path).toBe(alertCircle.path)
+    expect(playHex.path).toBe(playCircle.path)
   })
 })
 
@@ -93,12 +99,13 @@ describe('visual case registry', () => {
     expect(ids.has('idle-happy-hexagon')).toBe(true)
     expect(ids.has('wink')).toBe(true)
     expect(ids.has('wide-eyes')).toBe(true)
+    expect(ids.has('notification')).toBe(true)
   })
 
   it('seeks Idle→Alert at 0.25 through rendAt arithmetic', () => {
     const visualCase = VISUAL_CASES.find((row) => row.id === 'idle-to-alert-p25')
     expect(visualCase?.seek).toBeDefined()
-    expect(progressOf(visualCase!.seek!, DEFAULT_MORPH_MS)).toBeCloseTo(0.25, 10)
+    expect(progressOf(visualCase!.seek!, morphMsOf('Alert'))).toBeCloseTo(0.25, 10)
   })
 
   it('tokenizes silhouette paths and rejects unknown commands', () => {
@@ -111,9 +118,10 @@ describe.each(VISUAL_CASES.filter(wantsPicture))('picture $id — $what', (visua
   it('matches the reviewed PictureFrame', async () => {
     const picture = samplePicture(visualCase)
     expect(picture.schema).toBe(1)
-    expect(picture.eyes).toHaveLength(visualCase.expect.eyes)
+    const expectedEyes =
+      visualCase.expect.face === 'morphing' ? 0 : visualCase.expect.eyes
+    expect(picture.eyes).toHaveLength(expectedEyes)
     expect(picture.dots).toHaveLength(visualCase.expect.dots)
-    if (visualCase.expect.face === 'morphing') expect(picture.eyes).toHaveLength(0)
     if (visualCase.expect.state === 'Alert') expect(picture.eyes).toHaveLength(0)
     await expectPictureGolden(picture, visualCase)
   })

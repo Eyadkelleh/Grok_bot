@@ -31,6 +31,7 @@ const slugs = [
 ]
 
 const visualSpecs = [
+  'src/engine/__tests__/shape-animation-matrix.spec.ts',
   'src/engine/__tests__/visual-loop.spec.ts',
   'src/__tests__/Avatar.visual.spec.ts',
 ]

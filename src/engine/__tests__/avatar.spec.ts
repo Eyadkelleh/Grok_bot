@@ -54,6 +54,10 @@ describe('sampleAvatar', () => {
     expect(sampleAvatar({ state }).eyes).toHaveLength(0)
   })
 
+  it('keeps a notification badge on the still Notification frame', () => {
+    expect(sampleAvatar({ state: 'Notification' }).dots).toHaveLength(1)
+  })
+
   it('changes the body path when the shape changes', () => {
     const circle = sampleAvatar({ shape: 'circle' })
     const hexagon = sampleAvatar({ shape: 'hexagon' })
@@ -82,7 +86,10 @@ describe('sampleAvatar', () => {
     const play = sampleAvatar({ shape: 'triangle', state: 'Play' })
     const triangle = sampleAvatar({ shape: 'triangle' })
     expect(idle.path).toBe(triangle.path)
+    expect(idle.shapeApplied).toBe(true)
     expect(play.path).not.toBe(triangle.path)
     expect(play.eyes).toHaveLength(0)
+    expect(play.shapeApplied).toBe(false)
+    expect(play.geometryKind).toBe('symbol')
   })
 })

@@ -4,16 +4,25 @@ const en: typeof fr = {
   app: {
     name: 'Grok_bot',
     title: 'Grok_bot — SVG avatar studio',
-    tagline: 'Customise, animate, and export an SVG avatar.',
+    tagline: 'Design your bot, then take it away as an image or a video.',
     botAria: 'Grok_bot avatar',
   },
 
   nav: {
     label: 'Navigation',
-    studio: 'Studio',
-    customise: 'Customise',
+    rollup: 'Rollup',
     settings: 'Settings',
     about: 'About',
+  },
+
+  dock: {
+    label: 'Outputs',
+    image: 'Image',
+    video: 'Video',
+    imageHint: 'PNG · SVG',
+    videoHint: 'GIF · MP4',
+    imageAria: 'Image desk',
+    videoAria: 'Video desk',
   },
 
   panel: {
@@ -21,6 +30,33 @@ const en: typeof fr = {
     shape: 'Shape',
     expression: 'Expression',
     colour: 'Colour',
+    skinLimited: 'Shape and expression may not apply to this state.',
+  },
+
+  studio: {
+    modes: 'Studio modes',
+    shape: 'Shape',
+    face: 'Face',
+    aura: 'Aura',
+    motion: 'Motion',
+    shapeLocked: 'This pose keeps its own outline.',
+  },
+
+  rollup: {
+    title: 'Rollup',
+    lead: 'Event banner layout, not the bot.',
+  },
+
+  fond: {
+    title: 'Backdrop',
+    none: 'None',
+    banner01: 'Light banner',
+    banner2: 'Blue banner',
+    banner3: 'Dark banner',
+    welcome: 'Welcome',
+    event1: 'Event name',
+    event2: 'Line 2',
+    eventPlaceholder: 'Event name',
   },
 
   shapes: {
@@ -91,6 +127,7 @@ const en: typeof fr = {
     play: 'Start playback',
     pause: 'Stop playback',
     addAnimation: 'Add an animation',
+    addAnimationNamed: 'Add {state}',
     cycles: 'Cycles',
     blockAria: '{state}, {duration}',
     blockDurationAria: 'Duration of {state}, {duration}',
@@ -99,10 +136,12 @@ const en: typeof fr = {
     moveRight: 'Move {state} right',
   },
 
+  video: {
+    timeline: 'Timeline',
+  },
+
   dialog: {
     cancel: 'Cancel',
-    nameCreateTitle: 'New cycle',
-    nameRenameTitle: 'Rename cycle',
     nameField: 'Cycle name',
     nameCreate: 'Create',
     nameRename: 'Rename',
@@ -126,17 +165,31 @@ const en: typeof fr = {
 
   export: {
     title: 'Export',
+    primary: 'Download {format} · {name}',
     png: 'Download PNG',
     svg: 'Download SVG',
     gif: 'Download GIF',
     mp4: 'Download MP4',
+    metaPose: '{name} · {duration} · short clip of this pose',
+    metaCycle: '{name} · {duration} · {count} animations in the timeline',
+    busy: 'Exporting…',
+    progress: 'Exporting… {percent}%',
+    cancel: 'Cancel export',
+    mp4Unavailable: 'This browser cannot encode MP4',
     done: 'Exported',
     failed: 'Export failed',
+    banner: '2×6 banner',
+    bannerPng: 'Banner PNG',
+    bannerMp4: 'Banner MP4',
   },
 
   settings: {
     title: 'Settings',
     language: 'Language',
+    theme: 'Theme',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeSystem: 'System',
     about: 'About',
     credits: 'Independent recreation of {name} (MIT).',
     creditsAria: 'bloub on GitHub, in a new tab',

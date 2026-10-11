@@ -4,8 +4,10 @@ import {
   DEFAULT_MORPH_MS,
   makeBlock,
   morphProgress,
+  morphSecondsOf,
+  resolveStateGeometry,
   sampleAvatar,
-  sampleMorph,
+  sampleLiveMorph,
   type AnimationState,
   type Block,
 } from '../../engine'
@@ -51,13 +53,16 @@ function stopId(progress: number): string {
 
 function settledExpect(state: AnimationState, shape?: string): VisualExpectation {
   const frame = sampleAvatar({ state, shape })
-  const isFace = frame.eyes.length > 0
+  const geometry = resolveStateGeometry(state, shape)
+  const isFace = geometry.face !== 'none'
   return {
     face: isFace ? 'pictures' : 'glyph',
     state,
     eyes: frame.eyes.length,
     dots: frame.dots.length,
-    silhouette: isFace ? { kind: 'shape', shape: frame.shape } : { kind: 'state', state },
+    silhouette: geometry.shapeApplied
+      ? { kind: 'shape', shape: frame.shape }
+      : { kind: 'state', state },
   }
 }
 
@@ -80,7 +85,7 @@ function settledCase(state: AnimationState): VisualCase {
 function morphSeek(from: AnimationState, to: AnimationState, progress: number): Seek {
   return {
     blocks: [block(from), block(to)],
-    at: BLOCK_S + progress * (DEFAULT_MORPH_MS / 1000),
+    at: BLOCK_S + progress * morphSecondsOf(to),
   }
 }
 
@@ -92,22 +97,22 @@ function morphGolden(to: AnimationState, progress: number): GoldenKind {
 
 function morphCase(from: AnimationState, to: AnimationState, progress: number): VisualCase {
   const settled = progress >= 1
-  const morph = sampleMorph(from, to, progress)
+  const live = sampleLiveMorph({ from, to, t: progress })
   const expect: VisualExpectation = settled
     ? { ...settledExpect(to), target: to }
     : {
         face: 'morphing',
         state: from,
         target: to,
-        eyes: 0,
-        dots: morph.dots.length,
+        eyes: live.eyes.length,
+        dots: live.dots.length,
         silhouette: { kind: 'morph', from, to, progress },
       }
   return {
     id: `${kebab(from)}-to-${kebab(to)}-${stopId(progress)}`,
     what: settled
       ? `Idle→${to} lands on ${to}`
-      : `Idle→${to} at ${progress} drops eyes and interpolates the body`,
+      : `Idle→${to} at ${progress} fades eyes and interpolates the body`,
     props: { durationMs: DEFAULT_MORPH_MS },
     seek: morphSeek(from, to, progress),
     expect,
@@ -130,7 +135,7 @@ const curated: VisualCase[] = [
   },
   {
     id: 'alert-happy-hexagon',
-    what: 'Alert ignores customiser shape and expression',
+    what: 'Alert keeps the italic glyph and ignores hexagon and expression',
     props: { state: 'Alert', shape: 'hexagon', expression: 'happy', durationMs: 0 },
     expect: settledExpect('Alert', 'hexagon'),
     golden: 'picture',
